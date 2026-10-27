@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DEAD AIR</title>
+<style>
+  :root { --amber:#ffb24a; --red:#ff4433; --teal:#6fd3c9; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:100%; height:100%; background:#000; overflow:hidden;
+    font-family: "Courier New", ui-monospace, monospace; color:#cfe3e8; cursor:default; }
+  #wrap { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:#000; }
+  canvas#view { image-rendering:pixelated; image-rendering:crisp-edges; display:block; background:#000; }
+
+  /* ---- HUD ---- */
+  #hud { position:fixed; inset:0; pointer-events:none; z-index:10; }
+  #dot { position:absolute; left:50%; top:50%; width:4px; height:4px; margin:-2px 0 0 -2px;
+    border-radius:50%; background:rgba(180,220,230,.65); box-shadow:0 0 3px rgba(0,0,0,.8); }
+  #prompt { position:absolute; left:50%; top:58%; transform:translateX(-50%);
+    font-size:15px; letter-spacing:1px; color:var(--amber); text-shadow:0 0 6px #000; opacity:0; transition:opacity .12s; }
+  #prompt.on { opacity:1; }
+  #radio { position:absolute; left:50%; bottom:5%; transform:translateX(-50%);
+    width:min(760px,86%); min-height:34px; padding:9px 16px;
+    background:rgba(6,12,18,.68); border:1px solid rgba(111,211,201,.35);
+    border-left:3px solid var(--teal); border-radius:3px;
+    font-size:15px; line-height:1.35; color:#dff1f3; text-shadow:0 1px 2px #000;
+    opacity:0; transition:opacity .25s; letter-spacing:.3px; }
+  #radio.on { opacity:1; }
+  #radio .who { color:var(--teal); font-weight:bold; margin-right:8px; letter-spacing:1px; }
+  #radio.warn { border-left-color:var(--red); }
+  #radio.warn .who { color:var(--red); }
+  #callouts { position:absolute; left:14px; bottom:14px; font-size:11px; color:rgba(160,190,200,.5);
+    line-height:1.5; text-shadow:0 1px 2px #000; }
+  #statusbar { position:absolute; left:14px; top:12px; font-size:11px; letter-spacing:1px;
+    color:rgba(150,180,195,.55); text-shadow:0 1px 2px #000; }
+  #flashicon { color:#555; } #flashicon.on { color:var(--amber); }
+
+  /* ---- overlays ---- */
+  .overlay { position:fixed; inset:0; z-index:40; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center; background:rgba(2,5,9,.92);
+    padding:24px; }
+  .overlay.hidden { display:none; }
+  .overlay h1 { font-size:46px; letter-spacing:12px; color:#e8f3f4; margin-bottom:4px;
+    text-shadow:0 0 18px rgba(111,211,201,.4); }
+  .overlay h1 .d { color:var(--red); }
+  .overlay p { max-width:620px; font-size:14px; line-height:1.6; color:#9fb6bd; margin:6px 0; }
+  .overlay .hint { color:var(--amber); margin-top:18px; font-size:14px; letter-spacing:1px; }
+  .overlay .keys { margin-top:16px; font-size:12px; color:#7d949b; line-height:1.9; text-align:left;
+    columns:2; column-gap:40px; }
+  .overlay .keys b { color:var(--teal); display:inline-block; width:62px; }
+  .btn { pointer-events:auto; cursor:pointer; margin-top:22px; padding:12px 30px;
+    background:transparent; border:1px solid var(--teal); color:var(--teal);
+    font-family:inherit; font-size:15px; letter-spacing:3px; border-radius:2px; transition:.15s; }
+  .btn:hover { background:var(--teal); color:#03181a; }
+
+  /* pause menu */
+  #pause .row { display:flex; align-items:center; gap:14px; margin:8px 0; font-size:14px; color:#bcd2d8; }
+  #pause select, #pause .tog { pointer-events:auto; cursor:pointer; background:#0a141c; color:var(--teal);
+    border:1px solid rgba(111,211,201,.4); font-family:inherit; font-size:13px; padding:5px 10px; border-radius:2px; }
+
+  /* death static */
+  #death { background:#000; }
+  #death canvas { position:absolute; inset:0; width:100%; height:100%; }
+  #death h1 { position:relative; z-index:2; color:#ff5544; letter-spacing:10px;
+    text-shadow:0 0 20px rgba(255,60,40,.7); animation:flick .18s steps(2) infinite; }
+  @keyframes flick { 50% { opacity:.4; } }
+  #death p { position:relative; z-index:2; }
+
+  #dbg { position:fixed; right:10px; top:10px; z-index:30; display:none;
+    background:rgba(0,0,0,.6); border:1px solid #244; border-radius:3px; }
+  #dbg.on { display:block; }
+  #dbgtxt { position:fixed; right:10px; top:200px; z-index:30; display:none; font-size:11px;
+    color:#8fd; white-space:pre; text-shadow:0 1px 1px #000; }
+  #dbgtxt.on { display:block; }
+  .vig { position:fixed; inset:0; z-index:9; pointer-events:none;
+    box-shadow:inset 0 0 150px 6px rgba(0,0,0,.72); }
+</style>
+</head>
+<body>
+  <div id="wrap"><canvas id="view"></canvas></div>
+  <div class="vig"></div>
+
+  <div id="hud">
+    <div id="dot"></div>
+    <div id="prompt"></div>
+    <div id="radio"><span class="who">INES</span><span id="radiotext"></span></div>
+    <div id="statusbar">DEAD AIR  ·  <span id="flashicon">FLASHLIGHT</span>  ·  <span id="crouchicon"></span></div>
+    <div id="callouts">[1] where do I go &nbsp; [2] open this door<br>[3] where is it &nbsp; [4] close the door behind me</div>
+  </div>
+
+  <canvas id="dbg" width="256" height="76"></canvas>
+  <div id="dbgtxt"></div>
+
+  <!-- START -->
+  <div id="start" class="overlay">
+    <h1>DEA<span class="d">D</span> AIR</h1>
+    <p>You wake alone at the back of the drifting hauler <i>Veyra</i>. Someone is still breathing
+       on the comms channel — Ines, sealed on the bridge at the far end of the ship.</p>
+    <p>She can see you only through the security cameras. Where a camera watches, she can guide you
+       and open doors. In the dark between them, she is guessing. Something else is aboard.</p>
+    <div class="keys">
+      <div><b>WASD</b> move</div><div><b>Mouse</b> look</div>
+      <div><b>Shift</b> sprint (loud)</div><div><b>C</b> crouch (quiet)</div>
+      <div><b>F</b> flashlight</div><div><b>E</b> interact / door</div>
+      <div><b>1-4</b> radio Ines</div><div><b>V</b> Ines voice</div>
+      <div><b>Esc</b> pause</div><div><b>`</b> debug</div>
+    </div>
+    <p class="hint">Reach the bridge. Follow her voice.</p>
+    <button class="btn" id="startbtn">BEGIN</button>
+  </div>
+
+  <!-- PAUSE -->
+  <div id="pause" class="overlay hidden">
+    <h1 style="font-size:30px;letter-spacing:8px">PAUSED</h1>
+    <div class="row">Internal resolution
+      <select id="resSel">
+        <option value="0">320 × 180</option>
+        <option value="1" selected>480 × 270</option>
+        <option value="2">640 × 360</option>
+      </select>
+    </div>
+    <div class="row">Ines voice (TTS) <button class="tog" id="ttsTog">OFF</button></div>
+    <div class="row">Mouse sensitivity <button class="tog" id="sensDn">−</button>
+      <span id="sensVal">1.0</span> <button class="tog" id="sensUp">+</button></div>
+    <button class="btn" id="resumeBtn">RESUME</button>
+    <p style="margin-top:14px;font-size:12px">Esc to resume · ` for debug overlay</p>
+  </div>
+
+  <!-- DEATH -->
+  <div id="death" class="overlay hidden">
+    <canvas id="deathnoise"></canvas>
+    <h1>SIGNAL LOST</h1>
+    <p id="deathsub">— reconnecting —</p>
+  </div>
+
+  <!-- WIN -->
+  <div id="win" class="overlay hidden">
+    <h1>YOU MADE IT</h1>
+    <p id="winline">Ines turns from the console. For the first time, not just a voice.</p>
+    <p style="color:#5f757c">[ prototype ending — placeholder ]</p>
+    <button class="btn" id="winbtn">RESTART</button>
+  </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+/* ===========================================================================
+   DEAD AIR — first-person psychological horror prototype
+   Sections: CONFIG · MAP · GRID · RENDERER/DITHER · LEVEL · PLAYER · DOORS ·
+             CAMERAS · PATHFINDING · ALIENS · INES · AUDIO · UI · GAME STATE
+   =========================================================================== */
+
+/* ------------------------------- CONFIG ---------------------------------- */
+const CONFIG = {
+  render: {
+    resolutions: [[320,180],[480,270],[640,360]],
+    active: 1,                 // index into resolutions
+    paletteLevels: 5.0,        // dither quantization levels per channel
+    fov: 72,
+  },
+  world: { tile: 3.0, wallHeight: 3.0 },
+  player: {
+    walkSpeed: 3.2, sprintSpeed: 5.6, crouchSpeed: 1.7,
+    eyeHeight: 1.62, crouchHeight: 0.95, radius: 0.42,
+    accel: 14, mouseSens: 0.0022, headbob: 0.045,
+  },
+  flashlight: { range: 17, angle: 0.42, intensity: 2.2, penumbra: 0.5, startOn: true },
+  camera: {                    // security cameras
+    range: 10.5, fovDeg: 68, mountHeight: 2.5,
+  },
+  doors: {
+    openDelayMin: 1.0, openDelayMax: 2.6,   // Ines reaction time
+    slideTime: 0.7, airlockCycle: 2.6,
+    slamChance: 0.72,                        // chance she slams a door behind you
+    slamLateChance: 0.3,                     // sometimes a second too late
+  },
+  aliens: {
+    count: 2, speed: 2.5, chaseSpeed: 4.3,
+    fovDeg: 95, sightRange: 10.0,
+    flashlightBonus: 1.7,       // sight range x this when your flashlight is on
+    crouchPenalty: 0.5,         // sight range x this when you crouch
+    hearSprintRadius: 13.0,     // they hear sprinting within this
+    catchDist: 1.15,
+    burstMoveMin: 0.45, burstMoveMax: 1.1,   // uneven bursts
+    burstPauseMin: 0.12, burstPauseMax: 0.5,
+    searchTime: 8.0,            // how long they hunt your last-known spot
+    repathTime: 0.6,
+  },
+  ines: {
+    lineCooldown: 2.6,          // min gap between any two lines
+    directionCooldown: 5.5,     // min gap between unprompted directions
+    interferenceDist: 7.5,      // alien closer than this -> her radio breaks up
+    warnCooldown: 4.5,
+  },
+  fog: 0.055,
+  checkpointFacing: 0,
+};
+
+/* --------------------------------- MAP ----------------------------------- */
+/* Legend: # wall · . floor · D door · L airlock door · C camera ·
+   P player start · X alien spawn · B bridge goal ·
+   H crate  O console  U bunk  Y cryo pod  T table  (solid cover) ·
+   | pipe  ~ cable (decorative, walkable).  Edit freely — see validator notes. */
+const MAP = [
+'################################################################',
+'################################################################',
+'#......########......########.............#......###############',
+'#..YY..########...O..########.............#......###############',
+'#......########......########..TT..#......#..~~..###############',
+'#..YY..########..O...########..X...#......#......###############',
+'#......########......########...T..#......#...~..###############',
+'##C..###########C..############..C####..#####..C################',
+'#......#......#......#......#......#......#......###....#..O.O.#',
+'#..P...D......D......D......D......D......D......L.L....D...B..#',
+'#......#......#......#......#......#......#......###....#......#',
+'#########C..#####..#####..C##########C..############C..###C#####',
+'########.H...H#......#......########......##########....########',
+'########H.....#......#..UU..########..OX..##########.O..########',
+'########.H....#......#..UU..########....O.##########..O.########',
+'########.............#......########......##########....########',
+'########.....H.......#......########......##########....########',
+'################################################################',
+'################################################################',
+];
+
+/* Areas back->front by column range (used for names, guidance, danger memory) */
+const AREAS = [
+  { name:'Cryo Bay',       c0:1,  c1:6  },
+  { name:'Cargo Hold',     c0:7,  c1:13 },
+  { name:'Med Bay',        c0:14, c1:20 },
+  { name:'Crew Quarters',  c0:21, c1:27 },
+  { name:'Mess Hall',      c0:28, c1:34 },
+  { name:'Engineering',    c0:35, c1:41 },
+  { name:'Hydroponics',    c0:42, c1:48 },
+  { name:'the Airlock',    c0:49, c1:51 },
+  { name:'Comms',          c0:52, c1:55 },
+  { name:'the Bridge',     c0:56, c1:62 },
+];
+/* door column -> which area it opens into (for wall signage) */
+const SIGNS = [
+  {text:'CRYO BAY',      r:9, c:1,  face:1},
+  {text:'CARGO HOLD',    r:9, c:7,  face:1},
+  {text:'MED BAY',       r:9, c:14, face:1},
+  {text:'CREW QUARTERS', r:9, c:21, face:1},
+  {text:'MESS HALL',     r:9, c:28, face:1},
+  {text:'ENGINEERING',   r:9, c:35, face:1},
+  {text:'HYDROPONICS',   r:9, c:42, face:1},
+  {text:'AIRLOCK',       r:9, c:49, face:1},
+  {text:'COMMS',         r:9, c:52, face:1},
+  {text:'BRIDGE',        r:9, c:56, face:1},
+];
+/* camera definitions: row,col (on a wall cell), facing N/S/E/W */
+const CAMERA_DEFS = [
+  {r:7,c:2,dir:'S'},  {r:11,c:9,dir:'N'}, {r:7,c:16,dir:'S'}, {r:11,c:26,dir:'N'},
+  {r:7,c:33,dir:'S'}, {r:11,c:37,dir:'N'},{r:7,c:47,dir:'S'}, {r:11,c:52,dir:'N'},
+  {r:11,c:58,dir:'N'},
+];
+
+/* -------------------------------- GRID ----------------------------------- */
+const ROWS = MAP.length, COLS = MAP[0].length, TILE = CONFIG.world.tile;
+const SOLID_PROPS = new Set(['H','O','U','Y','T']);
+const DECOR_PROPS = new Set(['|','~']);
+const FLOOR_CHARS = new Set(['.','D','L','P','X','B','|','~']);
+
+function charAt(r,c){ if(r<0||c<0||r>=ROWS||c>=COLS) return '#'; const ch=MAP[r][c]; return ch===' '?'#':ch; }
+function isInterior(r,c){ const ch=charAt(r,c); return ch!=='#' && ch!=='C'; } // gets floor/ceiling
+function cellX(c){ return c*TILE; }
+function cellZ(r){ return r*TILE; }
+function worldToCell(x,z){ return { r:Math.round(z/TILE), c:Math.round(x/TILE) }; }
+
+const doorGrid = {};   // "r,c" -> door object
+function doorAt(r,c){ return doorGrid[r+','+c] || null; }
+
+// blocks movement & pathfinding. doorsPassable=true -> treat doors as open
+// (used for Ines's guidance route, since doors open as you reach them).
+function blockedNav(r,c, doorsPassable){
+  const ch=charAt(r,c);
+  if(ch==='#'||ch==='C') return true;
+  if(SOLID_PROPS.has(ch)) return true;
+  const d=doorAt(r,c); if(d) return doorsPassable? false : !d.isOpen;
+  return !FLOOR_CHARS.has(ch);
+}
+// blocks line of sight (closed doors block view; decor does not)
+function blockedSight(r,c){
+  const ch=charAt(r,c);
+  if(ch==='#'||ch==='C') return true;
+  if(SOLID_PROPS.has(ch)) return true;
+  const d=doorAt(r,c); if(d) return !d.isOpen;
+  return !FLOOR_CHARS.has(ch);
+}
+function areaOf(r,c){
+  for(const a of AREAS){ if(c>=a.c0 && c<=a.c1) return a.name; }
+  return 'the ship';
+}
+// continuous LOS sampler between two world points on the xz plane
+function losClear(x0,z0,x1,z1){
+  const dx=x1-x0, dz=z1-z0;
+  const dist=Math.hypot(dx,dz);
+  const steps=Math.max(1,Math.ceil(dist/(TILE*0.28)));
+  for(let i=1;i<steps;i++){
+    const t=i/steps, x=x0+dx*t, z=z0+dz*t;
+    const cc=Math.round(x/TILE), rr=Math.round(z/TILE);
+    if(blockedSight(rr,cc)) return false;
+  }
+  return true;
+}
+
+/* ---------------------- RENDERER / DITHER POST --------------------------- */
+const viewCanvas = document.getElementById('view');
+const renderer = new THREE.WebGLRenderer({ canvas:viewCanvas, antialias:false, powerPreference:'high-performance' });
+renderer.setPixelRatio(1);
+renderer.shadowMap.enabled = false;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x03050a);
+scene.fog = new THREE.FogExp2(0x03050a, CONFIG.fog);
+
+let [LOWW,LOWH] = CONFIG.render.resolutions[CONFIG.render.active];
+const camera = new THREE.PerspectiveCamera(CONFIG.render.fov, LOWW/LOWH, 0.08, 220);
+
+let rt = makeRT(LOWW,LOWH);
+function makeRT(w,h){
+  return new THREE.WebGLRenderTarget(w,h,{
+    minFilter:THREE.NearestFilter, magFilter:THREE.NearestFilter,
+    format:THREE.RGBAFormat, depthBuffer:true, stencilBuffer:false });
+}
+
+// fullscreen post scene: Bayer 4x4 ordered dither + palette quantization
+const postScene = new THREE.Scene();
+const postCam = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+const postMat = new THREE.ShaderMaterial({
+  uniforms:{ tDiffuse:{value:rt.texture}, res:{value:new THREE.Vector2(LOWW,LOWH)}, levels:{value:CONFIG.render.paletteLevels} },
+  vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }`,
+  fragmentShader:`
+    precision mediump float;
+    uniform sampler2D tDiffuse; uniform vec2 res; uniform float levels; varying vec2 vUv;
+    float bayer(int x,int y){
+      if(y==0){ if(x==0)return 0.0; if(x==1)return 8.0; if(x==2)return 2.0; return 10.0; }
+      if(y==1){ if(x==0)return 12.0; if(x==1)return 4.0; if(x==2)return 14.0; return 6.0; }
+      if(y==2){ if(x==0)return 3.0; if(x==1)return 11.0; if(x==2)return 1.0; return 9.0; }
+      if(x==0)return 15.0; if(x==1)return 7.0; if(x==2)return 13.0; return 5.0;
+    }
+    void main(){
+      vec3 c = texture2D(tDiffuse, vUv).rgb;
+      vec2 p = floor(vUv*res);
+      int bx = int(mod(p.x,4.0)); int by = int(mod(p.y,4.0));
+      float th = (bayer(bx,by)+0.5)/16.0;              // 0..1 threshold
+      float n = max(levels-1.0, 1.0);
+      vec3 q = floor(c*n + th)/n;                      // dithered quantize
+      // gentle palette lean: pull neutrals slightly toward cold teal/blue
+      float lum = dot(q, vec3(0.299,0.587,0.114));
+      q = mix(q, vec3(lum)*vec3(0.80,0.96,1.05), 0.08);
+      gl_FragColor = vec4(q,1.0);
+    }`
+});
+postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2), postMat));
+
+function setResolution(idx){
+  CONFIG.render.active = idx;
+  [LOWW,LOWH] = CONFIG.render.resolutions[idx];
+  rt.dispose(); rt = makeRT(LOWW,LOWH);
+  postMat.uniforms.tDiffuse.value = rt.texture;
+  postMat.uniforms.res.value.set(LOWW,LOWH);
+  camera.aspect = LOWW/LOWH; camera.updateProjectionMatrix();
+}
+
+function onResize(){
+  // letterbox a 16:9 (matching internal aspect) canvas into the window
+  const aspect = LOWW/LOWH;
+  let w = window.innerWidth, h = window.innerHeight;
+  if(w/h > aspect) w = Math.floor(h*aspect); else h = Math.floor(w/aspect);
+  renderer.setSize(w,h,true);
+  viewCanvas.style.width = w+'px'; viewCanvas.style.height = h+'px';
+  deathNoiseResize();
+}
+window.addEventListener('resize', onResize);
+
+/* -------------------------------- LEVEL ---------------------------------- */
+// palette (linear-ish sRGB) kept readable
+const COL = {
+  wall:    0x2a3644, wallHi:0x374856,
+  floor:   0x161e28, floorAlt:0x1b2630,
+  ceil:    0x10161d,
+  prop:    0x33424f, crate:0x4a3f2e, pod:0x274850, bunk:0x2e3a44,
+  door:    0x3a4a58, doorFrame:0x55331f,
+  screen:  0x1b6f78, screenAmber:0x7a4a10,
+  lightEm: 0xbfd0d8, redEm:0x8a1410,
+};
+
+const matWall = new THREE.MeshPhongMaterial({ color:0xffffff, flatShading:true, shininess:2, specular:0x0a0f14 });
+const matFloor= new THREE.MeshPhongMaterial({ color:COL.floor, flatShading:true, shininess:1, specular:0x05080a });
+const matCeil = new THREE.MeshPhongMaterial({ color:COL.ceil, flatShading:true, shininess:0 });
+
+const WH = CONFIG.world.wallHeight;
+const lightCells = [];   // candidate ceiling fixtures
+
+function buildLevel(){
+  // ---- gather cells ----
+  const wallCells=[], floorCells=[], ceilCells=[];
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+    const ch=charAt(r,c);
+    if(ch==='#'||ch==='C'){ wallCells.push([r,c,ch]); }
+    else { floorCells.push([r,c]); ceilCells.push([r,c]); }
+  }
+
+  // ---- walls (instanced) ----
+  const wallGeo=new THREE.BoxGeometry(TILE,WH,TILE);
+  const walls=new THREE.InstancedMesh(wallGeo, matWall, wallCells.length);
+  const m=new THREE.Matrix4(), col=new THREE.Color();
+  wallCells.forEach(([r,c],i)=>{
+    m.makeTranslation(cellX(c), WH/2, cellZ(r));
+    walls.setMatrixAt(i,m);
+    // tint walls faintly by area + a little noise so faces read in flat shading
+    const base = new THREE.Color(COL.wall);
+    const tint = (areaOf(r,c)==='the Bridge') ? 0.0 : 0.0;
+    const j = 0.82 + 0.3*(( (r*7+c*13)%5 )/5);
+    col.copy(base).multiplyScalar(j);
+    walls.setColorAt(i,col);
+  });
+  walls.instanceMatrix.needsUpdate=true; if(walls.instanceColor) walls.instanceColor.needsUpdate=true;
+  scene.add(walls);
+
+  // ---- floor (instanced thin slabs) ----
+  const fGeo=new THREE.BoxGeometry(TILE,0.12,TILE);
+  const floor=new THREE.InstancedMesh(fGeo, matFloor, floorCells.length);
+  floorCells.forEach(([r,c],i)=>{
+    m.makeTranslation(cellX(c), -0.06, cellZ(r)); floor.setMatrixAt(i,m);
+    col.copy(new THREE.Color((r+c)%2? COL.floor:COL.floorAlt));
+    floor.setColorAt(i,col);
+  });
+  floor.instanceMatrix.needsUpdate=true; if(floor.instanceColor) floor.instanceColor.needsUpdate=true;
+  scene.add(floor);
+
+  // ---- ceiling (instanced) with gaps that become light fixtures ----
+  const cGeo=new THREE.BoxGeometry(TILE,0.2,TILE);
+  const ceils=[];
+  ceilCells.forEach(([r,c])=>{
+    const isFix = ((c%5===3)&&(r===9)) || ((r===4||r===13)&&(c%7===3));
+    if(isFix){ lightCells.push([r,c]); } else ceils.push([r,c]);
+  });
+  const ceil=new THREE.InstancedMesh(cGeo, matCeil, ceils.length);
+  ceils.forEach(([r,c],i)=>{ m.makeTranslation(cellX(c), WH, cellZ(r)); ceil.setMatrixAt(i,m); });
+  ceil.instanceMatrix.needsUpdate=true; scene.add(ceil);
+
+  buildLights();
+  buildProps();
+  buildSigns();
+}
+
+const flickerLights=[], redLights=[], fixtureMeshes=[];
+function buildLights(){
+  // very dim ambient + hemisphere so unlit areas aren't pure black
+  scene.add(new THREE.AmbientLight(0x1a2740, 0.26));
+  const hemi=new THREE.HemisphereLight(0x27405a, 0x05070a, 0.34); scene.add(hemi);
+
+  // ceiling fixtures: emissive panels; a sparse subset gets a real flicker light
+  const fixGeo=new THREE.BoxGeometry(TILE*0.7,0.12,TILE*0.7);
+  const emMat=new THREE.MeshBasicMaterial({ color:COL.lightEm });
+  let realCount=0;
+  lightCells.forEach(([r,c])=>{
+    const panel=new THREE.Mesh(fixGeo, emMat.clone());
+    panel.position.set(cellX(c), WH-0.12, cellZ(r));
+    panel.userData.base = 0.9 + Math.random()*0.1;
+    scene.add(panel); fixtureMeshes.push(panel);
+    if(realCount<6 && (c%10===3)){
+      const L=new THREE.PointLight(0xa9c6d6, 0.9, TILE*6.5, 2.0);
+      L.position.set(cellX(c), WH-0.4, cellZ(r));
+      L.userData={panel, base:0.9, flick:Math.random()*10};
+      scene.add(L); flickerLights.push(L); realCount++;
+    }
+  });
+
+  // red emergency lights near each door, a few real
+  const redGeo=new THREE.SphereGeometry(0.14,6,5);
+  const redMat=new THREE.MeshBasicMaterial({ color:0xff3322 });
+  let redReal=0;
+  SIGNS.forEach((s,i)=>{
+    const x=cellX(s.c)+TILE*0.5, z=cellZ(s.r)-TILE*0.4, y=WH-0.3;
+    const b=new THREE.Mesh(redGeo, redMat.clone()); b.position.set(x,y,z); scene.add(b); fixtureMeshes.push(b);
+    if(redReal<4 && i%3===0){
+      const L=new THREE.PointLight(0xff2a1a, 0.5, TILE*5, 2.2);
+      L.position.set(x,y,z); L.userData={bulb:b, phase:Math.random()*6};
+      scene.add(L); redLights.push(L); redReal++;
+    }
+  });
+}
+
+function makeBox(w,h,d,color,x,y,z,flat=true){
+  const mat=new THREE.MeshPhongMaterial({ color, flatShading:flat, shininess:4, specular:0x0a0f14 });
+  const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
+  mesh.position.set(x,y,z); scene.add(mesh); return mesh;
+}
+function makeScreen(x,y,z,amber,rotY=0){
+  const mat=new THREE.MeshBasicMaterial({ color: amber?COL.screenAmber:COL.screen });
+  const s=new THREE.Mesh(new THREE.PlaneGeometry(0.7,0.5), mat);
+  s.position.set(x,y,z); s.rotation.y=rotY; scene.add(s); return s;
+}
+
+function buildProps(){
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+    const ch=charAt(r,c); const x=cellX(c), z=cellZ(r);
+    if(ch==='H'){ // crate
+      makeBox(TILE*0.8,1.3,TILE*0.8, COL.crate, x, 0.65, z);
+      makeBox(TILE*0.55,0.5,TILE*0.55, 0x5a4e3a, x, 1.55, z);
+    } else if(ch==='O'){ // console
+      makeBox(TILE*0.8,1.0,TILE*0.6, COL.prop, x, 0.5, z);
+      makeScreen(x, 1.15, z+ (r>9?-TILE*0.33:TILE*0.33), (c+r)%2===0, r>9?0:Math.PI);
+    } else if(ch==='U'){ // bunk
+      makeBox(TILE*0.85,0.4,TILE*0.7, COL.bunk, x, 0.35, z);
+      makeBox(TILE*0.85,0.1,TILE*0.7, 0x3a4650, x, 0.95, z);
+    } else if(ch==='Y'){ // cryo pod
+      makeBox(TILE*0.7,1.9,TILE*0.7, COL.pod, x, 0.95, z);
+      const g=new THREE.Mesh(new THREE.BoxGeometry(TILE*0.4,1.3,0.06),
+        new THREE.MeshBasicMaterial({color:0x183b42})); g.position.set(x,1.1,z+TILE*0.33); scene.add(g);
+    } else if(ch==='T'){ // table
+      makeBox(TILE*0.9,0.1,TILE*0.6, 0x3b4751, x, 0.9, z);
+      makeBox(0.1,0.9,0.1,0x2a333b, x-TILE*0.35,0.45,z);
+      makeBox(0.1,0.9,0.1,0x2a333b, x+TILE*0.35,0.45,z);
+    } else if(ch==='~'){ // hanging cables (decorative)
+      for(let k=0;k<3;k++){
+        const h=0.8+Math.random()*1.0;
+        const cab=makeBox(0.05,h,0.05,0x12181e, x-0.5+k*0.5, WH-h/2, z);
+      }
+    }
+  }
+}
+
+// paint area names on signs near doors (canvas texture planes, double sided)
+function buildSigns(){
+  SIGNS.forEach(s=>{
+    const cvs=document.createElement('canvas'); cvs.width=256; cvs.height=64;
+    const g=cvs.getContext('2d');
+    g.fillStyle='#07100f'; g.fillRect(0,0,256,64);
+    g.strokeStyle='#5a7f7a'; g.lineWidth=3; g.strokeRect(3,3,250,58);
+    g.fillStyle='#8fd8cf'; g.font='bold 30px Courier New'; g.textAlign='center'; g.textBaseline='middle';
+    g.fillText(s.text, 128, 34);
+    const tex=new THREE.CanvasTexture(cvs); tex.magFilter=THREE.NearestFilter; tex.minFilter=THREE.NearestFilter;
+    const mat=new THREE.MeshBasicMaterial({ map:tex, transparent:false, side:THREE.DoubleSide });
+    const plane=new THREE.Mesh(new THREE.PlaneGeometry(1.7,0.42), mat);
+    // place just under the ceiling at the door column, facing along the corridor
+    plane.position.set(cellX(s.c), WH-0.55, cellZ(s.r)+0.02);
+    plane.rotation.y = Math.PI/2; // faces +/-x (along corridor)
+    scene.add(plane);
+  });
+}
+
+/* -------------------------------- DOORS ---------------------------------- */
+const doors=[];
+function buildDoors(){
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+    const ch=charAt(r,c);
+    if(ch==='D'||ch==='L'){
+      const frame=makeBox(0.4,WH,TILE, COL.doorFrame, cellX(c), WH/2, cellZ(r)); // frame fills gap-ish
+      scene.remove(frame); // we'll manage the panel manually; keep a lintel instead
+      const d = createDoor(r,c, ch==='L');
+      doors.push(d); doorGrid[r+','+c]=d;
+    }
+  }
+}
+function createDoor(r,c,isAirlock){
+  const x=cellX(c), z=cellZ(r);
+  const grp=new THREE.Group();
+  // two sliding leaves
+  const leafMat=new THREE.MeshPhongMaterial({ color: isAirlock?0x4a5a3a:COL.door, flatShading:true, shininess:6, specular:0x101418 });
+  const leafGeo=new THREE.BoxGeometry(0.28, WH-0.1, TILE*0.5);
+  const l1=new THREE.Mesh(leafGeo, leafMat); l1.position.set(0,(WH-0.1)/2, -TILE*0.25);
+  const l2=new THREE.Mesh(leafGeo, leafMat.clone()); l2.position.set(0,(WH-0.1)/2, TILE*0.25);
+  grp.add(l1); grp.add(l2);
+  // red/green status panel on each side
+  const panelMat=new THREE.MeshBasicMaterial({ color:0xff3322 });
+  const pGeo=new THREE.PlaneGeometry(0.18,0.18);
+  const p1=new THREE.Mesh(pGeo, panelMat); p1.position.set(-0.16, 1.2, TILE*0.42); p1.rotation.y=Math.PI;
+  const p2=new THREE.Mesh(pGeo, panelMat.clone()); p2.position.set(0.16, 1.2, -TILE*0.42);
+  grp.add(p1); grp.add(p2);
+  // lintel above
+  const lint=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,TILE), new THREE.MeshPhongMaterial({color:COL.doorFrame,flatShading:true}));
+  lint.position.set(0, WH-0.25, 0); grp.add(lint);
+  grp.position.set(x,0,z); scene.add(grp);
+  return {
+    r,c,x,z, isAirlock, isOpen:false, state:'closed', // closed|opening|open|closing
+    open:0, timer:0, requested:false, locked:true,
+    grp, l1, l2, panels:[p1,p2],
+    setPanel(colr){ p1.material.color.setHex(colr); p2.material.color.setHex(colr); },
+  };
+}
+function updateDoors(dt){
+  for(const d of doors){
+    let target = (d.state==='open'||d.state==='opening')?1:0;
+    if(d.state==='opening'||d.state==='closing'){
+      const sp = dt/CONFIG.doors.slideTime;
+      d.open += (d.state==='opening'? sp : -sp);
+      if(d.open>=1){ d.open=1; d.state='open'; }
+      if(d.open<=0){ d.open=0; d.state='closed'; }
+    }
+    d.isOpen = (d.open>0.55);
+    const slide=(TILE*0.5)*d.open;
+    d.l1.position.z = -TILE*0.25 - slide;
+    d.l2.position.z =  TILE*0.25 + slide;
+    // panel color: red locked/closed, teal when open
+    d.setPanel(d.open>0.5 ? 0x33ff99 : 0xff3322);
+  }
+}
+function beginOpen(d){ if(d.state==='open'||d.state==='opening') return; d.state='opening'; audio.doorHiss(); }
+function beginClose(d){ if(d.state==='closed'||d.state==='closing') return; d.state='closing'; audio.doorHiss(); }
+
+/* ------------------------------- CAMERAS --------------------------------- */
+const cams=[];
+const DIRV={N:{r:-1,c:0},S:{r:1,c:0},E:{r:0,c:1},W:{r:0,c:-1}};
+function buildCameras(){
+  CAMERA_DEFS.forEach(def=>{
+    const dv=DIRV[def.dir];
+    const x=cellX(def.c), z=cellZ(def.r), y=CONFIG.camera.mountHeight;
+    const grp=new THREE.Group(); grp.position.set(x,y,z);
+    const body=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.26,0.5),
+      new THREE.MeshPhongMaterial({color:0x3a4650,flatShading:true}));
+    const lens=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.1,0.18,8),
+      new THREE.MeshPhongMaterial({color:0x11151a,flatShading:true}));
+    lens.rotation.x=Math.PI/2; lens.position.set(0,0,0.3);
+    const led=new THREE.Mesh(new THREE.SphereGeometry(0.05,6,5),
+      new THREE.MeshBasicMaterial({color:0x330000}));
+    led.position.set(0.12,0.12,0.26);
+    grp.add(body); grp.add(lens); grp.add(led);
+    // yaw the camera to face dir
+    const yaw=Math.atan2(dv.c, dv.r); grp.rotation.y=yaw + Math.PI; // box +z faces -dir; adjust
+    grp.rotation.y = Math.atan2(dv.c, dv.r);
+    scene.add(grp);
+    cams.push({
+      r:def.r, c:def.c, dir:def.dir, dv,
+      x, y, z, led, grp,
+      // sight origin: one cell into the room so the ray doesn't hit its own wall
+      ox: x + dv.c*TILE*0.6, oz: z + dv.r*TILE*0.6,
+      cosHalf: Math.cos(THREE.MathUtils.degToRad(CONFIG.camera.fovDeg)/2),
+      range: CONFIG.camera.range,
+      seesPlayer:false,
+    });
+  });
+}
+// can this camera see a world point?
+function camSees(cam, px,pz){
+  // distance & view-cone measured from the lens on the wall...
+  const dx=px-cam.x, dz=pz-cam.z;
+  const dist=Math.hypot(dx,dz);
+  if(dist>cam.range) return false;
+  if(dist<0.001) return true;
+  const fx=cam.dv.c, fz=cam.dv.r;              // facing (grid->world: x=col, z=row)
+  const dot=(dx*fx+dz*fz)/dist;
+  if(dot < cam.cosHalf) return false;
+  // ...but the occlusion ray starts just off the wall so it never hits its own cell
+  return losClear(cam.ox,cam.oz,px,pz);
+}
+function updateCameras(){
+  const px=player.obj.position.x, pz=player.obj.position.z;
+  let anySeesPlayer=false;
+  for(const cam of cams){
+    const sp = camSees(cam, px,pz) && !player.dead;
+    cam.seesPlayer=sp;
+    if(sp) anySeesPlayer=true;
+    cam.led.material.color.setHex(sp? 0xff2200 : 0x330000);
+  }
+  ines.seesPlayer = anySeesPlayer;
+  // which aliens are visible to any camera right now
+  ines.visibleAliens = [];
+  for(const a of aliens){
+    for(const cam of cams){
+      if(camSees(cam, a.obj.position.x, a.obj.position.z)){
+        ines.visibleAliens.push(a); break;
+      }
+    }
+  }
+}
+
+/* ----------------------------- PATHFINDING ------------------------------- */
+function neighbors(r,c){ return [[r+1,c],[r-1,c],[r,c+1],[r,c-1]]; }
+// doorsPassable=true -> doors never block (guidance route); default false (aliens)
+function astar(sr,sc,gr,gc, cellCost, doorsPassable){
+  const blk=(r,c)=>blockedNav(r,c,doorsPassable);
+  if(blk(gr,gc)) { // find nearest open goal
+    let best=null,bd=1e9;
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){ if(!blk(r,c)){ const d=Math.abs(r-gr)+Math.abs(c-gc); if(d<bd){bd=d;best=[r,c];}}}
+    if(best){gr=best[0];gc=best[1];} else return null;
+  }
+  const key=(r,c)=>r*COLS+c;
+  const open=new Map(), came=new Map(), g=new Map();
+  const startK=key(sr,sc); g.set(startK,0); open.set(startK,{r:sr,c:sc,f:Math.abs(sr-gr)+Math.abs(sc-gc)});
+  let guard=0;
+  while(open.size){
+    if(++guard>20000) break;
+    let bk=null,bf=1e9;
+    for(const [k,v] of open){ if(v.f<bf){bf=v.f;bk=k;} }
+    const cur=open.get(bk); open.delete(bk);
+    if(cur.r===gr&&cur.c===gc){
+      const path=[]; let k=bk;
+      while(k!==undefined){ const r=Math.floor(k/COLS),c=k%COLS; path.push([r,c]); k=came.get(k); }
+      return path.reverse();
+    }
+    for(const [nr,nc] of neighbors(cur.r,cur.c)){
+      if(blk(nr,nc)) continue;
+      let step=1; if(cellCost) step+=cellCost(nr,nc);
+      const nk=key(nr,nc); const ng=g.get(bk===null?startK:key(cur.r,cur.c))+step;
+      if(!g.has(nk)||ng<g.get(nk)){
+        g.set(nk,ng); came.set(nk,key(cur.r,cur.c));
+        open.set(nk,{r:nr,c:nc,f:ng+Math.abs(nr-gr)+Math.abs(nc-gc)});
+      }
+    }
+  }
+  return null;
+}
+
+/* -------------------------------- PLAYER --------------------------------- */
+const player = {
+  obj: new THREE.Object3D(),
+  yaw:0, pitch:0,
+  vx:0, vz:0, speed:0,
+  crouch:false, sprint:false, flashlight:CONFIG.flashlight.startOn,
+  eye: CONFIG.player.eyeHeight,
+  bob:0, dead:false, won:false,
+  checkpoint:{x:0,z:0,yaw:0}, lastAreaName:'',
+  lastDoorPassed:null, lastJunctionCell:null,
+  moving:false, stepTimer:0,
+};
+let flash, flashTarget;
+function setupPlayer(){
+  let pr=9,pc=3;
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++) if(charAt(r,c)==='P'){pr=r;pc=c;}
+  player.obj.position.set(cellX(pc), CONFIG.player.eyeHeight, cellZ(pr));
+  player.yaw = -Math.PI/2; // face +x (toward the bridge / front of ship)
+  player.checkpoint={x:cellX(pc), z:cellZ(pr), yaw:player.yaw};
+  scene.add(player.obj);
+
+  flash=new THREE.SpotLight(0xfff1d6, CONFIG.flashlight.intensity, CONFIG.flashlight.range,
+    CONFIG.flashlight.angle, CONFIG.flashlight.penumbra, 1.4);
+  flashTarget=new THREE.Object3D();
+  player.obj.add(flash); player.obj.add(flashTarget);
+  flash.position.set(0,0,0); flashTarget.position.set(0,0,-1); flash.target=flashTarget;
+  camera.position.set(0,0,0); player.obj.add(camera);
+  player.lastAreaName = areaOf(pr,pc);
+}
+
+function updatePlayer(dt){
+  if(player.dead||player.won){ return; }
+  // movement input
+  const f=(keys['w']?1:0)-(keys['s']?1:0);
+  const s=(keys['d']?1:0)-(keys['a']?1:0);
+  player.sprint = !!keys['shift'] && f>0 && !player.crouch;
+  let max = player.crouch?CONFIG.player.crouchSpeed : player.sprint?CONFIG.player.sprintSpeed:CONFIG.player.walkSpeed;
+  // desired velocity in world space
+  const sinY=Math.sin(player.yaw), cosY=Math.cos(player.yaw);
+  // forward = -z rotated by yaw :  (sin, -cos)?  camera forward derived from quaternion later
+  let dx = ( f*(-sinY) + s*(cosY) );
+  let dz = ( f*(-cosY) + s*(-sinY) );
+  const len=Math.hypot(dx,dz); if(len>0){dx/=len;dz/=len;}
+  const tvx=dx*max, tvz=dz*max;
+  const a=CONFIG.player.accel*dt;
+  player.vx += (tvx-player.vx)*Math.min(1,a);
+  player.vz += (tvz-player.vz)*Math.min(1,a);
+  player.speed=Math.hypot(player.vx,player.vz);
+  player.moving = len>0.01 && player.speed>0.2;
+
+  // collide per-axis
+  const R=CONFIG.player.radius;
+  let nx=player.obj.position.x + player.vx*dt;
+  let nz=player.obj.position.z + player.vz*dt;
+  if(!circleBlocked(nx, player.obj.position.z, R)) player.obj.position.x=nx; else player.vx*=-0.1;
+  if(!circleBlocked(player.obj.position.x, nz, R)) player.obj.position.z=nz; else player.vz*=-0.1;
+
+  // crouch height + headbob
+  const targetEye = player.crouch?CONFIG.player.crouchHeight:CONFIG.player.eyeHeight;
+  player.eye += (targetEye-player.eye)*Math.min(1,10*dt);
+  if(player.moving){ player.bob += dt*(player.sprint?16:10); }
+  const bobY = Math.sin(player.bob)*CONFIG.player.headbob*(player.moving?1:0)*(player.sprint?1.4:1);
+  player.obj.position.y = player.eye + bobY;
+
+  // orientation
+  const e=new THREE.Euler(player.pitch, player.yaw, 0, 'YXZ');
+  player.obj.quaternion.setFromEuler(e);
+
+  // footsteps
+  if(player.moving){
+    player.stepTimer-=dt;
+    if(player.stepTimer<=0){
+      player.stepTimer = player.sprint?0.28 : player.crouch?0.62 : 0.44;
+      audio.footstep(player.sprint, player.crouch);
+    }
+  }
+
+  // flashlight
+  flash.intensity = player.flashlight? CONFIG.flashlight.intensity : 0.0;
+
+  // area / junction detection for Ines guidance
+  const cell=worldToCell(player.obj.position.x, player.obj.position.z);
+  const areaNow=areaOf(cell.r,cell.c);
+  if(areaNow!==player.lastAreaName){
+    player.lastAreaName=areaNow;
+    ines.onEnterArea(areaNow, cell);
+  }
+  // door crossing -> checkpoint
+  const d=doorAt(cell.r,cell.c);
+  if(d && d.isOpen && player.lastDoorPassed!==d){
+    player.lastDoorPassed=d;
+    player.checkpoint={ x:d.x, z:d.z, yaw:player.yaw };
+    ines.onPassDoor(d);
+  }
+  // junction (3+ open neighbours) -> maybe a direction
+  if(!d){
+    let open=0; for(const [nr,nc] of neighbors(cell.r,cell.c)) if(!blockedNav(nr,nc)) open++;
+    const jk=cell.r+','+cell.c;
+    if(open>=3 && player.lastJunctionCell!==jk){
+      player.lastJunctionCell=jk; ines.onJunction(cell);
+    }
+  }
+
+  // win check
+  if(charAt(cell.r,cell.c)==='B'){ winGame(); }
+}
+
+function circleBlocked(x,z,R){
+  const cr=Math.round(z/TILE), cc=Math.round(x/TILE);
+  for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+    const r=cr+dr,c=cc+dc;
+    if(!blockedNav(r,c)) continue;
+    const cx=cellX(c), cz=cellZ(r), h=TILE/2;
+    const nxp=Math.max(cx-h,Math.min(x,cx+h));
+    const nzp=Math.max(cz-h,Math.min(z,cz+h));
+    const ddx=x-nxp, ddz=z-nzp;
+    if(ddx*ddx+ddz*ddz < R*R) return true;
+  }
+  return false;
+}
+
+/* -------------------------------- ALIENS --------------------------------- */
+const aliens=[];
+const AST={WANDER:'wander', INVESTIGATE:'investigate', CHASE:'chase', SEARCH:'search'};
+function buildAliens(){
+  const spawns=[];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++) if(charAt(r,c)==='X') spawns.push([r,c]);
+  for(let i=0;i<CONFIG.aliens.count;i++){
+    const [r,c]=spawns[i%spawns.length];
+    aliens.push(createAlien(r,c));
+  }
+}
+function createAlien(r,c){
+  const grp=new THREE.Group();
+  const bodyMat=new THREE.MeshPhongMaterial({ color:0x0b1016, flatShading:true, shininess:8, specular:0x1a2230 });
+  // tall thin torso
+  const torso=new THREE.Mesh(new THREE.ConeGeometry(0.55,2.2,5), bodyMat); torso.position.y=1.5; torso.rotation.x=Math.PI;
+  const torso2=new THREE.Mesh(new THREE.ConeGeometry(0.42,1.6,5), bodyMat); torso2.position.y=1.9;
+  const head=new THREE.Mesh(new THREE.BoxGeometry(0.4,0.5,0.35), bodyMat); head.position.y=2.75;
+  // limbs
+  const armGeo=new THREE.BoxGeometry(0.1,1.5,0.1);
+  const arm1=new THREE.Mesh(armGeo,bodyMat); arm1.position.set(0.45,1.7,0); arm1.rotation.z=0.3;
+  const arm2=new THREE.Mesh(armGeo,bodyMat); arm2.position.set(-0.45,1.7,0); arm2.rotation.z=-0.3;
+  // glowing eyes
+  const eyeMat=new THREE.MeshBasicMaterial({ color:0xff6a2a });
+  const e1=new THREE.Mesh(new THREE.SphereGeometry(0.06,6,5),eyeMat); e1.position.set(0.1,2.78,0.2);
+  const e2=new THREE.Mesh(new THREE.SphereGeometry(0.06,6,5),eyeMat.clone()); e2.position.set(-0.1,2.78,0.2);
+  grp.add(torso); grp.add(torso2); grp.add(head); grp.add(arm1); grp.add(arm2); grp.add(e1); grp.add(e2);
+  grp.position.set(cellX(c), 0, cellZ(r));
+  scene.add(grp);
+  return {
+    obj:grp, head, eyes:[e1,e2], arms:[arm1,arm2],
+    state:AST.WANDER, spawn:[r,c],
+    path:null, pathIdx:0, repath:0,
+    facing:0, moveTimer:0, paused:false, pauseTimer:0,
+    lastKnown:null, searchTimer:0, targetCell:null, speedMul:1,
+    stepPhase:Math.random()*6,
+  };
+}
+
+function alienPickWander(a){
+  // choose a random walkable cell somewhere in the ship
+  let r,c,tries=0;
+  do{ r=2+Math.floor(Math.random()*(ROWS-4)); c=1+Math.floor(Math.random()*(COLS-2)); tries++; }
+  while(blockedNav(r,c)&&tries<50);
+  a.targetCell=[r,c];
+  const ac=worldToCell(a.obj.position.x,a.obj.position.z);
+  a.path=astar(ac.r,ac.c,r,c); a.pathIdx=1;
+}
+function alienSetPathTo(a,r,c){
+  const ac=worldToCell(a.obj.position.x,a.obj.position.z);
+  a.path=astar(ac.r,ac.c,r,c); a.pathIdx=1;
+}
+// alien sight of player
+function alienSeesPlayer(a){
+  const ax=a.obj.position.x, az=a.obj.position.z;
+  const px=player.obj.position.x, pz=player.obj.position.z;
+  const dx=px-ax, dz=pz-az; const dist=Math.hypot(dx,dz);
+  let range=CONFIG.aliens.sightRange;
+  if(player.flashlight) range*=CONFIG.aliens.flashlightBonus;
+  if(player.crouch) range*=CONFIG.aliens.crouchPenalty;
+  if(dist>range) return false;
+  const fx=Math.sin(a.facing), fz=Math.cos(a.facing);
+  const dot=(dx*fx+dz*fz)/(dist||1);
+  const cosHalf=Math.cos(THREE.MathUtils.degToRad(CONFIG.aliens.fovDeg)/2);
+  if(dist>1.6 && dot<cosHalf) return false; // close behind still can't see; but very close = feel
+  return losClear(ax,az,px,pz);
+}
+
+function updateAliens(dt){
+  if(player.dead||player.won) return;
+  const px=player.obj.position.x, pz=player.obj.position.z;
+  const pcell=worldToCell(px,pz);
+  let nearest=1e9;
+
+  for(const a of aliens){
+    const ax=a.obj.position.x, az=a.obj.position.z;
+    const dP=Math.hypot(px-ax,pz-az); nearest=Math.min(nearest,dP);
+
+    // ---- perception ----
+    const sees=alienSeesPlayer(a);
+    if(sees){
+      a.state=AST.CHASE; a.lastKnown=[pcell.r,pcell.c]; a.searchTimer=CONFIG.aliens.searchTime;
+      if(!a._wasChasing){ audio.sting(); ines.onAlienChase(a); a._wasChasing=true; }
+    } else {
+      // hearing: sprinting player within radius
+      if(player.sprint && dP<CONFIG.aliens.hearSprintRadius && a.state!==AST.CHASE){
+        a.state=AST.INVESTIGATE; a.lastKnown=[pcell.r,pcell.c];
+      }
+      if(a.state===AST.CHASE){ a.state=AST.SEARCH; a.searchTimer=CONFIG.aliens.searchTime; a._wasChasing=false; }
+    }
+
+    // ---- catch ----
+    if(dP < CONFIG.aliens.catchDist){ killPlayer(a); return; }
+
+    // ---- decide target by state ----
+    a.repath-=dt;
+    if(a.state===AST.CHASE){
+      a.speedMul = CONFIG.aliens.chaseSpeed/CONFIG.aliens.speed;
+      if(a.repath<=0){ alienSetPathTo(a,pcell.r,pcell.c); a.repath=CONFIG.aliens.repathTime; }
+    } else if(a.state===AST.INVESTIGATE){
+      a.speedMul=1.0;
+      if(a.repath<=0 && a.lastKnown){ alienSetPathTo(a,a.lastKnown[0],a.lastKnown[1]); a.repath=CONFIG.aliens.repathTime; }
+      if(a.lastKnown){ const d2=Math.abs(a.lastKnown[0]-worldToCell(ax,az).r)+Math.abs(a.lastKnown[1]-worldToCell(ax,az).c);
+        if(d2<=1){ a.state=AST.SEARCH; a.searchTimer=CONFIG.aliens.searchTime; } }
+    } else if(a.state===AST.SEARCH){
+      a.speedMul=1.0; a.searchTimer-=dt;
+      if(a.searchTimer<=0){ a.state=AST.WANDER; a.path=null; }
+      else if(a.repath<=0 && (!a.path || a.pathIdx>=(a.path?a.path.length:0))){
+        // poke around near last known
+        const lk=a.lastKnown||[worldToCell(ax,az).r,worldToCell(ax,az).c];
+        let tr=lk[0]+(Math.floor(Math.random()*5)-2), tc=lk[1]+(Math.floor(Math.random()*5)-2);
+        if(!blockedNav(tr,tc)) alienSetPathTo(a,tr,tc);
+        a.repath=CONFIG.aliens.repathTime;
+      }
+    } else { // WANDER
+      a.speedMul=1.0;
+      const done = !a.path || a.pathIdx>=a.path.length;
+      if(done && a.repath<=0){ alienPickWander(a); a.repath=0.8; }
+    }
+
+    // ---- uneven burst movement along path ----
+    a.pauseTimer-=dt;
+    if(a.paused){ if(a.pauseTimer<=0){ a.paused=false; a.moveTimer=rand(CONFIG.aliens.burstMoveMin,CONFIG.aliens.burstMoveMax);} }
+    else {
+      a.moveTimer-=dt;
+      if(a.moveTimer<=0){ a.paused=true; a.pauseTimer=rand(CONFIG.aliens.burstPauseMin,CONFIG.aliens.burstPauseMax); }
+      // move toward current path node
+      if(a.path && a.pathIdx<a.path.length){
+        const [tr,tc]=a.path[a.pathIdx];
+        const txp=cellX(tc), tzp=cellZ(tr);
+        const ddx=txp-ax, ddz=tzp-az; const d=Math.hypot(ddx,ddz);
+        const spd=CONFIG.aliens.speed*a.speedMul*(a.state===AST.CHASE?1.0:0.95);
+        if(d<0.12){ a.pathIdx++; }
+        else {
+          const step=Math.min(d, spd*dt);
+          a.obj.position.x+=ddx/d*step; a.obj.position.z+=ddz/d*step;
+          a.facing=Math.atan2(ddx,ddz);
+          a.stepPhase+=dt*8;
+        }
+      }
+    }
+    a.obj.rotation.y=a.facing;
+    // bob/twitch
+    a.obj.position.y = Math.abs(Math.sin(a.stepPhase))*0.08;
+    const flick = 0.5+0.5*Math.sin(now*0.02 + a.stepPhase);
+    a.eyes.forEach(e=> e.material.color.setRGB(1.0*flick+0.2, 0.35*flick, 0.1));
+  }
+
+  audio.alienProximity(nearest);
+  ines.alienNearest = nearest;
+}
+function rand(a,b){ return a+Math.random()*(b-a); }
+
+/* -------------------------------- INES ----------------------------------- */
+const LINES = {
+  intro: [
+    "Okay, you're awake. Good. I'm Ines — I'm up on the bridge, far end of the ship. I can't get to you, but I can see most of the halls on the cameras.",
+    "There you are. I've got eyes on a few cameras from up here. Stay with me and I'll walk you home.",
+  ],
+  firstmove:[
+    "Head toward the front of the ship. I'll call the turns. When you hit a locked door, press E and I'll pop it — if a camera can see you.",
+  ],
+  dir_straight:[ "Keep going straight.", "Straight ahead, you're fine.", "Hold this line, right through." ],
+  dir_left:[ "Door on your left.", "Take the left.", "Left here — through {area}." ],
+  dir_right:[ "Door on your right.", "Go right.", "Right turn — into {area}." ],
+  dir_back:[ "It's behind you — turn around.", "Wrong way. Turn around.", "Back the other way, toward {area}." ],
+  enterarea:[ "You're in {area} now.", "That's {area}. Keep moving.", "Welcome to {area}. Doesn't get prettier." ],
+  head_through:[ "Head through {area}.", "Cut through {area} and keep going.", "{area} is next — go." ],
+  open_ok:[
+    "Got you on camera. Opening it... there.",
+    "I see you. Door's coming open — go.",
+    "Hang on — unlocking. Okay, go through.",
+  ],
+  open_blind:[
+    "I can't see you — which door are you at? Find a camera and I'll get it.",
+    "You're in a blind spot. I don't know which door you mean. Step where I can see you.",
+    "No camera on you right now. I'm guessing, and I'd rather not guess with doors.",
+  ],
+  cantsee:[
+    "I lost you. Find a camera so I can see you.",
+    "You dropped off my screens. Get back in view.",
+    "You're in the dark for me. Move until a red light comes on.",
+  ],
+  guess:[
+    "I think you want to keep going front-ward — but I can't see you, so don't quote me.",
+    "Best guess, head toward the bow. Find me a camera and I'll be sure.",
+  ],
+  alien_spotted:[
+    "Hold on — I've got movement on a camera. One of them, over in {area}.",
+    "Stop. Camera just caught something in {area}.",
+    "Careful. There's one in {area}. Not looking at you yet.",
+  ],
+  alien_heading:[
+    "It's moving toward you. {area}. Pick up the pace.",
+    "That thing's coming your way from {area}. Go.",
+    "It's heading for you — out of {area}. Don't let it close.",
+  ],
+  alien_chase:[
+    "Run. Now. I'll get the door.",
+    "It's on you — move! I'll try to seal it off.",
+    "Go go go — straight ahead, I'm on the doors.",
+  ],
+  slam:[
+    "Door shut behind you. That bought you a second.",
+    "Sealed it. It's on the wrong side now.",
+    "Got the door — breathe.",
+  ],
+  slam_late:[
+    "Door's— no, too slow, it slipped through. Keep moving!",
+    "I hit the door a beat late. It's still with you. Go!",
+  ],
+  safe:[
+    "Okay. Okay. I think you're clear.",
+    "It wandered off. You can breathe. A little.",
+    "You're doing fine. Better than I'd be doing.",
+  ],
+  idle:[
+    "Still here. Still watching.",
+    "Quiet. I don't love quiet on this ship.",
+    "Take a second if you need it. Not too long.",
+    "Power's holding. For now.",
+  ],
+  where_clear:[
+    "Cameras are clear. Nothing on my screens right now.",
+    "I don't see anything moving. Doesn't mean much in the blind spots.",
+  ],
+  where_alien:[
+    "I see one in {area}. {dir}",
+    "Movement — {area}. {dir}",
+  ],
+  death:[
+    "No— no no. ...Okay. I pulled your last safe position. Try again. I've still got you.",
+    "I lost the feed. I've got you back at the last door. Slower this time.",
+    "...You're alright. Rerouting you from the last checkpoint. Stay with me.",
+  ],
+  bridge:[
+    "Wait — that's you at the door. You actually made it. Come in.",
+    "You're here. I'm opening the bridge. Come in, come in.",
+  ],
+  airlock:[
+    "Airlock. One door at a time — it'll cycle. Hold tight, it's always slow.",
+    "Okay, cycling the lock. You'll be sealed in for a second. Don't love it either.",
+    "Working the airlock. Wait for the far door — don't panic in there.",
+  ],
+};
+
+const ines = {
+  seesPlayer:false, visibleAliens:[], alienNearest:1e9, alienNearestArea:'',
+  dangerAreas:{}, route:null, routeTime:0,
+  lineTimer:0, dirTimer:0, warnTimer:0, idleTimer:14,
+  slammedThisChase:false, lastLineKey:'',
+  init(){ this.say('intro'); setTimeout(()=>this.say('firstmove'), 4200); },
+
+  pick(key){
+    const pool=LINES[key]; return pool[Math.floor(Math.random()*pool.length)];
+  },
+  format(t, ctx){
+    return t.replace('{area}', ctx&&ctx.area?ctx.area:'the next section')
+            .replace('{dir}', ctx&&ctx.dir?ctx.dir:'');
+  },
+  // say a line respecting cooldown. force=true ignores cooldown (player requests / critical)
+  say(key, ctx, force){
+    if(!force && this.lineTimer>0) return false;
+    let t=this.format(this.pick(key), ctx);
+    this.lineTimer=CONFIG.ines.lineCooldown;
+    this.lastLineKey=key;
+    const warn = key.startsWith('alien')||key==='slam_late';
+    radioShow(t, warn, this.alienNearest<CONFIG.ines.interferenceDist);
+    return true;
+  },
+
+  update(dt){
+    this.lineTimer-=dt; this.dirTimer-=dt; this.warnTimer-=dt; this.idleTimer-=dt;
+    this.routeTime-=dt;
+    if(this.routeTime<=0){ this.computeRoute(); this.routeTime=0.6; }
+
+    // alien warnings from camera feeds
+    if(this.warnTimer<=0 && this.visibleAliens.length){
+      const a=this.visibleAliens[0];
+      const ac=worldToCell(a.obj.position.x,a.obj.position.z);
+      const area=areaOf(ac.r,ac.c);
+      this.rememberDanger(area);
+      const heading = a.state===AST.CHASE || a.state===AST.INVESTIGATE;
+      if(a.state===AST.CHASE){ /* handled by onAlienChase */ }
+      else if(heading){ this.say('alien_heading',{area}); this.warnTimer=CONFIG.ines.warnCooldown; }
+      else { this.say('alien_spotted',{area}); this.warnTimer=CONFIG.ines.warnCooldown; }
+    }
+
+    // idle check-ins when calm & visible
+    if(this.idleTimer<=0){
+      this.idleTimer=rand(16,26);
+      if(this.seesPlayer && !this.visibleAliens.length && this.lineTimer<=0) this.say('idle');
+    }
+  },
+
+  rememberDanger(area){ this.dangerAreas[area]=6.0; },
+  decayDanger(dt){ for(const k in this.dangerAreas){ this.dangerAreas[k]-=dt; if(this.dangerAreas[k]<=0) delete this.dangerAreas[k]; } },
+
+  computeRoute(){
+    const pc=worldToCell(player.obj.position.x, player.obj.position.z);
+    let br=9,bc=60; for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++) if(charAt(r,c)==='B'){br=r;bc=c;}
+    const danger=this.dangerAreas;
+    this.route=astar(pc.r,pc.c, br,bc, (r,c)=>{ const a=areaOf(r,c); return danger[a]?6:0; }, true);
+  },
+
+  // find the next "waypoint" along the route (a door, or the goal) and describe it
+  nextWaypoint(){
+    if(!this.route||this.route.length<2) return null;
+    const pc=worldToCell(player.obj.position.x,player.obj.position.z);
+    // find our index on route
+    let idx=0,bd=1e9;
+    this.route.forEach((cell,i)=>{ const d=Math.abs(cell[0]-pc.r)+Math.abs(cell[1]-pc.c); if(d<bd){bd=d;idx=i;} });
+    // scan ahead for a door
+    for(let i=idx+1;i<this.route.length;i++){
+      const [r,c]=this.route[i];
+      if(doorAt(r,c)) return {cell:[r,c], kind:'door', area:areaOf(r,c)};
+    }
+    const last=this.route[this.route.length-1];
+    return {cell:last, kind:'goal', area:'the Bridge'};
+  },
+
+  relDir(cell){
+    const fwd=new THREE.Vector3(); camera.getWorldDirection(fwd); fwd.y=0; fwd.normalize();
+    const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion); right.y=0; right.normalize();
+    const to=new THREE.Vector3(cellX(cell[1])-player.obj.position.x, 0, cellZ(cell[0])-player.obj.position.z);
+    if(to.length()<0.3) return 'straight';
+    to.normalize();
+    const df=to.dot(fwd), dr=to.dot(right);
+    if(df>0.6) return 'straight';
+    if(df<-0.45) return 'back';
+    return dr>0?'right':'left';
+  },
+
+  giveDirection(force){
+    if(!this.seesPlayer){
+      // guessing in a blind spot
+      if(force) this.say('guess', null, true);
+      else this.say('cantsee');
+      return;
+    }
+    const wp=this.nextWaypoint();
+    if(!wp){ this.say('dir_straight',null,force); return; }
+    const d=this.relDir(wp.cell);
+    const area=wp.area;
+    const map={straight:'dir_straight',left:'dir_left',right:'dir_right',back:'dir_back'};
+    this.say(map[d], {area}, force);
+  },
+
+  onEnterArea(area, cell){
+    if(area==='the Bridge') return;
+    if(this.lineTimer<=0 && this.seesPlayer){ this.say('enterarea',{area}); }
+  },
+  onJunction(cell){
+    if(this.dirTimer<=0){ this.dirTimer=CONFIG.ines.directionCooldown; this.giveDirection(false); }
+  },
+  onPassDoor(d){
+    this.slammedThisChase=false;
+  },
+  onAlienChase(a){
+    this.say('alien_chase', null, true);
+    // maybe slam a door behind the player
+    if(!this.slammedThisChase) this.trySlamBehind();
+  },
+
+  // close the nearest door the player has just gone through (needs a camera to see it)
+  trySlamBehind(){
+    const d=player.lastDoorPassed;
+    if(!d || d.isAirlock) return;
+    // Ines needs a camera that can see the door or the player to act
+    const seen = this.seesPlayer || cams.some(c=>camSees(c, d.x, d.z));
+    if(!seen) return;
+    this.slammedThisChase=true;
+    if(Math.random()<CONFIG.doors.slamChance){
+      const late = Math.random()<CONFIG.doors.slamLateChance;
+      setTimeout(()=>{
+        beginClose(d);
+        this.say(late?'slam_late':'slam', null, true);
+      }, late? 900 : 350);
+    }
+  },
+
+  // ---- player callouts (number keys) ----
+  callWhereGo(){ this.giveDirection(true); },
+  callOpenDoor(){
+    const d=nearbyDoor();
+    if(!d){ this.say('open_blind',null,true); return; }
+    requestDoor(d, true);
+  },
+  callWhereIsIt(){
+    if(this.visibleAliens.length){
+      const a=this.visibleAliens[0]; const ac=worldToCell(a.obj.position.x,a.obj.position.z);
+      const area=areaOf(ac.r,ac.c);
+      const d=this.relDir([ac.r,ac.c]);
+      const dirtxt = d==='straight'?'Dead ahead of you.': d==='back'?'Behind you.': d==='left'?'To your left.':'To your right.';
+      this.rememberDanger(area);
+      this.say('where_alien',{area,dir:dirtxt},true);
+    } else {
+      this.say('where_clear',null,true);
+    }
+  },
+  callCloseDoor(){
+    const d=player.lastDoorPassed;
+    if(!d){ this.say('open_blind',null,true); return; }
+    const seen=this.seesPlayer || cams.some(c=>camSees(c,d.x,d.z));
+    if(!seen){ this.say('cantsee',null,true); return; }
+    beginClose(d); this.say('slam',null,true);
+  },
+
+  onDeath(){ this.say('death',null,true); this.dangerAreas={}; },
+  onWin(){ this.say('bridge',null,true); },
+};
+
+function nearbyDoor(){
+  const p=player.obj.position; let best=null,bd=TILE*1.4;
+  for(const d of doors){ const dist=Math.hypot(d.x-p.x,d.z-p.z); if(dist<bd){bd=dist;best=d;} }
+  return best;
+}
+// player requests a door open via E or callout
+function requestDoor(d, viaCallout){
+  if(d.isOpen||d.state==='opening') return;
+  if(d.isAirlock){ cycleAirlock(d); return; }
+  // Ines must be able to see the player (core rule)
+  if(ines.seesPlayer || cams.some(c=>camSees(c,d.x,d.z))){
+    const delay=rand(CONFIG.doors.openDelayMin,CONFIG.doors.openDelayMax);
+    ines.say('open_ok',null,true);
+    setTimeout(()=>beginOpen(d), delay*1000);
+  } else {
+    ines.say('open_blind',null,true);
+  }
+}
+// airlocks: find the partner door (adjacent L in same corridor), cycle one open at a time
+function airlockPartner(d){
+  for(const o of doors){ if(o!==d && o.isAirlock && o.r===d.r && Math.abs(o.c-d.c)<=3) return o; }
+  return null;
+}
+// Airlocks are MECHANICAL — the player works the panel, not Ines. The chamber is a
+// blind spot by design, so these must never be camera-gated or the player gets trapped.
+// Operating a door seals its partner first; only one leaf is ever open, and during the
+// cycle both are shut for a beat, so you're briefly stuck in the chamber.
+function cycleAirlock(d){
+  if(d.state==='open'||d.state==='opening') return;
+  const p=airlockPartner(d);
+  if(p) beginClose(p);
+  ines.say('airlock',null,true);
+  setTimeout(()=>beginOpen(d), CONFIG.doors.airlockCycle*1000);
+}
+
+/* -------------------------------- AUDIO ---------------------------------- */
+const audio = {
+  ctx:null, master:null, noiseBuf:null, started:false,
+  humGain:null, alienGain:null, breathGain:null, clickTimer:0, staticGain:null,
+  init(){
+    if(this.started) return;
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC) return;
+    this.ctx=new AC();
+    this.master=this.ctx.createGain(); this.master.gain.value=0.6; this.master.connect(this.ctx.destination);
+    // noise buffer
+    const n=this.ctx.sampleRate*2; const buf=this.ctx.createBuffer(1,n,this.ctx.sampleRate);
+    const d=buf.getChannelData(0); for(let i=0;i<n;i++) d[i]=Math.random()*2-1; this.noiseBuf=buf;
+    this.started=true;
+    this.startAmbient();
+  },
+  noise(loop=true){ const s=this.ctx.createBufferSource(); s.buffer=this.noiseBuf; s.loop=loop; return s; },
+  startAmbient(){
+    const c=this.ctx;
+    // deep ship hum
+    [46,52.5,33].forEach((f,i)=>{
+      const o=c.createOscillator(); o.type='sine'; o.frequency.value=f;
+      const g=c.createGain(); g.gain.value=0.05-(i*0.008);
+      o.connect(g); g.connect(this.master); o.start();
+    });
+    // rumble from filtered noise
+    const nz=this.noise(); const lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=120;
+    this.humGain=c.createGain(); this.humGain.gain.value=0.09;
+    nz.connect(lp); lp.connect(this.humGain); this.humGain.connect(this.master); nz.start();
+    // light buzz
+    const o=c.createOscillator(); o.type='sawtooth'; o.frequency.value=120;
+    const bg=c.createGain(); bg.gain.value=0.004; const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2400;
+    o.connect(bp); bp.connect(bg); bg.connect(this.master); o.start();
+    // alien proximity bus (breathing + clicks), silent until near
+    this.alienGain=c.createGain(); this.alienGain.gain.value=0; this.alienGain.connect(this.master);
+    const br=this.noise(); const blp=c.createBiquadFilter(); blp.type='lowpass'; blp.frequency.value=600;
+    this.breathLFO=c.createOscillator(); this.breathLFO.frequency.value=0.5;
+    const brAmt=c.createGain(); brAmt.gain.value=0.5; this.breathLFO.connect(brAmt);
+    this.breathGain=c.createGain(); this.breathGain.gain.value=0.5; brAmt.connect(this.breathGain.gain);
+    br.connect(blp); blp.connect(this.breathGain); this.breathGain.connect(this.alienGain);
+    br.start(); this.breathLFO.start();
+    // sustained interference static bus
+    this.staticGain=c.createGain(); this.staticGain.gain.value=0; this.staticGain.connect(this.master);
+    const sn=this.noise(); const shp=c.createBiquadFilter(); shp.type='highpass'; shp.frequency.value=1500;
+    sn.connect(shp); shp.connect(this.staticGain); sn.start();
+  },
+  footstep(sprint,crouch){
+    if(!this.ctx) return; const c=this.ctx; const t=c.currentTime;
+    const s=this.noise(false); const bp=c.createBiquadFilter(); bp.type='lowpass'; bp.frequency.value=sprint?900:600;
+    const g=c.createGain(); const vol=crouch?0.03:sprint?0.16:0.08;
+    g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.12);
+    s.connect(bp); bp.connect(g); g.connect(this.master); s.start(t); s.stop(t+0.14);
+  },
+  doorHiss(){
+    if(!this.ctx) return; const c=this.ctx; const t=c.currentTime;
+    const s=this.noise(false); const bp=c.createBiquadFilter(); bp.type='bandpass';
+    bp.frequency.setValueAtTime(400,t); bp.frequency.exponentialRampToValueAtTime(1800,t+0.5);
+    const g=c.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.09,t+0.08);
+    g.gain.exponentialRampToValueAtTime(0.001,t+0.7);
+    s.connect(bp); bp.connect(g); g.connect(this.master); s.start(t); s.stop(t+0.75);
+  },
+  staticBurst(level=0.12){
+    if(!this.ctx) return; const c=this.ctx; const t=c.currentTime;
+    const s=this.noise(false); const hp=c.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=1200;
+    const g=c.createGain(); g.gain.setValueAtTime(level,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.22);
+    s.connect(hp); hp.connect(g); g.connect(this.master); s.start(t); s.stop(t+0.24);
+  },
+  sting(){
+    if(!this.ctx) return; const c=this.ctx; const t=c.currentTime;
+    const o=c.createOscillator(); o.type='sawtooth'; o.frequency.setValueAtTime(90,t);
+    o.frequency.exponentialRampToValueAtTime(680,t+0.5);
+    const g=c.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.14,t+0.05);
+    g.gain.exponentialRampToValueAtTime(0.001,t+0.7);
+    const bp=c.createBiquadFilter(); bp.type='lowpass'; bp.frequency.value=1200;
+    o.connect(bp); bp.connect(g); g.connect(this.master); o.start(t); o.stop(t+0.72);
+    this.staticBurst(0.2);
+  },
+  alienProximity(dist){
+    if(!this.ctx) return;
+    const near = Math.max(0, 1 - dist/14);   // 0 far .. 1 touching
+    const g = near*near*0.5;
+    this.alienGain.gain.setTargetAtTime(g, this.ctx.currentTime, 0.2);
+    this.breathLFO.frequency.setTargetAtTime(0.4+near*1.6, this.ctx.currentTime, 0.3);
+    // clicks
+    this.clickTimer-=1/60;
+    if(near>0.15 && this.clickTimer<=0){
+      this.clickTimer=rand(0.12,0.5)*(1.2-near);
+      const c=this.ctx,t=c.currentTime;
+      const o=c.createOscillator(); o.type='square'; o.frequency.value=rand(1200,3600);
+      const gg=c.createGain(); gg.gain.setValueAtTime(near*0.06,t); gg.gain.exponentialRampToValueAtTime(0.001,t+0.04);
+      o.connect(gg); gg.connect(this.master); o.start(t); o.stop(t+0.05);
+    }
+    // interference static scaling
+    if(this.staticGain){
+      const s = dist<CONFIG.ines.interferenceDist ? (1-dist/CONFIG.ines.interferenceDist)*0.12 : 0;
+      this.staticGain.gain.setTargetAtTime(s, this.ctx.currentTime, 0.25);
+    }
+  },
+};
+
+/* --------------------------------- UI ------------------------------------ */
+const el = (id)=>document.getElementById(id);
+const radioBox=el('radio'), radioText=el('radiotext'), promptEl=el('prompt');
+let ttsOn=false, mouseSensMul=1.0, radioHideT=0;
+let scrambleTarget='', scrambleTimer=0;
+
+function radioShow(text, warn, interference){
+  audio.staticBurst(interference?0.22:0.1);
+  radioBox.classList.add('on'); radioBox.classList.toggle('warn', !!warn);
+  if(interference){
+    // break the line up with static & scrambled letters
+    text = scramble(text);
+  }
+  radioText.textContent=text;
+  radioHideT=5.0;
+  if(ttsOn && !interference) speak(stripScramble(text));
+}
+function scramble(t){
+  const noise='▒░#%@*/\\=—';
+  let out=''; for(const ch of t){
+    if(ch===' '){ out+=' '; continue; }
+    const r=Math.random();
+    if(r<0.18) out+=noise[Math.floor(Math.random()*noise.length)];
+    else if(r<0.26) out+='';
+    else out+=ch;
+  }
+  // occasionally drop whole chunks
+  return out.replace(/(\S{4,})/g, m=> Math.random()<0.3? '—'+m.slice(2):m);
+}
+function stripScramble(t){ return t; }
+function speak(t){
+  if(!('speechSynthesis' in window)) return;
+  try{ const u=new SpeechSynthesisUtterance(t); u.rate=1.02; u.pitch=1.0;
+    const vs=speechSynthesis.getVoices(); const f=vs.find(v=>/female|zira|samantha|google uk english female/i.test(v.name));
+    if(f) u.voice=f; speechSynthesis.cancel(); speechSynthesis.speak(u);
+  }catch(e){}
+}
+function updatePrompt(){
+  if(state!=='play'){ promptEl.classList.remove('on'); return; }
+  const d=nearbyDoor();
+  if(d && !d.isOpen){ promptEl.textContent = d.isAirlock?'[E] cycle airlock':'[E] radio Ines — open door'; promptEl.classList.add('on'); }
+  else if(d && d.isOpen && d.isAirlock){ promptEl.textContent='[E] cycle airlock'; promptEl.classList.add('on'); }
+  else promptEl.classList.remove('on');
+}
+
+/* ------------------------------ GAME STATE ------------------------------- */
+let state='menu';      // menu | play | pause | dead | win
+let now=0, last=performance.now(), fps=0, fpsAcc=0, fpsFrames=0;
+const keys={};
+
+function startGame(){
+  el('start').classList.add('hidden');
+  audio.init();
+  requestLock();
+  state='play';
+  ines.init();
+}
+function requestLock(){ viewCanvas.requestPointerLock && viewCanvas.requestPointerLock(); }
+
+function killPlayer(a){
+  if(player.dead) return;
+  player.dead=true; state='dead';
+  audio.staticBurst(0.3); audio.sting();
+  document.exitPointerLock && document.exitPointerLock();
+  el('death').classList.remove('hidden');
+  ines.onDeath();
+  // reset eyes bright
+  setTimeout(respawn, 2300);
+}
+function respawn(){
+  player.dead=false;
+  player.obj.position.set(player.checkpoint.x, player.eye, player.checkpoint.z);
+  player.yaw=player.checkpoint.yaw!==undefined?player.checkpoint.yaw:Math.PI/2; player.pitch=0;
+  player.vx=player.vz=0;
+  // reset aliens to spawns, drop aggro
+  aliens.forEach(a=>{ a.obj.position.set(cellX(a.spawn[1]),0,cellZ(a.spawn[0])); a.state=AST.WANDER; a.path=null; a._wasChasing=false; a.lastKnown=null; });
+  el('death').classList.add('hidden');
+  state='play'; requestLock();
+}
+function winGame(){
+  if(player.won) return;
+  player.won=true; state='win';
+  document.exitPointerLock && document.exitPointerLock();
+  // place Ines figure at the bridge
+  placeInesFigure();
+  ines.onWin();
+  setTimeout(()=>el('win').classList.remove('hidden'), 900);
+}
+function placeInesFigure(){
+  let br=9,bc=61; for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++) if(charAt(r,c)==='B'){br=r;bc=c;}
+  const g=new THREE.Group();
+  const mat=new THREE.MeshPhongMaterial({color:0x6a7f86,flatShading:true});
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.34,1.3,7),mat); body.position.y=0.65;
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.22,7,6),mat); head.position.y=1.5;
+  g.add(body); g.add(head);
+  g.position.set(cellX(bc)+1.0,0,cellZ(br));
+  const L=new THREE.PointLight(0x9fd0d6,1.2,8,2); L.position.set(cellX(bc)+1,1.6,cellZ(br)); scene.add(L);
+  scene.add(g);
+}
+function restartAll(){ location.reload(); }
+
+/* flicker / light animation */
+function animateLights(dt){
+  for(const L of flickerLights){
+    const u=L.userData; u.flick+=dt;
+    let f = 0.75 + 0.25*Math.sin(u.flick*3.3);
+    if(Math.random()<0.012) f*=0.2;          // occasional dropout
+    L.intensity = 0.9*f;
+    if(u.panel) u.panel.material.color.setRGB(0.74*f+0.1, 0.82*f+0.1, 0.86*f+0.1);
+  }
+  for(const L of redLights){
+    const u=L.userData; u.phase+=dt;
+    const f=0.5+0.5*Math.sin(u.phase*2.2);
+    L.intensity=0.25+0.45*f;
+    if(u.bulb) u.bulb.material.color.setRGB(0.7+0.3*f,0.12*f,0.07*f);
+  }
+}
+
+/* ------------------------------ DEBUG OVERLAY ---------------------------- */
+const dbgCanvas=el('dbg'), dbgCtx=dbgCanvas.getContext('2d');
+let debugOn=false;
+dbgCanvas.width=COLS*4; dbgCanvas.height=ROWS*4;
+function drawDebug(){
+  const s=4, g=dbgCtx; g.clearRect(0,0,dbgCanvas.width,dbgCanvas.height);
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const ch=charAt(r,c);
+    g.fillStyle = (ch==='#'||ch==='C')?'#20303c':(SOLID_PROPS.has(ch)?'#3a3020':'#0a1016');
+    const d=doorAt(r,c); if(d) g.fillStyle=d.isOpen?'#1a5':'#833';
+    g.fillRect(c*s,r*s,s,s);
+  }
+  // camera cones
+  g.fillStyle='rgba(120,200,255,.18)';
+  for(const cam of cams){
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+      if(camSees(cam,cellX(c),cellZ(r))){ g.fillRect(c*s,r*s,s,s); }
+    }
+    g.fillStyle=cam.seesPlayer?'#f40':'#48f'; g.fillRect(cam.c*s,cam.r*s,s,s);
+    g.fillStyle='rgba(120,200,255,.18)';
+  }
+  // route
+  if(ines.route){ g.fillStyle='rgba(255,210,90,.6)'; for(const [r,c] of ines.route) g.fillRect(c*s+1,r*s+1,s-2,s-2); }
+  // aliens
+  for(const a of aliens){ const ac=worldToCell(a.obj.position.x,a.obj.position.z);
+    g.fillStyle = a.state===AST.CHASE?'#f22':a.state===AST.SEARCH?'#f82':a.state===AST.INVESTIGATE?'#fd2':'#a6f';
+    g.fillRect(ac.c*s-1,ac.r*s-1,s+2,s+2);
+  }
+  // player
+  const pc=worldToCell(player.obj.position.x,player.obj.position.z);
+  g.fillStyle='#6ff'; g.fillRect(pc.c*s,pc.r*s,s,s);
+
+  el('dbgtxt').textContent =
+    `FPS ${fps|0}\nstate ${state}\nines.sees ${ines.seesPlayer}\nvisAliens ${ines.visibleAliens.length}\n`+
+    aliens.map((a,i)=>`A${i} ${a.state} d=${(ines.alienNearest).toFixed(1)}`).join('\n')+
+    `\ndanger ${Object.keys(ines.dangerAreas).join(',')||'-'}`;
+}
+
+/* ------------------------------- INPUT ----------------------------------- */
+document.addEventListener('keydown', e=>{
+  const k=e.key.toLowerCase();
+  keys[k]=true;
+  if(k==='escape'){ togglePause(); }
+  if(state!=='play') { return; }
+  if(k==='f'){ player.flashlight=!player.flashlight; el('flashicon').classList.toggle('on',player.flashlight); }
+  if(k==='c'){ player.crouch=!player.crouch; el('crouchicon').textContent=player.crouch?'CROUCH':''; }
+  if(k==='e'){ const d=nearbyDoor(); if(d) requestDoor(d,false); }
+  if(k==='v'){ ttsOn=!ttsOn; el('ttsTog').textContent=ttsOn?'ON':'OFF'; }
+  if(k==='`'){ debugOn=!debugOn; dbgCanvas.classList.toggle('on',debugOn); el('dbgtxt').classList.toggle('on',debugOn); }
+  if(k==='1'){ ines.callWhereGo(); }
+  if(k==='2'){ ines.callOpenDoor(); }
+  if(k==='3'){ ines.callWhereIsIt(); }
+  if(k==='4'){ ines.callCloseDoor(); }
+});
+document.addEventListener('keyup', e=>{ keys[e.key.toLowerCase()]=false; });
+document.addEventListener('mousemove', e=>{
+  if(document.pointerLockElement!==viewCanvas || state!=='play') return;
+  player.yaw   -= e.movementX*CONFIG.player.mouseSens*mouseSensMul;
+  player.pitch -= e.movementY*CONFIG.player.mouseSens*mouseSensMul;
+  player.pitch = Math.max(-1.3, Math.min(1.3, player.pitch));
+});
+viewCanvas.addEventListener('click', ()=>{ if(state==='play' && document.pointerLockElement!==viewCanvas) requestLock(); });
+document.addEventListener('pointerlockchange', ()=>{
+  if(document.pointerLockElement!==viewCanvas && state==='play'){ /* soft pause */ }
+});
+
+function togglePause(){
+  if(state==='play'){ state='pause'; el('pause').classList.remove('hidden'); document.exitPointerLock&&document.exitPointerLock(); }
+  else if(state==='pause'){ el('pause').classList.add('hidden'); state='play'; requestLock(); }
+}
+
+/* UI buttons */
+el('startbtn').onclick=startGame;
+el('resumeBtn').onclick=togglePause;
+el('winbtn').onclick=restartAll;
+el('resSel').onchange=e=>{ setResolution(parseInt(e.target.value)); onResize(); };
+el('ttsTog').onclick=()=>{ ttsOn=!ttsOn; el('ttsTog').textContent=ttsOn?'ON':'OFF'; };
+el('sensUp').onclick=()=>{ mouseSensMul=Math.min(3,mouseSensMul+0.2); el('sensVal').textContent=mouseSensMul.toFixed(1); };
+el('sensDn').onclick=()=>{ mouseSensMul=Math.max(0.2,mouseSensMul-0.2); el('sensVal').textContent=mouseSensMul.toFixed(1); };
+
+/* ---------------------------- DEATH STATIC ------------------------------- */
+const dn=el('deathnoise'), dnx=dn.getContext('2d');
+function deathNoiseResize(){ dn.width=Math.floor(window.innerWidth/4); dn.height=Math.floor(window.innerHeight/4); }
+function drawDeathNoise(){
+  if(el('death').classList.contains('hidden')) return;
+  const w=dn.width,h=dn.height; const img=dnx.createImageData(w,h); const d=img.data;
+  for(let i=0;i<d.length;i+=4){ const v=Math.random()*90; d[i]=v*0.6; d[i+1]=v*0.7; d[i+2]=v*0.8; d[i+3]=255; }
+  dnx.putImageData(img,0,0);
+}
+
+/* ------------------------------- MAIN LOOP ------------------------------- */
+function loop(t){
+  requestAnimationFrame(loop);
+  let dt=(t-last)/1000; last=t; if(dt>0.05)dt=0.05; now=t;
+  fpsAcc+=dt; fpsFrames++; if(fpsAcc>=0.5){ fps=fpsFrames/fpsAcc; fpsAcc=0; fpsFrames=0; }
+
+  if(state==='play'){
+    updatePlayer(dt);
+    updateDoors(dt);
+    updateCameras();
+    updateAliens(dt);
+    ines.update(dt);
+    ines.decayDanger(dt);
+    updatePrompt();
+  } else {
+    updateDoors(dt);
+  }
+  animateLights(dt);
+
+  // radio auto-hide
+  if(radioHideT>0){ radioHideT-=dt; if(radioHideT<=0) radioBox.classList.remove('on'); }
+
+  // render scene -> low-res target, then dither pass -> screen
+  renderer.setRenderTarget(rt);
+  renderer.clear();
+  renderer.render(scene, camera);
+  renderer.setRenderTarget(null);
+  renderer.render(postScene, postCam);
+
+  if(debugOn) drawDebug();
+  drawDeathNoise();
+}
+
+/* ------------------------------- BOOT ------------------------------------ */
+function boot(){
+  buildLevel();
+  buildDoors();
+  buildCameras();
+  setupPlayer();
+  buildAliens();
+  setResolution(CONFIG.render.active);
+  onResize();
+  // reflect initial flashlight state in HUD
+  el('flashicon').classList.toggle('on', player.flashlight);
+  // prime TTS voices
+  if('speechSynthesis' in window){ speechSynthesis.getVoices(); }
+  last=performance.now();
+  requestAnimationFrame(loop);
+}
+boot();
+</script>
+</body>
+</html>
