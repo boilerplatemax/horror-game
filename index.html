@@ -655,6 +655,7 @@ function buildLevel(){
   buildStructure(floors);
   buildLights();
   buildClutter();
+  buildSetDressing();
   buildMessScreen();
   buildBridgeCRTs();
   buildSigns();
@@ -868,16 +869,6 @@ function buildClutter(){
       const g=new THREE.Mesh(new THREE.BoxGeometry(TILE*0.4,1.3,0.06), new THREE.MeshBasicMaterial({color:em(0x2fa6c8,0.8)})); g.position.set(x,fy+1.1,z+TILE*0.33); scene.add(g); }
     else if(ch==='T'){ box(TILE*0.9,0.1,TILE*0.6,0x4a4034,x,fy+0.9,z); box(0.1,0.9,0.1,0x2a241c,x-TILE*0.33,fy+0.45,z); box(0.1,0.9,0.1,0x2a241c,x+TILE*0.33,fy+0.45,z); }
   }
-  // Cryo: posters near the start
-  addPoster(5,1,0,1,TEX.posterCorp); addPoster(3,7,0,-1,TEX.posterSafety);
-  // Crew Quarters clutter: lockers, mugs, a board game on a table
-  addLockers(13,35); addLockers(14,38);
-  // Vending machine in Mess / corridor
-  addVending(10,38);
-  // Mess tables with a half-finished board game
-  addBoardgame(43,15>ROWS?10:16);
-  // a few corporate posters along corridors
-  addPoster(8,30,0,1,TEX.posterSafety); addPoster(12,55,0,-1,TEX.posterCorp);
 }
 function addPoster(r,c,dz,face,tex){ if(!isWallCell(r+ (face>0?-1:1), c) && false){} // best-effort: mount on nearest wall
   // place a poster plane on the wall above the spine at (r,c) facing into the room
@@ -892,7 +883,81 @@ function addLockers(r,c){ if(isWallCell(r,c)) return; const fy=floorY(r,c);
 function addVending(r,c){ if(isWallCell(r,c)) return; const fy=floorY(r,c); const g=new THREE.Group();
   g.add(new THREE.Mesh(new THREE.BoxGeometry(0.9,2.0,0.7), new THREE.MeshLambertMaterial({color:0xb03a2e})));
   const front=new THREE.Mesh(new THREE.PlaneGeometry(0.6,1.2), new THREE.MeshBasicMaterial({color:em(0xffcf6a,0.9)})); front.position.set(0,0.2,0.36); g.add(front);
-  g.position.set(cellX(c), fy+1.0, cellZ(r)); scene.add(g); }
+  g.position.set(cellX(c), fy+1.0, cellZ(r)); scene.add(g); return g; }
+
+/* ----------------------- SET DRESSING / PROPS ---------------------------- */
+const LANDMARKS=[], holos=[], propCounts={};
+let propSrc={comms:null, vending:null};
+function landmark(name,r,c){ LANDMARKS.push({name,r,c,x:cellX(c),z:cellZ(r)}); }
+function nearestLandmark(maxTiles){ const pc=worldToCell(player.obj.position.x,player.obj.position.z); let best=null,bd=maxTiles;
+  for(const l of LANDMARKS){ const d=Math.abs(l.r-pc.r)+Math.abs(l.c-pc.c); if(d<bd){bd=d;best=l;} } return best; }
+// wall-scrawl messages (rough pixel handwriting)
+function wallMsgTex(txt){ const c=cvs(96,32),g=c.getContext('2d'); g.clearRect(0,0,96,32);
+  g.fillStyle='rgba(180,40,30,0.85)'; g.font='bold 15px VT323,monospace'; g.textAlign='center';
+  for(const [dx,dy] of [[-1,0],[1,0],[0,1]]) g.fillText(txt,48+dx*0.6,20+dy*0.6);  // rough double-stroke
+  g.fillStyle='rgba(200,60,44,0.95)'; g.fillText(txt,48,20);
+  const t=new THREE.CanvasTexture(c); t.magFilter=t.minFilter=THREE.NearestFilter; t.generateMipmaps=false; return t; }
+function addWallMsg(r,c,txt){ if(r<0||r>=ROWS) return; let wr=r; while(wr>0&&!isWallCell(wr,c))wr--; const fy=floorY(r,c);
+  const pl=new THREE.Mesh(new THREE.PlaneGeometry(2.0,0.7), new THREE.MeshBasicMaterial({map:wallMsgTex(txt),transparent:true,depthWrite:false}));
+  pl.position.set(cellX(c), fy+1.5, cellZ(wr)+TILE*0.47); scene.add(pl); }
+// boards (canvas textures)
+function signBoard(lines, scratchFace){ const c=cvs(96,64),g=c.getContext('2d'); g.fillStyle='#1a2018'; g.fillRect(0,0,96,64); g.strokeStyle='#5a7f5a'; g.strokeRect(2,2,92,60);
+  g.fillStyle='#9fd8a0'; g.font='10px VT323,monospace'; g.textAlign='center'; lines.forEach((l,i)=>g.fillText(l,48,16+i*14));
+  if(scratchFace){ mascotFace(g,24,40,10); g.strokeStyle='#c22'; g.lineWidth=2; g.beginPath(); g.moveTo(14,30);g.lineTo(34,50);g.moveTo(34,30);g.lineTo(14,50);g.stroke(); mascotFace(g,72,40,10); }
+  poster(g,96,64,5); const t=new THREE.CanvasTexture(c); t.magFilter=t.minFilter=THREE.NearestFilter; t.generateMipmaps=false; return t; }
+function addBoard(r,c,tex,w,h){ let wr=r; while(wr>0&&!isWallCell(wr,c))wr--; const fy=floorY(r,c);
+  const pl=new THREE.Mesh(new THREE.PlaneGeometry(w||1.6,h||1.1), new THREE.MeshBasicMaterial({map:tex})); pl.position.set(cellX(c),fy+1.7,cellZ(wr)+TILE*0.46); scene.add(pl); return pl; }
+// reusable prop bits (all meshes are non-colliding — nav is grid-cell based)
+function suitFigure(x,y,z,slumped,col){ const g=new THREE.Group(); const m=new THREE.MeshLambertMaterial({color:col||0xcfd0c8});
+  g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.26,0.3,1.0,7),m));
+  const h=new THREE.Mesh(new THREE.SphereGeometry(0.22,7,6), new THREE.MeshLambertMaterial({color:0x2a3034})); h.position.y=0.7; g.add(h);
+  const vis=new THREE.Mesh(new THREE.SphereGeometry(0.16,7,6), new THREE.MeshBasicMaterial({color:em(0x203040,0.6)})); vis.position.set(0,0.7,0.14); g.add(vis);
+  g.position.set(x,y+0.5,z); if(slumped){ g.rotation.x=0.9; g.position.y=y+0.35; } return (scene.add(g),g); }
+
+function sceneFor(name, r, c){ const fy=floorY(r,c), x=cellX(c), z=cellZ(r); const o=(dc,dr)=>[x+dc,z+dr];
+  switch(name){
+    case 'Cryo Bay':{ // running pod with soft light + punch clock
+      const pod=box(0.8,1.9,0.8,0x24404a, x-1.4, fy+0.95, z); const glow=new THREE.Mesh(new THREE.PlaneGeometry(0.4,1.2),new THREE.MeshBasicMaterial({color:em(0x6fd0ff,0.9)})); glow.position.set(x-1.4,fy+1.0,z+0.42); scene.add(glow);
+      box(0.4,0.6,0.15,0x2a2a22, x+1.6, fy+1.2, z); const pc=new THREE.Mesh(new THREE.PlaneGeometry(0.3,0.4),new THREE.MeshBasicMaterial({color:em(0xffcf6a,0.6)})); pc.position.set(x+1.6,fy+1.2,z+0.09); scene.add(pc); break; } // punch clock
+    case 'Med Bay':{ const g=box(1.6,0.5,0.7,0x3a4650, x, fy+0.5, z); g.rotation.z=0.5; // overturned gurney
+      box(0.08,1.4,0.08,0x8a9088, x+0.9,fy+0.7,z); box(0.3,0.2,0.1,0xcfd8d0,x+0.9,fy+1.4,z); // IV stand+bag
+      addWallMsg(r,c,'WE WAITED'); break; }
+    case 'Crew Quarters':{ box(0.9,0.2,0.5,0x5a4a3a, x-1.2,fy+0.15,z); // bedroll
+      box(0.25,0.3,0.2,0x8a5a6a, x+1.2,fy+0.5,z); break; } // plush toy
+    case 'Mess Hall':{ landmark('DAYS WITHOUT INCIDENT board',r,c); addBoard(r,c,signBoard(['DAYS WITHOUT','INCIDENT','0'],false),1.4,1.0);
+      addVending(r, c+2); propSrc.vending={x:cellX(c+2),z}; break; }
+    case 'Engineering':{ box(0.6,0.3,0.4,0x2a2a22,x,fy+0.5,z); const hp=new THREE.Mesh(new THREE.PlaneGeometry(0.3,0.3),new THREE.MeshBasicMaterial({color:em(0xff5a20,0.8)})); hp.rotation.x=-Math.PI/2; hp.position.set(x,fy+0.66,z); scene.add(hp); // hot plate
+      box(1.2,0.1,0.6,0x3a3328,x+1.2,fy+0.9,z); break; } // workbench
+    case 'Hydroponics':{ for(let i=0;i<3;i++){ const pot=box(0.3,0.3,0.3,0x3a2e22,x-1+i,fy+0.15,z); const plant=new THREE.Mesh(new THREE.ConeGeometry(0.2,0.5,5),new THREE.MeshLambertMaterial({color:i===1?0x4a7a2a:0x5a4a2a})); plant.position.set(x-1+i,fy+0.5,z); scene.add(plant);} break; }
+    case 'Comms':{ box(1.0,0.6,0.5,0x2a3038,x,fy+0.5,z); const dial=new THREE.Mesh(new THREE.PlaneGeometry(0.4,0.3),new THREE.MeshBasicMaterial({color:em(0x6fe0a0,0.8)})); dial.position.set(x,fy+0.85,z+0.26); scene.add(dial);
+      const beac=new THREE.Mesh(new THREE.SphereGeometry(0.08,6,5),new THREE.MeshBasicMaterial({color:em(0xff3020,1.2)})); beac.position.set(x+0.8,fy+1.0,z); scene.add(beac); holos.push({mesh:beac,beacon:true,phase:0});
+      propSrc.comms={x,z}; break; }
+    case 'Observation Deck':{ landmark('slumped spacesuit',r,c); suitFigure(x, fy, z+1.2, true); break; }
+    case 'Airlock Bay':{ landmark('EVA rack',r,c); for(let i=0;i<3;i++){ if(i===1) continue; suitFigure(x-1+i*1.0, fy, z-1.0, false, 0xd8d0b0); } break; } // one suit missing
+    case 'Bridge':{ landmark('nav console',r,c); box(1.4,0.9,0.6,0x2a3038,x,fy+0.5,z); const chart=new THREE.Mesh(new THREE.PlaneGeometry(0.8,0.6),new THREE.MeshBasicMaterial({color:em(0x6fa0e0,0.7)})); chart.position.set(x,fy+1.5,z-TILE*0.4); scene.add(chart); break; }
+    case 'Server Room':{ for(let i=0;i<4;i++){ box(0.4,1.6,0.5,0x20262a,x-1.2+i*0.7,fy+0.8,z); const scr=new THREE.Mesh(new THREE.PlaneGeometry(0.3,0.4),new THREE.MeshBasicMaterial({color:em(0x30ff60,0.7)})); scr.position.set(x-1.2+i*0.7,fy+1.3,z+0.27); scene.add(scr); animScreens.push(scr);} break; }
+    case 'Storage Lockers':{ addLockers(r,c); box(0.4,0.5,0.4,0x3a5a7a,x+1.2,fy+0.25,z); break; } // water jug
+    case 'Water Reclamation':{ box(1.2,1.2,1.2,0x2a4042,x,fy+0.6,z); break; }
+    case 'Cargo Hold':{ landmark('crate barricade',r,c); break; } // crates already from map 'H'
+    case 'Maintenance Tunnels':{ box(0.8,0.3,0.8,0x3a2e2a,x,fy+0.2,z); addWallMsg(r,c,'IT FOLLOWS SOUND'); break; } // nest
+  }
+}
+function buildSetDressing(){
+  for(let i=0;i<AREA_NAMES.length;i++){ const nm=AREA_NAMES[i]; const [r,c]=ROOM_CENTERS[i]; if(isWallCell(r,c)) continue; sceneFor(nm,r,c); propCounts[nm]=(propCounts[nm]||0)+1; }
+  // corporate leftovers + landmarks in a few generic rooms / corridors
+  const corr=roomsWith(n=>n==='Corridor'||n==='Junction');
+  if(corr[0]){ landmark('single boot',corr[0].r,corr[0].c); box(0.2,0.15,0.35,0x2a1a12,cellX(corr[0].c),floorY(corr[0].r,corr[0].c)+0.08,cellZ(corr[0].r)); }
+  if(corr[1]){ landmark('jammed blast door',corr[1].r,corr[1].c); box(0.2,2.2,TILE*0.5,0x44525e,cellX(corr[1].c),floorY(corr[1].r,corr[1].c)+1.1,cellZ(corr[1].r)-0.6); box(0.06,0.8,0.06,0x8a8070,cellX(corr[1].c)+0.3,floorY(corr[1].r,corr[1].c)+0.5,cellZ(corr[1].r)); } // crowbar
+  if(corr[2]){ addBoard(corr[2].r,corr[2].c, signBoard(['EMPLOYEE OF','THE MONTH'],true),1.3,1.0); addWallMsg(corr[2].r,corr[2].c,"DON'T OPEN"); }
+  if(corr[3]){ landmark('mascot hologram',corr[3].r,corr[3].c); const holo=new THREE.Mesh(new THREE.PlaneGeometry(1.0,1.4), new THREE.MeshBasicMaterial({map:TEX.posterCorp,transparent:true,opacity:0.6,depthWrite:false,blending:THREE.AdditiveBlending}));
+    holo.position.set(cellX(corr[3].c),floorY(corr[3].r,corr[3].c)+1.2,cellZ(corr[3].r)); scene.add(holo); holos.push({mesh:holo,phase:0}); }
+  if(corr[4]){ landmark('barricade',corr[4].r,corr[4].c); const x=cellX(corr[4].c),z=cellZ(corr[4].r),fy=floorY(corr[4].r,corr[4].c); for(let i=0;i<4;i++) box(0.5,0.8,0.5,[0x3a443e,0x40382c][i%2],x-0.6+i*0.4,fy+0.4+((i%2)*0.4),z); }
+  // a couple more scrawled messages
+  const more=roomsWith(n=>n==='Maintenance Tunnels'); if(more[1]) addWallMsg(more[1].r,more[1].c,'STAY OFF THE STAIRS');
+  // small clutter scatter (seeded, no collision)
+  const rnd=mulberry32(777); const clut=new THREE.MeshLambertMaterial({color:0x6a6050});
+  let n=0; for(let r=1;r<ROWS-1&&n<140;r++)for(let c=1;c<COLS-1;c++){ if(isWallCell(r,c))continue; if(rnd()>CONFIG.visual.props.clutter*0.08)continue; const fy=floorY(r,c); box(0.1+rnd()*0.12,0.05,0.1+rnd()*0.12, [0x8a8070,0x6a4a3a,0x3a4a3a][(rnd()*3)|0], cellX(c)+(rnd()-0.5)*1.6, fy+0.05, cellZ(r)+(rnd()-0.5)*1.6); n++; }
+}
 function addBoardgame(c,r){ if(r>=ROWS||isWallCell(r,c)) return; const fy=floorY(r,c);
   box(0.9,0.08,0.6,0x4a4034,cellX(c),fy+0.9,cellZ(r)); const board=new THREE.Mesh(new THREE.PlaneGeometry(0.5,0.5), new THREE.MeshLambertMaterial({color:0xcfc0a0}));
   board.rotation.x=-Math.PI/2; board.position.set(cellX(c),fy+0.95,cellZ(r)); scene.add(board); }
@@ -1324,6 +1389,7 @@ const LINES = {
   where_clear:[ "Cameras are clear. Nothing moving.", "I don't see anything. Doesn't mean much in the blind spots." ],
   batt_here:[ "Your light's dying. There's a power cell in {area} — I can see it on camera.", "Low on charge? I've got eyes on a cell in {area}. Grab it.", "Spare cell in {area}, on the camera feed. Go get it before your lamp quits." ],
   batt_none:[ "Your light's fading and I can't see a single spare on any camera. Check the side rooms.", "You're low. Nothing on my screens — you'll have to dig one up yourself." ],
+  dir_landmark:[ "See the {lm}? {dir} from there.", "Past the {lm} — {dir}.", "By the {lm}: {dir}.", "Use the {lm} as your marker — {dir}." ],
   where_alien:[ "I see one in {area}. {dir}", "Movement — {area}. {dir}" ],
   death:[ "No— no no. ...Okay. I pulled you back to cryo. Try again. I've still got you.", "I lost the feed. You're back at the start. Slower this time.", "...You're alright. Reset to where you woke up. Stay with me." ],
   bridge:[ "Wait — that's you at the door. You actually made it. Come in.", "You're here. I'm opening the bridge. Come in, come in." ],
@@ -1336,7 +1402,7 @@ const ines={ seesPlayer:false, visibleAliens:[], alienNearest:1e9, dangerAreas:{
   lineTimer:0,dirTimer:0,warnTimer:0,idleTimer:14, slammedThisChase:false,
   init(){ this.say('intro'); setTimeout(()=>this.say('firstmove'),4200); },
   pick(k){ const p=LINES[k]; return p[Math.floor(Math.random()*p.length)]; },
-  format(t,ctx){ return t.replace('{area}',ctx&&ctx.area?ctx.area:'the next section').replace('{dir}',ctx&&ctx.dir?ctx.dir:'').replace('{vert}',ctx&&ctx.vert?ctx.vert:''); },
+  format(t,ctx){ return t.replace('{area}',ctx&&ctx.area?ctx.area:'the next section').replace('{dir}',ctx&&ctx.dir?ctx.dir:'').replace('{vert}',ctx&&ctx.vert?ctx.vert:'').replace('{lm}',ctx&&ctx.lm?ctx.lm:'it'); },
   say(k,ctx,force){ if(!force&&this.lineTimer>0) return false; let t=this.format(this.pick(k),ctx); this.lineTimer=CONFIG.ines.lineCooldown;
     const warn=k.startsWith('alien')||k==='slam_late'; radioShow(t,warn,this.alienNearest<CONFIG.ines.interferenceDist); return true; },
   update(dt){ this.lineTimer-=dt;this.dirTimer-=dt;this.warnTimer-=dt;this.idleTimer-=dt;this.routeTime-=dt;
@@ -1367,6 +1433,9 @@ const ines={ seesPlayer:false, visibleAliens:[], alienNearest:1e9, dangerAreas:{
   giveDirection(force){ if(!this.seesPlayer){ if(force) this.say('guess',null,true); else this.say('cantsee'); return; }
     const wp=this.nextWaypoint(); if(!wp){ this.say('dir_straight',null,force); return; }
     const d=this.relDir(wp.cell), vert=this.vertHint(wp.cell), vd=this.vertDir(wp.cell), area=wp.area;
+    // landmark-flavoured direction when a recognisable prop is close
+    const lm=nearestLandmark(5); const dirtxt={straight:'keep going',left:'take the left',right:'go right',back:'turn around'}[d]||'keep going';
+    if(lm && Math.random()<0.6){ this.say('dir_landmark',{lm:lm.name, dir:(vd?dirtxt+' and '+(vd==='down'?'head down':'head up'):dirtxt)},force); return; }
     if(d==='straight'&&vd){ this.say(vd==='down'?'dir_down':'dir_up',{area},force); return; }
     const map={straight:'dir_straight',left:'dir_left',right:'dir_right',back:'dir_back'}; this.say(map[d],{area,vert},force); },
   onEnterArea(area,cell){ if(area==='the Bridge') return; if(this.lineTimer<=0&&this.seesPlayer) this.say('enterarea',{area}); },
@@ -1588,6 +1657,16 @@ function animateAtmos(dt){
   drawSunset(now*0.001);
   if(messLight){ messLight.intensity = sunsetAlert>0 ? (0.4+0.6*(Math.floor(now*0.006)%2)) : 1.1; messLight.color.setHex(sunsetAlert>0?0xff2a14:0xff9a4a); }
   if(smearT>0){ smearT-=dt; }
+  // hologram flicker + prop beacons
+  for(const h of holos){ h.phase+=dt; if(h.beacon){ h.mesh.material.color.copy(em(0xff3020, 0.8+0.8*Math.max(0,Math.sin(h.phase*4)))); }
+    else { h.mesh.visible = Math.random()>0.07; h.mesh.position.y += Math.sin(h.phase*22)*0.003; } }
+  // prop sounds: vending buzz + Comms distress loop (distance-attenuated)
+  if(audio.ctx){ if(!audio._prop){ audio._prop=true; audio.buzzGain=audio.ctx.createGain(); audio.buzzGain.gain.value=0;
+      const o=audio.ctx.createOscillator(); o.type='sawtooth'; o.frequency.value=88; const bp=audio.ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=150; o.connect(bp); bp.connect(audio.buzzGain); audio.buzzGain.connect(audio.master); o.start(); audio._beepT=0; }
+    const px=player.obj.position.x,pz=player.obj.position.z;
+    if(propSrc.vending){ const d=Math.hypot(propSrc.vending.x-px,propSrc.vending.z-pz); audio.buzzGain.gain.setTargetAtTime(d<10?0.03*(1-d/10):0,audio.ctx.currentTime,0.25); }
+    if(propSrc.comms){ const d=Math.hypot(propSrc.comms.x-px,propSrc.comms.z-pz); const g=d<14?0.08*(1-d/14):0; audio._beepT-=dt;
+      if(audio._beepT<=0&&g>0.003){ audio._beepT=1.3; const c=audio.ctx,t=c.currentTime; const o=c.createOscillator(); o.type='sine'; o.frequency.value=880; const gg=c.createGain(); gg.gain.setValueAtTime(g,t); gg.gain.exponentialRampToValueAtTime(0.001,t+0.18); o.connect(gg); gg.connect(audio.master); o.start(t); o.stop(t+0.2); } } }
 }
 
 /* ------------------------------ DEBUG ------------------------------------ */
@@ -1611,7 +1690,7 @@ function drawDebug(){ const s=4,g=dbgCtx; g.clearRect(0,0,dbgCanvas.width,dbgCan
   const pc=worldToCell(player.obj.position.x,player.obj.position.z); g.fillStyle='#6ff'; g.fillRect(pc.c*s,pc.r*s,s,s);
   // battery spawn spots (green = available, grey = taken)
   for(const bt of batteries){ g.fillStyle=bt.taken?'#444':'#2e2'; g.fillRect(bt.c*s+1,bt.r*s+1,s-2,s-2); }
-  el('dbgtxt').textContent=`FPS ${fps|0}  state ${state}\nfeetY ${player.feetY.toFixed(1)} fl ${flU(pc.r,pc.c)} area ${areaOf(pc.r,pc.c)}\nines.sees ${ines.seesPlayer} vis ${ines.visibleAliens.length}\nledge gaps ${ledgeGaps.length}  bad windows ${window.__badWindows||0}\nbattery ${(player.battery*100|0)}%  drain ${(100/CONFIG.flashlight.batteryLife).toFixed(2)}%/s  cells ${invCount('battery')}/${CONFIG.battery.carryMax}\nbatt spawns ${batteries.length} ([b] refill)\n`+aliens.map((a,i)=>`A${i} ${a.state} d=${ines.alienNearest.toFixed(1)}`).join('\n'); }
+  el('dbgtxt').textContent=`FPS ${fps|0}  state ${state}\nfeetY ${player.feetY.toFixed(1)} fl ${flU(pc.r,pc.c)} area ${areaOf(pc.r,pc.c)}\nines.sees ${ines.seesPlayer} vis ${ines.visibleAliens.length}\nledge gaps ${ledgeGaps.length}  bad windows ${window.__badWindows||0}\nbattery ${(player.battery*100|0)}%  drain ${(100/CONFIG.flashlight.batteryLife).toFixed(2)}%/s  cells ${invCount('battery')}/${CONFIG.battery.carryMax}\nbatt spawns ${batteries.length} ([b] refill)\nscenes ${Object.keys(propCounts).length}  landmarks ${LANDMARKS.length}  holos ${holos.length}\n`+aliens.map((a,i)=>`A${i} ${a.state} d=${ines.alienNearest.toFixed(1)}`).join('\n'); }
 
 /* ------------------------------- INPUT ----------------------------------- */
 document.addEventListener('keydown',e=>{ const k=e.key.toLowerCase();
