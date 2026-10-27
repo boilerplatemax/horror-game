@@ -1168,11 +1168,11 @@ function updatePlayer(dt){
     player.lastAreaName=areaNow;
     ines.onEnterArea(areaNow, cell);
   }
-  // door crossing -> checkpoint
+  // door crossing -> track last door (for slamming), but respawn always returns
+  // to the original Cryo Bay spawn (player.checkpoint set once in setupPlayer).
   const d=doorAt(cell.r,cell.c);
   if(d && d.isOpen && player.lastDoorPassed!==d){
     player.lastDoorPassed=d;
-    player.checkpoint={ x:d.x, z:d.z, yaw:player.yaw };
     ines.onPassDoor(d);
   }
   // junction (3+ open neighbours) -> maybe a direction
@@ -1434,9 +1434,9 @@ const LINES = {
     "Movement — {area}. {dir}",
   ],
   death:[
-    "No— no no. ...Okay. I pulled your last safe position. Try again. I've still got you.",
-    "I lost the feed. I've got you back at the last door. Slower this time.",
-    "...You're alright. Rerouting you from the last checkpoint. Stay with me.",
+    "No— no no. ...Okay. I pulled you back to the cryo bay. Try again. I've still got you.",
+    "I lost the feed. You're back at the start — back in cryo. Slower this time.",
+    "...You're alright. I've reset you to where you woke up. Stay with me.",
   ],
   bridge:[
     "Wait — that's you at the door. You actually made it. Come in.",
