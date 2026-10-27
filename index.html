@@ -166,7 +166,10 @@ const CONFIG = {
   },
   flashlight: { range: 17, angle: 0.42, intensity: 2.2, penumbra: 0.5, startOn: true },
   camera: {                    // security cameras
-    range: 10.5, fovDeg: 68, mountHeight: 2.5,
+    // Wide lens: if you're in front of a camera with clear line of sight and in
+    // range, it sees you. Occlusion (walls/props) is the only thing that hides
+    // you, so the blind spots are the geometric ones (side loops, airlock).
+    range: 20, fovDeg: 150, mountHeight: 2.5,   // world units (tile = 3)
   },
   doors: {
     openDelayMin: 1.0, openDelayMax: 2.6,   // Ines reaction time
