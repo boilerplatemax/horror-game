@@ -44,6 +44,20 @@
     font-size:20px; letter-spacing:2px; color:#cfe0d6; background:rgba(8,12,10,.72);
     border:1px solid rgba(150,170,150,.3); padding:4px 14px; opacity:0; transition:opacity .2s; text-shadow:0 2px 2px #000; }
   #toast.on { opacity:1; }
+  #batt { position:absolute; right:16px; bottom:16px; image-rendering:pixelated; }
+  #inv { position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:35; width:360px;
+    background:rgba(8,12,10,.92); border:1px solid rgba(150,170,150,.5); padding:14px 16px; color:#cfe0d6;
+    font-family:'VT323',monospace; }
+  #inv.hidden { display:none; }
+  #inv .invhdr { font-size:22px; letter-spacing:4px; color:var(--amber); margin-bottom:10px; }
+  #invslots { display:flex; gap:8px; }
+  #invslots .slot { width:54px; height:54px; border:1px solid rgba(150,170,150,.4); background:rgba(0,0,0,.3);
+    position:relative; image-rendering:pixelated; }
+  #invslots .slot.sel { border-color:var(--amber); box-shadow:0 0 0 1px var(--amber); }
+  #invslots .slot canvas { width:48px; height:48px; margin:2px; image-rendering:pixelated; }
+  #invslots .slot .cnt { position:absolute; right:3px; bottom:0; font-size:18px; color:#e8efe6; text-shadow:0 1px 2px #000; }
+  #invdesc { margin-top:12px; font-size:18px; color:#9aa89c; min-height:46px; line-height:1.15; }
+  #invfoot, #inv .invfoot { margin-top:8px; font-size:14px; color:#6a7a6c; letter-spacing:1px; }
 
   /* ---- overlays ---- */
   .overlay { position:fixed; inset:0; z-index:40; display:flex; flex-direction:column;
@@ -107,6 +121,15 @@
     <div id="statusbar">VEYRA-7 &nbsp;·&nbsp; <span id="flashicon">LAMP</span> &nbsp;·&nbsp; <span id="crouchicon"></span></div>
     <div id="callouts">[1] where do I go &nbsp; [2] open this door<br>[3] where is it &nbsp; [4] close the door behind me</div>
     <div id="toast"></div>
+    <canvas id="batt" width="72" height="22"></canvas>
+  </div>
+
+  <!-- INVENTORY -->
+  <div id="inv" class="hidden">
+    <div class="invhdr">INVENTORY</div>
+    <div id="invslots"></div>
+    <div id="invdesc"></div>
+    <div class="invfoot">[wheel/←→] select &nbsp; [click/Enter] use &nbsp; [Tab] close</div>
   </div>
 
   <canvas id="dbg" width="332" height="84"></canvas>
@@ -127,7 +150,8 @@
     <div class="keys">
       <div><b>WASD</b> move</div><div><b>Mouse</b> look</div>
       <div><b>Shift</b> run (loud)</div><div><b>C</b> crouch</div>
-      <div><b>F</b> lamp</div><div><b>E</b> interact</div>
+      <div><b>F</b> lamp</div><div><b>E</b> interact / pick up</div>
+      <div><b>R</b> swap battery</div><div><b>Tab</b> inventory</div>
       <div><b>1-4</b> radio Ines</div><div><b>V</b> her voice</div>
       <div><b>T</b> dither</div><div><b>`</b> debug</div>
     </div>
@@ -153,6 +177,7 @@
     </div>
     <div class="row">Ines voice (TTS) <button class="tog" id="ttsTog">OFF</button></div>
     <div class="row">Mouse sensitivity <button class="tog" id="sensDn">−</button><span id="sensVal">1.0</span><button class="tog" id="sensUp">+</button></div>
+    <div class="row">Brightness <button class="tog" id="briDn">−</button><span id="briVal">1.0</span><button class="tog" id="briUp">+</button></div>
     <button class="btn" id="resumeBtn">RESUME</button>
   </div>
 
@@ -196,7 +221,9 @@ const CONFIG = {
     eyeHeight:1.6, crouchHeight:1.0, radius:0.42,
     accel:14, mouseSens:0.0022, headbob:0.04,
   },
-  flashlight: { range:16, angle:0.46, intensity:2.0, penumbra:0.6, startOn:true },
+  flashlight: { range:11, angle:0.36, intensity:2.6, penumbra:0.45, startOn:true,
+    batteryLife:180, startCharge:0.70, swapTime:2.0, sway:0.012 },   // batteryLife=sec for a full cell
+  battery: { count:10, carryMax:4 },               // pickups spread (seeded) + carry limit
   camera: { range:20, fovDeg:150, mount:0.4 },     // security cams (world units)
   doors: { openDelayMin:1.0, openDelayMax:2.6, slideTime:0.7, airlockCycle:2.6, slamChance:0.72, slamLateChance:0.3 },
   aliens: {
@@ -210,7 +237,7 @@ const CONFIG = {
     ditherMode:'off',                        // 'off' | 'subtle' | 'strong' (default Off)
     ditherStrength:{subtle:0.5, strong:1.0}, paletteLevels:{subtle:22, strong:5},
     textureSize:64, posterize:5,             // hand-painted textures: size + shade count
-    vignette:0.42, exposure:0.95,
+    vignette:0.46, exposure:0.95, brightness:1.0,   // brightness scales exposure (pause menu; default dark)
     glitch:0.45,                             // alien-near tearing / color bleed strength
     dust:160,
     reverb:{ small:0.04, big:0.3 },
@@ -396,7 +423,7 @@ const finalMat=new THREE.ShaderMaterial({
 function renderScene(){
   renderer.setRenderTarget(rtScene); renderer.clear(); renderer.render(scene,camera);
   const v=CONFIG.visual, u=finalMat.uniforms, m={off:0,subtle:1,strong:2}[v.ditherMode];
-  u.tScene.value=rtScene.texture; u.ditherMode.value=m; u.exposure.value=v.exposure; u.vignette.value=v.vignette;
+  u.tScene.value=rtScene.texture; u.ditherMode.value=m; u.exposure.value=v.exposure*v.brightness; u.vignette.value=v.vignette;
   u.levels.value=m>1.5?v.paletteLevels.strong:v.paletteLevels.subtle;
   u.ditherStrength.value=m>1.5?v.ditherStrength.strong:v.ditherStrength.subtle;
   u.tear.value=glitchTear; u.time.value=now*0.001;
@@ -665,8 +692,9 @@ let dustPoints=null, swingLamp=null, steamList=[], sparkList=[];
 function em(hex,mul){ const c=new THREE.Color(hex); c.multiplyScalar(mul===undefined?1:mul); return c; }
 
 function buildLights(){
-  scene.add(new THREE.AmbientLight(0x20282a, 0.5));
-  const hemi=new THREE.HemisphereLight(0x2a3830,0x05060a,0.4); scene.add(hemi);
+  // near-black world: tiny ambient so shapes read but floor/detail need the lamp
+  scene.add(new THREE.AmbientLight(0x10161a, 0.16));
+  const hemi=new THREE.HemisphereLight(0x161f1c,0x04050a,0.14); scene.add(hemi);
 
   // ceiling light fixtures per area (flat wash + a few real flicker lights + shafts)
   const fixGeo=new THREE.BoxGeometry(TILE*0.7,0.12,TILE*0.4);
@@ -939,23 +967,35 @@ function beginClose(d){ if(d.state==='closed'||d.state==='closing')return; d.sta
 
 /* ------------------------------- CAMERAS --------------------------------- */
 const cams=[]; const DIRV={N:{r:-1,c:0},S:{r:1,c:0},E:{r:0,c:1},W:{r:0,c:-1}};
+let camHazTex=null;
 function buildCameras(){ CAMERA_DEFS.forEach(def=>{ const dv=DIRV[def.dir];
   const orr=def.r+dv.r, occ=def.c+dv.c; const mountY=ceilY(orr,occ)-CONFIG.camera.mount;
-  const x=cellX(def.c), z=cellZ(def.r), y=ceilY(orr,occ)-0.3;
-  const grp=new THREE.Group(); grp.position.set(x,y,z);
-  grp.add(new THREE.Mesh(new THREE.BoxGeometry(0.28,0.24,0.46), new THREE.MeshLambertMaterial({color:0x3a4650})));
-  const lens=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.09,0.16,8), new THREE.MeshLambertMaterial({color:0x11151a})); lens.rotation.x=Math.PI/2; lens.position.z=0.28; grp.add(lens);
-  const led=new THREE.Mesh(new THREE.SphereGeometry(0.05,6,5), new THREE.MeshBasicMaterial({color:0x330000})); led.position.set(0.12,0.1,0.24); grp.add(led);
-  grp.rotation.y=Math.atan2(dv.c,dv.r); scene.add(grp);
-  cams.push({ r:def.r,c:def.c,dir:def.dir,dv, x,z, ox:cellX(occ),oz:cellZ(orr), mountY, led,
-    cosHalf:Math.cos(THREE.MathUtils.degToRad(CONFIG.camera.fovDeg)/2), range:CONFIG.camera.range, seesPlayer:false }); }); }
+  const x=cellX(def.c), z=cellZ(def.r), y=ceilY(orr,occ)-0.45;
+  const grp=new THREE.Group(); grp.position.set(x,y,z); grp.rotation.y=Math.atan2(dv.c,dv.r);
+  // chunky mount bracket with hazard stripes + arm
+  const mat=new THREE.MeshLambertMaterial({color:0x4a5560});
+  const bracket=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,0.18), new THREE.MeshLambertMaterial({map:TEX.hazard,color:0x8a8a70})); bracket.position.z=-0.22; grp.add(bracket);
+  const arm=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,0.3), mat); arm.position.z=-0.05; grp.add(arm);
+  // the head (rotates to track) holds the housing + big lens + two LEDs
+  const head=new THREE.Group(); head.position.z=0.12; grp.add(head);
+  head.add(new THREE.Mesh(new THREE.BoxGeometry(0.42,0.36,0.6), mat));
+  const lens=new THREE.Mesh(new THREE.CylinderGeometry(0.11,0.14,0.22,10), new THREE.MeshLambertMaterial({color:0x0b0f14})); lens.rotation.x=Math.PI/2; lens.position.z=0.38; head.add(lens);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(0.13,0.02,6,12), new THREE.MeshBasicMaterial({color:0x223})); ring.position.z=0.44; head.add(ring);
+  const idle=new THREE.Mesh(new THREE.SphereGeometry(0.05,6,5), new THREE.MeshBasicMaterial({color:em(0xffa820,1.2)})); idle.position.set(0.16,0.12,0.3); head.add(idle); // amber idle, always on
+  scene.add(grp);
+  cams.push({ r:def.r,c:def.c,dir:def.dir,dv, x,z, ox:cellX(occ),oz:cellZ(orr), mountY, idle, head, baseYaw:grp.rotation.y, grp,
+    cosHalf:Math.cos(THREE.MathUtils.degToRad(CONFIG.camera.fovDeg)/2), range:CONFIG.camera.range, seesPlayer:false, _was:false }); }); }
 function camSees(cam, px,py,pz){ const dx=px-cam.x, dz=pz-cam.z, dist=Math.hypot(dx,dz);
   if(dist>cam.range) return false; if(dist<0.001) return true;
   const dot=(dx*cam.dv.c+dz*cam.dv.r)/dist; if(dot<cam.cosHalf) return false;
   return losClearH(cam.ox,cam.mountY,cam.oz, px,py,pz); }
 function updateCameras(){ const px=player.obj.position.x, pz=player.obj.position.z, py=player.feetY+1.5;
   let any=false; for(const cam of cams){ const sp=camSees(cam,px,py,pz)&&!player.dead; cam.seesPlayer=sp; if(sp)any=true;
-    cam.led.material.color.setHex(sp?0xff2200:0x330000); }
+    cam.idle.material.color.copy(sp?em(0xff2200,1.6):em(0xffa820,1.1));
+    if(sp && !cam._was) sfx('blip'); cam._was=sp;
+    // head tracks the player visually when watching (LOS logic unchanged)
+    const want = sp ? Math.atan2(px-cam.x, pz-cam.z) - cam.baseYaw : 0;
+    let cur=cam.head.rotation.y; cam.head.rotation.y = cur + (Math.max(-0.9,Math.min(0.9,want))-cur)*0.12; }
   ines.seesPlayer=any; ines.visibleAliens=[];
   for(const a of aliens){ for(const cam of cams){ if(camSees(cam,a.obj.position.x,a.feetY+1.2,a.obj.position.z)){ ines.visibleAliens.push(a); break; } } } }
 
@@ -978,7 +1018,8 @@ function astar(sr,sc,gr,gc,cellCost,doorsPassable){
 /* -------------------------------- PLAYER --------------------------------- */
 const player={ obj:new THREE.Object3D(), yaw:0,pitch:0, vx:0,vz:0,speed:0, crouch:false,sprint:false,
   flashlight:CONFIG.flashlight.startOn, eye:CONFIG.player.eyeHeight, feetY:0, bob:0, dead:false, won:false,
-  checkpoint:{x:0,z:0,yaw:0}, lastAreaName:'', lastDoorPassed:null, lastJunctionCell:null, moving:false, stepTimer:0 };
+  checkpoint:{x:0,z:0,yaw:0}, lastAreaName:'', lastDoorPassed:null, lastJunctionCell:null, moving:false, stepTimer:0,
+  battery:CONFIG.flashlight.startCharge, swapping:0, swayT:0, inv:[] };
 let flash, flashTarget;
 function setupPlayer(){ let pr=10,pc=3; for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++) if(charAt(r,c)==='P'){pr=r;pc=c;}
   player.feetY=floorY(pr,pc); player.obj.position.set(cellX(pc), player.feetY+player.eye, cellZ(pr));
@@ -987,6 +1028,84 @@ function setupPlayer(){ let pr=10,pc=3; for(let r=0;r<ROWS;r++)for(let c=0;c<COL
   flashTarget=new THREE.Object3D(); player.obj.add(flash); player.obj.add(flashTarget); flash.position.set(0,0,0); flashTarget.position.set(0,0,-1); flash.target=flashTarget;
   flash.castShadow=true; flash.shadow.mapSize.set(1024,1024); flash.shadow.camera.near=0.3; flash.shadow.camera.far=CONFIG.flashlight.range; flash.shadow.bias=-0.0013;
   camera.position.set(0,0,0); player.obj.add(camera); player.lastAreaName=areaOf(pr,pc); }
+
+/* ---------------- FLASHLIGHT BATTERY / INVENTORY / PICKUPS ---------------- */
+function sfx(kind){ if(!audio.ctx) return; const c=audio.ctx,t=c.currentTime;
+  if(kind==='click'){ const o=c.createOscillator();o.type='square';o.frequency.value=2200;const g=c.createGain();g.gain.setValueAtTime(0.07,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.05);o.connect(g);g.connect(audio.master);o.start(t);o.stop(t+0.06); }
+  else if(kind==='clunk'){ const o=c.createOscillator();o.type='square';o.frequency.setValueAtTime(180,t);o.frequency.exponentialRampToValueAtTime(70,t+0.12);const g=c.createGain();g.gain.setValueAtTime(0.12,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.16);o.connect(g);g.connect(audio.master);o.start(t);o.stop(t+0.18); }
+  else if(kind==='blip'){ const o=c.createOscillator();o.type='sine';o.frequency.value=1400;const g=c.createGain();g.gain.setValueAtTime(0.05,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.08);o.connect(g);g.connect(audio.master);o.start(t);o.stop(t+0.09); }
+  else if(kind==='pickup'){ const o=c.createOscillator();o.type='triangle';o.frequency.setValueAtTime(600,t);o.frequency.exponentialRampToValueAtTime(1200,t+0.1);const g=c.createGain();g.gain.setValueAtTime(0.06,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.12);o.connect(g);g.connect(audio.master);o.start(t);o.stop(t+0.13); } }
+
+function updateFlashlight(dt){ const F=CONFIG.flashlight;
+  if(player.swapping>0){ player.swapping-=dt; flash.intensity=0; if(player.swapping<=0){ player.battery=1.0; sfx('clunk'); } return; }
+  if(player.flashlight && player.battery>0) player.battery=Math.max(0, player.battery - dt/F.batteryLife);
+  if(!player.flashlight || player.battery<=0){ flash.intensity=0; return; }
+  let intens=F.intensity, ang=F.angle, col=0xfff1d6; const b=player.battery;
+  if(b<0.30){ intens*=0.55; col=0xffcf7a; }
+  if(b<0.15){ ang*=0.8; if(Math.random()<0.10) intens*=0.15; }
+  if(b<0.04 && Math.random()<0.3) intens*=0.1;
+  flash.intensity=intens; flash.angle=ang; flash.color.setHex(col);
+  player.swayT += dt*(player.moving?7:2.5);
+  flashTarget.position.set(Math.sin(player.swayT)*F.sway, Math.cos(player.swayT*0.9)*F.sway*0.7, -1);
+}
+function swapBattery(){ if(player.swapping>0) return; if(invCount('battery')<=0){ showToast('No batteries'); return; }
+  invRemove('battery',1); player.swapping=CONFIG.flashlight.swapTime; sfx('click'); showToast('Swapping power cell...'); refreshInv(); }
+
+// ---- generic inventory ----
+const ITEMS={ battery:{ id:'battery', name:'Power Cell', stack:true, max:CONFIG.battery.carryMax,
+  desc:'Standard power cell. Company property. Do not ingest.', use:()=>swapBattery() } };
+function invCount(id){ const s=player.inv.find(x=>x.id===id); return s?s.count:0; }
+function invAdd(id){ const it=ITEMS[id]; let s=player.inv.find(x=>x.id===id); if(s){ if(s.count>=it.max) return false; s.count++; } else player.inv.push({id,count:1}); return true; }
+function invRemove(id,n){ const s=player.inv.find(x=>x.id===id); if(!s) return; s.count-=n; if(s.count<=0) player.inv=player.inv.filter(x=>x!==s); }
+
+// ---- seeded battery pickups (rooms only; beatable along route) ----
+function mulberry32(seed){ let t=seed>>>0; return ()=>{ t+=0x6D2B79F5; let x=Math.imul(t^(t>>>15),1|t); x^=x+Math.imul(x^(x>>>7),61|x); return ((x^(x>>>14))>>>0)/4294967296; }; }
+const batteries=[]; let batteryTex=null;
+function batteryMat(){ if(!batteryTex){ const c=cvs(16,24),g=c.getContext('2d'); g.fillStyle='#2a6a3a'; g.fillRect(0,0,16,24); g.fillStyle='#caa150'; g.fillRect(2,4,12,5); g.fillStyle='#1a2a1a'; g.font='6px monospace'; g.fillText('FF',4,20); poster(g,16,24,5); batteryTex=mkTex(c); } return new THREE.MeshLambertMaterial({map:batteryTex,color:0xffffff}); }
+function makeBatteryMesh(x,y,z){ const g=new THREE.Group(); const body=new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.09,0.26,8), batteryMat()); body.castShadow=true; g.add(body);
+  const led=new THREE.Mesh(new THREE.SphereGeometry(0.028,5,4), new THREE.MeshBasicMaterial({color:em(0x30ff60,1.3)})); led.position.y=0.15; g.add(led);
+  g.position.set(x,y,z); g.userData={led}; scene.add(g); return g; }
+function buildBatteries(){
+  const rnd=mulberry32(90125);
+  // rooms the route passes through (beatable guarantee)
+  let br=10,bc=79; for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++) if(charAt(r,c)==='P'){br=r;bc=c;}
+  let gr=10,gc=79; for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++) if(charAt(r,c)==='B'){gr=r;gc=c;}
+  const route=astar(br,bc,gr,gc,null,true)||[]; const routeArea=new Set(route.map(([r,c])=>AR[r][c]).filter(a=>a>=0));
+  // candidate floor cells inside named rooms, grouped by room idx
+  const byRoom={}; for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){ if(isWallCell(r,c))continue; const a=AR[r][c]; if(a<0)continue; const nm=AREA_NAMES[a]; if(nm==='Corridor'||nm==='Junction')continue; const ch=charAt(r,c); if(ch==='P'||ch==='B'||ch==='X')continue; (byRoom[a]=byRoom[a]||[]).push([r,c]); }
+  const rooms=Object.keys(byRoom).map(Number);
+  const onRoute=rooms.filter(a=>routeArea.has(a)), offRoute=rooms.filter(a=>!routeArea.has(a));
+  function shuf(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+  shuf(onRoute); shuf(offRoute);
+  const want=CONFIG.battery.count; const nOn=Math.ceil(want*0.6);
+  const chosen=[]; let i=0;
+  const cryo=rooms.find(a=>AREA_NAMES[a]==='Cryo Bay'); if(cryo!==undefined) chosen.push(cryo);   // first cell early, near Cryo
+  while(chosen.length<nOn && onRoute.length){ chosen.push(onRoute[i%onRoute.length]); i++; if(i>onRoute.length*3)break; }
+  i=0; while(chosen.length<want && offRoute.length){ chosen.push(offRoute[i%offRoute.length]); i++; if(i>offRoute.length*3)break; }
+  // if still short, reuse route rooms
+  while(chosen.length<want && onRoute.length){ chosen.push(onRoute[chosen.length%onRoute.length]); }
+  chosen.slice(0,want).forEach(a=>{ const cells=byRoom[a]; const [r,c]=cells[Math.floor(rnd()*cells.length)];
+    const y=floorY(r,c)+0.42; const mesh=makeBatteryMesh(cellX(c)+(rnd()-0.5)*0.8, y, cellZ(r)+(rnd()-0.5)*0.8);
+    batteries.push({mesh, r,c, area:AREA_NAMES[a], taken:false}); });
+}
+function updateBatteries(dt){ const px=player.obj.position.x,pz=player.obj.position.z;
+  const fwd=new THREE.Vector3(); camera.getWorldDirection(fwd);
+  for(const bt of batteries){ if(bt.taken) continue; bt.mesh.rotation.y+=dt*1.2;
+    const u=bt.mesh.userData; u.led.material.color.setRGB(0.1,0.8+0.2*Math.sin(now*0.004),0.25);
+    // distance cull
+    const d2=(bt.mesh.position.x-px)**2+(bt.mesh.position.z-pz)**2; bt.mesh.visible=d2<28*28; }
+}
+function lookedBattery(){ const px=player.obj.position.x,pz=player.obj.position.z;
+  const fwd=new THREE.Vector3(); camera.getWorldDirection(fwd); fwd.y=0; const fl=Math.hypot(fwd.x,fwd.z)||1; fwd.x/=fl; fwd.z/=fl;
+  let best=null,bd=1e9;
+  for(const bt of batteries){ if(bt.taken) continue; const dx=bt.mesh.position.x-px,dz=bt.mesh.position.z-pz; const hd=Math.hypot(dx,dz); if(hd>2.4)continue;
+    const dot=(dx*fwd.x+dz*fwd.z)/(hd||1); if((dot>0.3 || hd<1.0) && hd<bd){bd=hd;best=bt;} }   // near floor items: roughly facing OR very close
+  return best; }
+function tryPickup(){ const bt=lookedBattery(); if(!bt) return false;
+  if(invCount('battery')>=CONFIG.battery.carryMax){ showToast('Pack full ('+CONFIG.battery.carryMax+' cells)'); return true; }
+  invAdd('battery'); bt.taken=true; scene.remove(bt.mesh); sfx('pickup'); showToast('Picked up Power Cell'); refreshInv(); return true; }
+function batterySeenByCamera(){ // nearest un-taken battery a camera can see (for Ines)
+  for(const bt of batteries){ if(bt.taken) continue; for(const cam of cams){ if(camSees(cam, bt.mesh.position.x, bt.mesh.position.y, bt.mesh.position.z)) return bt; } } return null; }
 
 function circleBlocked(x,z,R,baseFloorU){ const cr=Math.round(z/TILE), cc=Math.round(x/TILE);
   for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){ const r=cr+dr,c=cc+dc;
@@ -1018,7 +1137,7 @@ function updatePlayer(dt){ if(player.dead||player.won) return;
   const e=new THREE.Euler(player.pitch,player.yaw,0,'YXZ'); player.obj.quaternion.setFromEuler(e);
   if(player.moving){ player.stepTimer-=dt; if(player.stepTimer<=0){ const onStair=stU(nc.r,nc.c)!==0;
     player.stepTimer=player.sprint?0.28:player.crouch?0.62:0.44; audio.footstep(player.sprint,player.crouch,onStair); } }
-  flash.intensity=player.flashlight?CONFIG.flashlight.intensity:0;
+  updateFlashlight(dt);
   const areaNow=areaOf(nc.r,nc.c);
   if(areaNow!==player.lastAreaName){ player.lastAreaName=areaNow; ines.onEnterArea(areaNow,nc); triggerSmear(); }
   const d=doorAt(nc.r,nc.c); if(d&&d.isOpen&&player.lastDoorPassed!==d){ player.lastDoorPassed=d; ines.onPassDoor(d); }
@@ -1116,6 +1235,8 @@ const LINES = {
   safe:[ "Okay. Okay. I think you're clear.", "It wandered off. You can breathe. A little.", "You're doing fine. Better than I'd be." ],
   idle:[ "Still here. Still watching.", "I don't love how quiet it's gotten.", "Power's holding. For now.", "Take a second. Not too long." ],
   where_clear:[ "Cameras are clear. Nothing moving.", "I don't see anything. Doesn't mean much in the blind spots." ],
+  batt_here:[ "Your light's dying. There's a power cell in {area} — I can see it on camera.", "Low on charge? I've got eyes on a cell in {area}. Grab it.", "Spare cell in {area}, on the camera feed. Go get it before your lamp quits." ],
+  batt_none:[ "Your light's fading and I can't see a single spare on any camera. Check the side rooms.", "You're low. Nothing on my screens — you'll have to dig one up yourself." ],
   where_alien:[ "I see one in {area}. {dir}", "Movement — {area}. {dir}" ],
   death:[ "No— no no. ...Okay. I pulled you back to cryo. Try again. I've still got you.", "I lost the feed. You're back at the start. Slower this time.", "...You're alright. Reset to where you woke up. Stay with me." ],
   bridge:[ "Wait — that's you at the door. You actually made it. Come in.", "You're here. I'm opening the bridge. Come in, come in." ],
@@ -1135,7 +1256,12 @@ const ines={ seesPlayer:false, visibleAliens:[], alienNearest:1e9, dangerAreas:{
     if(this.routeTime<=0){ this.computeRoute(); this.routeTime=0.6; }
     if(this.warnTimer<=0&&this.visibleAliens.length){ const a=this.visibleAliens[0]; const ac=worldToCell(a.obj.position.x,a.obj.position.z); const area=areaOf(ac.r,ac.c); this.rememberDanger(area);
       if(a.state===AST.CHASE){} else if(a.state===AST.INVESTIGATE){ this.say('alien_heading',{area}); this.warnTimer=CONFIG.ines.warnCooldown; } else { this.say('alien_spotted',{area}); this.warnTimer=CONFIG.ines.warnCooldown; } }
-    if(this.idleTimer<=0){ this.idleTimer=rand(16,26); if(this.seesPlayer&&!this.visibleAliens.length&&this.lineTimer<=0) this.say('idle'); } },
+    // low battery: if a camera can see a cell, point the player to it
+    this.battTimer=(this.battTimer||0)-dt;
+    if(this.battTimer<=0 && player.battery<0.3 && player.battery>0 && this.lineTimer<=0 && !this.visibleAliens.length){
+      this.battTimer=14; const bt=batterySeenByCamera();
+      if(bt) this.say('batt_here',{area:bt.area}); else if(this.seesPlayer) this.say('batt_none'); }
+    if(this.idleTimer<=0){ this.idleTimer=rand(16,26); if(this.seesPlayer&&!this.visibleAliens.length&&this.lineTimer<=0&&player.battery>=0.3) this.say('idle'); } },
   rememberDanger(a){ this.dangerAreas[a]=6; }, decayDanger(dt){ for(const k in this.dangerAreas){ this.dangerAreas[k]-=dt; if(this.dangerAreas[k]<=0) delete this.dangerAreas[k]; } },
   computeRoute(){ const pc=worldToCell(player.obj.position.x,player.obj.position.z); let br=10,bc=79; for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++) if(charAt(r,c)==='B'){br=r;bc=c;}
     const danger=this.dangerAreas; this.route=astar(pc.r,pc.c,br,bc,(r,c)=>{const a=areaOf(r,c);return danger[a]?6:0;},true); updateObjective(); },
@@ -1219,10 +1345,38 @@ function radioShow(text,warn,interference){ audio.staticBurst(interference?0.22:
   if(interference) text=scramble(text); radioText.textContent=text; radioHideT=5; if(ttsOn&&!interference) speak(text); }
 function scramble(t){ const noise='▒░#%@*/\\=—'; let out=''; for(const ch of t){ if(ch===' '){out+=' ';continue;} const r=Math.random(); if(r<0.18)out+=noise[Math.floor(Math.random()*noise.length)]; else if(r<0.26)out+=''; else out+=ch; } return out; }
 function speak(t){ if(!('speechSynthesis' in window)) return; try{ const u=new SpeechSynthesisUtterance(t); u.rate=1.02; const vs=speechSynthesis.getVoices(); const f=vs.find(v=>/female|zira|samantha|google uk english female/i.test(v.name)); if(f)u.voice=f; speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(e){} }
-function updatePrompt(){ if(state!=='play'){ promptEl.classList.remove('on'); return; } const d=nearbyDoor();
+function updatePrompt(){ if(state!=='play'){ promptEl.classList.remove('on'); return; }
+  if(lookedBattery()){ promptEl.textContent='[E] pick up power cell'; promptEl.classList.add('on'); return; }
+  const d=nearbyDoor();
   if(d&&!d.isOpen){ promptEl.textContent=d.isAirlock?'[E] cycle airlock':'[E] radio Ines'; promptEl.classList.add('on'); }
   else if(d&&d.isOpen&&d.isAirlock){ promptEl.textContent='[E] cycle airlock'; promptEl.classList.add('on'); }
   else promptEl.classList.remove('on'); }
+
+// ---- battery HUD meter (4 pixel segments, blinks when low) ----
+const battCanvas=el('batt'), battCtx=battCanvas.getContext('2d');
+function drawBattMeter(){ const g=battCtx,W=72,H=22; g.clearRect(0,0,W,H);
+  g.strokeStyle='#8aa08c'; g.lineWidth=2; g.strokeRect(1,3,62,16); g.fillStyle='#8aa08c'; g.fillRect(64,8,4,6); // casing + nub
+  const segs=4, charge=player.swapping>0?0:player.battery, lit=Math.ceil(charge*segs);
+  const low=charge<=0.25, blink=low && (Math.floor(now*0.006)%2===0);
+  for(let i=0;i<segs;i++){ const x=4+i*15; const on=i<lit && !(low&&blink);
+    g.fillStyle = on ? (charge<0.3?'#e0b040':charge<0.6?'#c8d050':'#6fe0a0') : 'rgba(40,50,44,0.5)';
+    g.fillRect(x,6,12,10); }
+  g.fillStyle=charge<=0.05?'#e04025':'#6a7a6c'; g.font='9px monospace'; g.fillText(Math.round(charge*100)+'%',4,H-1);
+}
+
+// ---- inventory panel ----
+let invOpen=false, invSel=0;
+function batteryIcon(){ const c=cvs(48),g=c.getContext('2d'); g.clearRect(0,0,48,48);
+  g.fillStyle='#2a6a3a'; g.fillRect(14,10,20,32); g.fillStyle='#caa150'; g.fillRect(18,6,12,6); g.fillStyle='#1a2a1a'; g.font='bold 9px VT323,monospace'; g.fillText('FF',18,30);
+  g.fillStyle='#30ff60'; g.fillRect(30,36,4,4); poster(g,48,48,5); return c; }
+const ICONS={ battery:batteryIcon() };
+function toggleInv(){ invOpen=!invOpen; el('inv').classList.toggle('hidden',!invOpen); if(invOpen){ invSel=0; refreshInv(); } }
+function refreshInv(){ if(!invOpen) return; const slots=el('invslots'); slots.innerHTML='';
+  if(player.inv.length===0){ slots.innerHTML='<div style="color:#6a7a6c;font-size:18px">— empty —</div>'; el('invdesc').textContent=''; return; }
+  player.inv.forEach((it,i)=>{ const d=document.createElement('div'); d.className='slot'+(i===invSel?' sel':''); const ic=ICONS[it.id]; if(ic){ const cc=ic.cloneNode(); cc.getContext('2d').drawImage(ic,0,0); d.appendChild(cc); } const cnt=document.createElement('div'); cnt.className='cnt'; cnt.textContent=it.count>1?it.count:''; d.appendChild(cnt); d.onclick=()=>{ invSel=i; useInvSel(); }; slots.appendChild(d); });
+  const sel=player.inv[Math.min(invSel,player.inv.length-1)]; el('invdesc').textContent = sel? (ITEMS[sel.id].name+' — '+ITEMS[sel.id].desc) : ''; }
+function invNav(dir){ if(!invOpen||!player.inv.length) return; invSel=(invSel+dir+player.inv.length)%player.inv.length; refreshInv(); }
+function useInvSel(){ if(!player.inv.length) return; const it=player.inv[Math.min(invSel,player.inv.length-1)]; if(it&&ITEMS[it.id].use) ITEMS[it.id].use(); }
 function updateObjective(){ // flat corporate objective updated from the route
   let txt='Proceed to the Bridge.'; const wp=ines.nextWaypoint();
   if(wp&&wp.area&&wp.area!=='the Bridge'){ txt='Proceed forward via '+wp.area+'.'; } el('objtext').textContent=txt; }
@@ -1308,6 +1462,9 @@ function respawn(){ player.dead=false; glitchTear=0; const pc=worldToCell(player
   player.feetY=floorY(pc.r,pc.c); player.obj.position.set(player.checkpoint.x,player.feetY+player.eye,player.checkpoint.z);
   player.yaw=player.checkpoint.yaw!==undefined?player.checkpoint.yaw:-Math.PI/2; player.pitch=0; player.vx=player.vz=0;
   aliens.forEach(a=>{ a.obj.position.set(cellX(a.spawn[1]),floorY(a.spawn[0],a.spawn[1]),cellZ(a.spawn[0])); a.feetY=floorY(a.spawn[0],a.spawn[1]); a.state=AST.WANDER; a.path=null; a._wasChasing=false; a.lastKnown=null; });
+  // checkpoint restore: inventory + battery charge back to spawn state, pickups respawn
+  player.battery=CONFIG.flashlight.startCharge; player.swapping=0; player.inv=[];
+  batteries.forEach(bt=>{ if(bt.taken){ bt.taken=false; scene.add(bt.mesh); } }); refreshInv();
   el('death').classList.add('hidden'); state='play'; titleCard(impactHours+' HOURS AFTER IMPACT','STERN-CRYO-04',1500); requestLock(); }
 function winGame(){ if(player.won) return; player.won=true; state='win'; document.exitPointerLock&&document.exitPointerLock(); placeInes(); ines.onWin(); setTimeout(()=>el('win').classList.remove('hidden'),900); }
 function placeInes(){ let br=10,bc=79; for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++) if(charAt(r,c)==='B'){br=r;bc=c;} const fy=floorY(br,bc);
@@ -1365,20 +1522,29 @@ function drawDebug(){ const s=4,g=dbgCtx; g.clearRect(0,0,dbgCanvas.width,dbgCan
   if(ines.route){ g.fillStyle='rgba(255,210,90,.7)'; for(const [r,c] of ines.route) g.fillRect(c*s+1,r*s+1,s-2,s-2); }
   for(const a of aliens){ const ac=worldToCell(a.obj.position.x,a.obj.position.z); g.fillStyle=a.state===AST.CHASE?'#f22':a.state===AST.SEARCH?'#f82':a.state===AST.INVESTIGATE?'#fd2':'#a6f'; g.fillRect(ac.c*s-1,ac.r*s-1,s+2,s+2); }
   const pc=worldToCell(player.obj.position.x,player.obj.position.z); g.fillStyle='#6ff'; g.fillRect(pc.c*s,pc.r*s,s,s);
-  el('dbgtxt').textContent=`FPS ${fps|0}  state ${state}\nfeetY ${player.feetY.toFixed(1)} fl ${flU(pc.r,pc.c)} area ${areaOf(pc.r,pc.c)}\nines.sees ${ines.seesPlayer} vis ${ines.visibleAliens.length}\nledge gaps ${ledgeGaps.length}  bad windows ${window.__badWindows||0}\n`+aliens.map((a,i)=>`A${i} ${a.state} d=${ines.alienNearest.toFixed(1)}`).join('\n'); }
+  // battery spawn spots (green = available, grey = taken)
+  for(const bt of batteries){ g.fillStyle=bt.taken?'#444':'#2e2'; g.fillRect(bt.c*s+1,bt.r*s+1,s-2,s-2); }
+  el('dbgtxt').textContent=`FPS ${fps|0}  state ${state}\nfeetY ${player.feetY.toFixed(1)} fl ${flU(pc.r,pc.c)} area ${areaOf(pc.r,pc.c)}\nines.sees ${ines.seesPlayer} vis ${ines.visibleAliens.length}\nledge gaps ${ledgeGaps.length}  bad windows ${window.__badWindows||0}\nbattery ${(player.battery*100|0)}%  drain ${(100/CONFIG.flashlight.batteryLife).toFixed(2)}%/s  cells ${invCount('battery')}/${CONFIG.battery.carryMax}\nbatt spawns ${batteries.length} ([b] refill)\n`+aliens.map((a,i)=>`A${i} ${a.state} d=${ines.alienNearest.toFixed(1)}`).join('\n'); }
 
 /* ------------------------------- INPUT ----------------------------------- */
-document.addEventListener('keydown',e=>{ const k=e.key.toLowerCase(); keys[k]=true;
+document.addEventListener('keydown',e=>{ const k=e.key.toLowerCase();
+  if(k==='tab'){ e.preventDefault(); if(state==='play') toggleInv(); return; }   // Tab = inventory (no focus jump)
+  keys[k]=true;
+  if(invOpen){ if(k==='arrowleft') invNav(-1); else if(k==='arrowright') invNav(1); else if(k==='enter') useInvSel(); else if(k==='escape') toggleInv(); return; }
   if(k==='escape'){ togglePause(); } if(k==='t'){ cycleDither(); } if(state!=='play') return;
   if(k==='f'){ player.flashlight=!player.flashlight; el('flashicon').classList.toggle('on',player.flashlight); }
   if(k==='c'){ player.crouch=!player.crouch; el('crouchicon').textContent=player.crouch?'CROUCH':''; }
-  if(k==='e'){ const d=nearbyDoor(); if(d) requestDoor(d,false); }
+  if(k==='e'){ if(!tryPickup()){ const d=nearbyDoor(); if(d) requestDoor(d,false); } }
+  if(k==='r'){ swapBattery(); }
   if(k==='v'){ ttsOn=!ttsOn; el('ttsTog').textContent=ttsOn?'ON':'OFF'; }
   if(k==='`'){ debugOn=!debugOn; dbgCanvas.classList.toggle('on',debugOn); el('dbgtxt').classList.toggle('on',debugOn); }
+  if(k==='b' && debugOn){ player.battery=1.0; showToast('DEBUG: battery refilled'); }   // debug refill
   if(k==='1') ines.callWhereGo(); if(k==='2') ines.callOpenDoor(); if(k==='3') ines.callWhereIsIt(); if(k==='4') ines.callCloseDoor(); });
 document.addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
-document.addEventListener('mousemove',e=>{ if(document.pointerLockElement!==viewCanvas||state!=='play') return;
+document.addEventListener('mousemove',e=>{ if(document.pointerLockElement!==viewCanvas||state!=='play'||invOpen) return;
   player.yaw-=e.movementX*CONFIG.player.mouseSens*mouseSensMul; player.pitch-=e.movementY*CONFIG.player.mouseSens*mouseSensMul; player.pitch=Math.max(-1.3,Math.min(1.3,player.pitch)); });
+window.addEventListener('wheel',e=>{ if(invOpen){ invNav(e.deltaY>0?1:-1); } });
+el('inv').addEventListener('click',e=>{ /* slot clicks handled per-slot */ });
 viewCanvas.addEventListener('click',()=>{ if(state==='play'&&document.pointerLockElement!==viewCanvas) requestLock(); });
 el('intro').addEventListener('click',endIntro);
 function togglePause(){ if(state==='play'){ state='pause'; el('pause').classList.remove('hidden'); document.exitPointerLock&&document.exitPointerLock(); } else if(state==='pause'){ el('pause').classList.add('hidden'); state='play'; requestLock(); } }
@@ -1388,12 +1554,15 @@ el('ditherSel').onchange=e=>applyDither(e.target.value,true);
 el('ttsTog').onclick=()=>{ ttsOn=!ttsOn; el('ttsTog').textContent=ttsOn?'ON':'OFF'; };
 el('sensUp').onclick=()=>{ mouseSensMul=Math.min(3,mouseSensMul+0.2); el('sensVal').textContent=mouseSensMul.toFixed(1); };
 el('sensDn').onclick=()=>{ mouseSensMul=Math.max(0.2,mouseSensMul-0.2); el('sensVal').textContent=mouseSensMul.toFixed(1); };
+el('briUp').onclick=()=>{ CONFIG.visual.brightness=Math.min(2.2,CONFIG.visual.brightness+0.15); el('briVal').textContent=CONFIG.visual.brightness.toFixed(1); };
+el('briDn').onclick=()=>{ CONFIG.visual.brightness=Math.max(0.6,CONFIG.visual.brightness-0.15); el('briVal').textContent=CONFIG.visual.brightness.toFixed(1); };
 
 /* ------------------------------- LOOP ------------------------------------ */
 function loop(t){ requestAnimationFrame(loop); let dt=(t-last)/1000; last=t; if(dt>0.05)dt=0.05; now=t;
   fpsAcc+=dt; fpsFrames++; if(fpsAcc>=0.5){ fps=fpsFrames/fpsAcc; fpsAcc=0; fpsFrames=0; }
-  if(state==='play'){ updatePlayer(dt); updateDoors(dt); updateCameras(); updateAliens(dt); ines.update(dt); ines.decayDanger(dt); updatePrompt(); }
+  if(state==='play'){ updatePlayer(dt); updateDoors(dt); updateCameras(); updateAliens(dt); updateBatteries(dt); ines.update(dt); ines.decayDanger(dt); updatePrompt(); }
   else updateDoors(dt);
+  drawBattMeter();
   animateAtmos(dt); audio.tick(dt);
   const pc=worldToCell(player.obj.position.x,player.obj.position.z); updateFog(areaOf(pc.r,pc.c),dt);
   if(radioHideT>0){ radioHideT-=dt; if(radioHideT<=0) radioBox.classList.remove('on'); }
@@ -1403,7 +1572,7 @@ function loop(t){ requestAnimationFrame(loop); let dt=(t-last)/1000; last=t; if(
 }
 
 /* ------------------------------- BOOT ------------------------------------ */
-function boot(){ buildLevel(); buildDoors(); buildCameras(); setupPlayer(); buildAliens();
+function boot(){ buildLevel(); buildDoors(); buildCameras(); setupPlayer(); buildAliens(); buildBatteries();
   setResolution(CONFIG.render.active); onResize(); el('flashicon').classList.toggle('on',player.flashlight); loadDither();
   if('speechSynthesis' in window) speechSynthesis.getVoices(); startIntro(); last=performance.now(); requestAnimationFrame(loop); }
 boot();
