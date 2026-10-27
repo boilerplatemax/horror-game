@@ -73,7 +73,12 @@
     color:#8fd; white-space:pre; text-shadow:0 1px 1px #000; }
   #dbgtxt.on { display:block; }
   .vig { position:fixed; inset:0; z-index:9; pointer-events:none;
-    box-shadow:inset 0 0 150px 6px rgba(0,0,0,.72); }
+    box-shadow:inset 0 0 120px 0 rgba(0,0,0,.35); }
+  #toast { position:absolute; left:50%; top:14%; transform:translateX(-50%);
+    font-size:13px; letter-spacing:2px; color:#bfe6ff; background:rgba(6,12,18,.7);
+    border:1px solid rgba(111,211,201,.3); padding:6px 14px; border-radius:3px;
+    opacity:0; transition:opacity .2s; text-shadow:0 1px 2px #000; }
+  #toast.on { opacity:1; }
 </style>
 </head>
 <body>
@@ -86,6 +91,7 @@
     <div id="radio"><span class="who">INES</span><span id="radiotext"></span></div>
     <div id="statusbar">DEAD AIR  ·  <span id="flashicon">FLASHLIGHT</span>  ·  <span id="crouchicon"></span></div>
     <div id="callouts">[1] where do I go &nbsp; [2] open this door<br>[3] where is it &nbsp; [4] close the door behind me</div>
+    <div id="toast"></div>
   </div>
 
   <canvas id="dbg" width="256" height="76"></canvas>
@@ -103,7 +109,8 @@
       <div><b>Shift</b> sprint (loud)</div><div><b>C</b> crouch (quiet)</div>
       <div><b>F</b> flashlight</div><div><b>E</b> interact / door</div>
       <div><b>1-4</b> radio Ines</div><div><b>V</b> Ines voice</div>
-      <div><b>Esc</b> pause</div><div><b>`</b> debug</div>
+      <div><b>T</b> dither mode</div><div><b>`</b> debug</div>
+      <div><b>Esc</b> pause</div><div></div>
     </div>
     <p class="hint">Reach the bridge. Follow her voice.</p>
     <button class="btn" id="startbtn">BEGIN</button>
@@ -117,6 +124,13 @@
         <option value="0">320 × 180</option>
         <option value="1" selected>480 × 270</option>
         <option value="2">640 × 360</option>
+      </select>
+    </div>
+    <div class="row">Dithering
+      <select id="ditherSel">
+        <option value="off">Off (smooth)</option>
+        <option value="subtle" selected>Subtle</option>
+        <option value="strong">Strong</option>
       </select>
     </div>
     <div class="row">Ines voice (TTS) <button class="tog" id="ttsTog">OFF</button></div>
@@ -157,6 +171,32 @@ const CONFIG = {
     active: 1,                 // index into resolutions
     paletteLevels: 5.0,        // dither quantization levels per channel
     fov: 72,
+  },
+  // ---- VISUAL (look only; see notes at end of file for the high-impact knobs) ----
+  visual: {
+    ditherMode: 'subtle',                         // 'off' | 'subtle' | 'strong'
+    ditherStrength: { subtle: 0.5, strong: 1.0 }, // how hard the dither blends in
+    paletteLevels:  { subtle: 22.0, strong: 5.0 },// quantization steps (high = smooth)
+    bloom:   { strength: 0.5, threshold: 1.15, radius: 1.1 }, // glow on emissives
+    grain:   0.04,                                // film grain amount
+    vignette:0.5,                                 // corner darkening (0..1)
+    exposure:1.12,                                // pre-tonemap exposure (ACES)
+    shadow:  { enabled:true, size:1024 },         // flashlight shadow map size
+    dust:    360,                                 // dust motes in the flashlight beam
+    // Per-area identity: fog tint + the colour its lights/fixtures lean toward.
+    areas: {
+      'Cryo Bay':      { fog:0x0b1a2a, light:0xcfe9ff, accent:0x9fd8ff },
+      'Cargo Hold':    { fog:0x0c1218, light:0xd2dbe0, accent:0xc2ccd2 },
+      'Med Bay':       { fog:0x08201f, light:0xc6f1e9, accent:0x8fe6d6 },
+      'Crew Quarters': { fog:0x18120a, light:0xffdca0, accent:0xffc87a },
+      'Mess Hall':     { fog:0x19140b, light:0xffe2aa, accent:0xffcf86 },
+      'Engineering':   { fog:0x1c1307, light:0xffb062, accent:0xff8a3a },
+      'Hydroponics':   { fog:0x0a1b0f, light:0xb4f2a6, accent:0x8ce680 },
+      'the Airlock':   { fog:0x0d1115, light:0xd3dce0, accent:0xc0ccd0 },
+      'Comms':         { fog:0x0a1521, light:0xc2d4ec, accent:0x9fb8e0 },
+      'the Bridge':    { fog:0x07102a, light:0xaac6ff, accent:0x7aa0ff },
+      'the ship':      { fog:0x05080c, light:0xaac0cc, accent:0x90b0c0 },
+    },
   },
   world: { tile: 3.0, wallHeight: 3.0 },
   player: {
@@ -312,58 +352,141 @@ function losClear(x0,z0,x1,z1){
 const viewCanvas = document.getElementById('view');
 const renderer = new THREE.WebGLRenderer({ canvas:viewCanvas, antialias:false, powerPreference:'high-performance' });
 renderer.setPixelRatio(1);
-renderer.shadowMap.enabled = false;
+// Tone mapping & sRGB are done by hand in the final composite shader, so the scene
+// is rendered raw-linear into an HDR target (lets emissives exceed 1.0 for bloom).
+renderer.toneMapping = THREE.NoToneMapping;
+renderer.outputEncoding = THREE.LinearEncoding;
+renderer.shadowMap.enabled = CONFIG.visual.shadow.enabled;
+renderer.shadowMap.type = THREE.PCFShadowMap;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x03050a);
-scene.fog = new THREE.FogExp2(0x03050a, CONFIG.fog);
+const fogColor = new THREE.Color(CONFIG.visual.areas['Cryo Bay'].fog);
+scene.background = fogColor.clone();
+scene.fog = new THREE.FogExp2(fogColor.getHex(), CONFIG.fog);
 
 let [LOWW,LOWH] = CONFIG.render.resolutions[CONFIG.render.active];
-const camera = new THREE.PerspectiveCamera(CONFIG.render.fov, LOWW/LOWH, 0.08, 220);
+const camera = new THREE.PerspectiveCamera(CONFIG.render.fov, LOWW/LOWH, 0.08, 240);
 
-let rt = makeRT(LOWW,LOWH);
-function makeRT(w,h){
-  return new THREE.WebGLRenderTarget(w,h,{
-    minFilter:THREE.NearestFilter, magFilter:THREE.NearestFilter,
-    format:THREE.RGBAFormat, depthBuffer:true, stencilBuffer:false });
+// ---- render targets ----
+function sceneRT(w,h){ return new THREE.WebGLRenderTarget(w,h,{
+  minFilter:THREE.LinearFilter, magFilter:THREE.LinearFilter, type:THREE.HalfFloatType,
+  format:THREE.RGBAFormat, depthBuffer:true, stencilBuffer:false }); }
+function bloomRT(w,h){ return new THREE.WebGLRenderTarget(w,h,{
+  minFilter:THREE.LinearFilter, magFilter:THREE.LinearFilter, type:THREE.HalfFloatType,
+  format:THREE.RGBAFormat, depthBuffer:false, stencilBuffer:false }); }
+let rtScene = sceneRT(LOWW,LOWH);
+let BW=Math.ceil(LOWW/2), BH=Math.ceil(LOWH/2);
+let rtBloomA = bloomRT(BW,BH), rtBloomB = bloomRT(BW,BH);
+
+// ---- Bayer ordered-dither matrices as data textures (WebGL1 has no bit ops) ----
+function bayerMatrix(n){
+  function rec(m){ if(m===1) return [[0]]; const s=rec(m/2), h=m/2, out=[];
+    for(let y=0;y<m;y++){ out[y]=[]; for(let x=0;x<m;x++){ const q=(x<h?0:1)+(y<h?0:2);
+      out[y][x]=4*s[y%h][x%h]+q; } } return out; }
+  return rec(n);
 }
+function bayerTexture(n){
+  const mat=bayerMatrix(n), data=new Uint8Array(n*n*4);
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){ const v=Math.round((mat[y][x]+0.5)/(n*n)*255), i=(y*n+x)*4;
+    data[i]=data[i+1]=data[i+2]=v; data[i+3]=255; }
+  const t=new THREE.DataTexture(data,n,n,THREE.RGBAFormat);
+  t.magFilter=t.minFilter=THREE.NearestFilter; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.needsUpdate=true; return t;
+}
+const bayer4Tex=bayerTexture(4), bayer8Tex=bayerTexture(8);
 
-// fullscreen post scene: Bayer 4x4 ordered dither + palette quantization
-const postScene = new THREE.Scene();
-const postCam = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
-const postMat = new THREE.ShaderMaterial({
-  uniforms:{ tDiffuse:{value:rt.texture}, res:{value:new THREE.Vector2(LOWW,LOWH)}, levels:{value:CONFIG.render.paletteLevels} },
-  vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }`,
-  fragmentShader:`
-    precision mediump float;
-    uniform sampler2D tDiffuse; uniform vec2 res; uniform float levels; varying vec2 vUv;
-    float bayer(int x,int y){
-      if(y==0){ if(x==0)return 0.0; if(x==1)return 8.0; if(x==2)return 2.0; return 10.0; }
-      if(y==1){ if(x==0)return 12.0; if(x==1)return 4.0; if(x==2)return 14.0; return 6.0; }
-      if(y==2){ if(x==0)return 3.0; if(x==1)return 11.0; if(x==2)return 1.0; return 9.0; }
-      if(x==0)return 15.0; if(x==1)return 7.0; if(x==2)return 13.0; return 5.0;
-    }
+// ---- fullscreen quad helper ----
+const VERT=`varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }`;
+const fsScene=new THREE.Scene(), fsCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+const fsMesh=new THREE.Mesh(new THREE.PlaneGeometry(2,2)); fsScene.add(fsMesh);
+function blit(mat,target){ fsMesh.material=mat; renderer.setRenderTarget(target||null); renderer.render(fsScene,fsCam); }
+
+// ---- bright pass ----
+const brightMat=new THREE.ShaderMaterial({ uniforms:{ tDiffuse:{value:null}, threshold:{value:1.0} },
+  vertexShader:VERT, fragmentShader:`precision highp float; uniform sampler2D tDiffuse; uniform float threshold;
+  varying vec2 vUv; void main(){ vec3 c=texture2D(tDiffuse,vUv).rgb; gl_FragColor=vec4(max(c-threshold,0.0),1.0); }`});
+
+// ---- separable gaussian blur ----
+const blurMat=new THREE.ShaderMaterial({ uniforms:{ tDiffuse:{value:null}, dir:{value:new THREE.Vector2()} },
+  vertexShader:VERT, fragmentShader:`precision highp float; uniform sampler2D tDiffuse; uniform vec2 dir;
+  varying vec2 vUv; void main(){ float w[5];
+    w[0]=0.227027; w[1]=0.1945946; w[2]=0.1216216; w[3]=0.054054; w[4]=0.016216;
+    vec3 s=texture2D(tDiffuse,vUv).rgb*w[0];
+    for(int i=1;i<5;i++){ vec2 o=dir*float(i);
+      s+=texture2D(tDiffuse,vUv+o).rgb*w[i]; s+=texture2D(tDiffuse,vUv-o).rgb*w[i]; }
+    gl_FragColor=vec4(s,1.0); }`});
+
+// ---- final composite: tonemap + bloom + dither + grain + vignette ----
+const finalMat=new THREE.ShaderMaterial({
+  uniforms:{ tScene:{value:rtScene.texture}, tBloom:{value:rtBloomA.texture},
+    bayer4:{value:bayer4Tex}, bayer8:{value:bayer8Tex},
+    res:{value:new THREE.Vector2(LOWW,LOWH)},
+    ditherMode:{value:1.0}, ditherStrength:{value:0.5}, levels:{value:22.0},
+    bloomStrength:{value:0.85}, exposure:{value:1.3}, vignette:{value:0.5}, grain:{value:0.05}, time:{value:0.0} },
+  vertexShader:VERT,
+  fragmentShader:`precision highp float;
+    uniform sampler2D tScene,tBloom,bayer4,bayer8; uniform vec2 res;
+    uniform float ditherMode,ditherStrength,levels,bloomStrength,exposure,vignette,grain,time;
+    varying vec2 vUv;
+    vec3 aces(vec3 x){ return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.0,1.0); }
+    float hash(vec2 p){ return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453); }
     void main(){
-      vec3 c = texture2D(tDiffuse, vUv).rgb;
-      vec2 p = floor(vUv*res);
-      int bx = int(mod(p.x,4.0)); int by = int(mod(p.y,4.0));
-      float th = (bayer(bx,by)+0.5)/16.0;              // 0..1 threshold
-      float n = max(levels-1.0, 1.0);
-      vec3 q = floor(c*n + th)/n;                      // dithered quantize
-      // gentle palette lean: pull neutrals slightly toward cold teal/blue
-      float lum = dot(q, vec3(0.299,0.587,0.114));
-      q = mix(q, vec3(lum)*vec3(0.80,0.96,1.05), 0.08);
-      gl_FragColor = vec4(q,1.0);
+      vec2 px = floor(vUv*res);
+      vec2 suv = (px+0.5)/res;                       // snap -> crisp low-res pixels
+      vec3 scene = texture2D(tScene, suv).rgb;
+      vec3 bloom = texture2D(tBloom, vUv).rgb;        // smooth
+      vec3 c = scene + bloom*bloomStrength;
+      c = aces(c*exposure);
+      float lum = dot(c, vec3(0.299,0.587,0.114));
+      if(ditherMode > 0.5){
+        float th; float n = max(levels-1.0, 1.0);
+        if(ditherMode > 1.5){ vec2 b=(mod(px,4.0)+0.5)/4.0; th=texture2D(bayer4,b).r;
+          vec3 q=floor(c*n+th)/n;
+          c=mix(q, vec3(dot(q,vec3(0.299,0.587,0.114)))*vec3(0.80,0.96,1.05), 0.08); // strong look
+        } else { vec2 b=(mod(px,8.0)+0.5)/8.0; th=texture2D(bayer8,b).r;
+          vec3 q=floor(c*n+th)/n;
+          float w=(1.0-smoothstep(0.30,0.92,lum))*ditherStrength;                     // mostly darks/mids
+          c=mix(c,q,w);
+        }
+      }
+      float g=(hash(vUv*res+vec2(time))-0.5)*grain; c += g*(1.0-0.55*lum);            // film grain
+      vec2 d=vUv-0.5; float v=clamp(1.0-dot(d,d)*vignette*2.4,0.0,1.0); c*=v;          // vignette
+      gl_FragColor=vec4(pow(max(c,0.0),vec3(1.0/2.2)),1.0);
     }`
 });
-postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2), postMat));
+
+function renderScene(){
+  // 1) scene -> HDR target
+  renderer.setRenderTarget(rtScene); renderer.clear(); renderer.render(scene, camera);
+  // 2) bright pass -> bloomA (half res)
+  brightMat.uniforms.tDiffuse.value=rtScene.texture; brightMat.uniforms.threshold.value=CONFIG.visual.bloom.threshold;
+  blit(brightMat, rtBloomA);
+  // 3) blur H (A->B) then V (B->A), scaled by radius
+  const rad=CONFIG.visual.bloom.radius;
+  blurMat.uniforms.tDiffuse.value=rtBloomA.texture; blurMat.uniforms.dir.value.set(rad/BW,0); blit(blurMat, rtBloomB);
+  blurMat.uniforms.tDiffuse.value=rtBloomB.texture; blurMat.uniforms.dir.value.set(0,rad/BH); blit(blurMat, rtBloomA);
+  blurMat.uniforms.tDiffuse.value=rtBloomA.texture; blurMat.uniforms.dir.value.set(rad*2.0/BW,0); blit(blurMat, rtBloomB);
+  blurMat.uniforms.tDiffuse.value=rtBloomB.texture; blurMat.uniforms.dir.value.set(0,rad*2.0/BH); blit(blurMat, rtBloomA);
+  // 4) final composite -> screen
+  const v=CONFIG.visual, m=DITHER_MODE_NUM[v.ditherMode];
+  const u=finalMat.uniforms;
+  u.tScene.value=rtScene.texture; u.tBloom.value=rtBloomA.texture;
+  u.ditherMode.value=m; u.bloomStrength.value=v.bloom.strength; u.exposure.value=v.exposure;
+  u.vignette.value=v.vignette; u.grain.value=v.grain;
+  u.levels.value = m>1.5? v.paletteLevels.strong : v.paletteLevels.subtle;
+  u.ditherStrength.value = m>1.5? v.ditherStrength.strong : v.ditherStrength.subtle;
+  u.time.value = now*0.001;
+  blit(finalMat, null);
+}
+const DITHER_MODE_NUM={ off:0.0, subtle:1.0, strong:2.0 };
 
 function setResolution(idx){
   CONFIG.render.active = idx;
   [LOWW,LOWH] = CONFIG.render.resolutions[idx];
-  rt.dispose(); rt = makeRT(LOWW,LOWH);
-  postMat.uniforms.tDiffuse.value = rt.texture;
-  postMat.uniforms.res.value.set(LOWW,LOWH);
+  rtScene.dispose(); rtBloomA.dispose(); rtBloomB.dispose();
+  rtScene = sceneRT(LOWW,LOWH);
+  BW=Math.ceil(LOWW/2); BH=Math.ceil(LOWH/2);
+  rtBloomA = bloomRT(BW,BH); rtBloomB = bloomRT(BW,BH);
+  finalMat.uniforms.res.value.set(LOWW,LOWH);
   camera.aspect = LOWW/LOWH; camera.updateProjectionMatrix();
 }
 
@@ -378,6 +501,16 @@ function onResize(){
 }
 window.addEventListener('resize', onResize);
 
+// per-area fog tween + helper to turn a hex into an emissive (possibly >1) colour
+function emissive(hex, mul){ const c=new THREE.Color(hex); c.multiplyScalar(mul===undefined?1:mul); return c; }
+let fogTarget=new THREE.Color(CONFIG.visual.areas['Cryo Bay'].fog);
+function updateFog(areaName, dt){
+  const a=CONFIG.visual.areas[areaName]||CONFIG.visual.areas['the ship'];
+  fogTarget.setHex(a.fog);
+  fogColor.lerp(fogTarget, Math.min(1, dt*1.5));
+  scene.fog.color.copy(fogColor); scene.background = fogColor;
+}
+
 /* -------------------------------- LEVEL ---------------------------------- */
 // palette (linear-ish sRGB) kept readable
 const COL = {
@@ -390,14 +523,97 @@ const COL = {
   lightEm: 0xbfd0d8, redEm:0x8a1410,
 };
 
-const matWall = new THREE.MeshPhongMaterial({ color:0xffffff, flatShading:true, shininess:2, specular:0x0a0f14 });
-const matFloor= new THREE.MeshPhongMaterial({ color:COL.floor, flatShading:true, shininess:1, specular:0x05080a });
-const matCeil = new THREE.MeshPhongMaterial({ color:COL.ceil, flatShading:true, shininess:0 });
+/* ---- procedural canvas textures (no external files) ---- */
+function cvs(w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+function tex(canvas, rep){ const t=new THREE.CanvasTexture(canvas); t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  t.anisotropy=4; if(rep) t.repeat.set(rep,rep); return t; }
+function wallTexture(){
+  const c=cvs(128,128), g=c.getContext('2d');
+  g.fillStyle='#8a97a3'; g.fillRect(0,0,128,128);                 // mid grey (tinted per-instance)
+  // subtle vertical brushed streaks
+  for(let i=0;i<120;i++){ g.globalAlpha=0.04+Math.random()*0.05; g.fillStyle=Math.random()<.5?'#aeb9c3':'#5f6a74';
+    const x=Math.random()*128; g.fillRect(x,0,1,128); }
+  g.globalAlpha=1;
+  // inset panel border
+  g.strokeStyle='#5c6670'; g.lineWidth=3; g.strokeRect(9,9,110,110);
+  g.strokeStyle='#aab4bd'; g.lineWidth=1; g.strokeRect(11,11,106,106);
+  // horizontal seam
+  g.strokeStyle='#4e5861'; g.lineWidth=2; g.beginPath(); g.moveTo(0,64); g.lineTo(128,64); g.stroke();
+  // rivets
+  g.fillStyle='#39424b'; for(const [x,y] of [[18,18],[110,18],[18,110],[110,110],[64,20],[64,108]]){
+    g.beginPath(); g.arc(x,y,2.2,0,7); g.fill(); }
+  g.fillStyle='#b9c3cc'; for(const [x,y] of [[18,18],[110,18],[18,110],[110,110]]){ g.beginPath(); g.arc(x-0.6,y-0.6,1,0,7); g.fill(); }
+  return tex(c);
+}
+function floorTexture(){
+  const c=cvs(128,128), g=c.getContext('2d');
+  g.fillStyle='#4a545e'; g.fillRect(0,0,128,128);
+  g.strokeStyle='#2c343c'; g.lineWidth=4; g.strokeRect(0,0,128,128);
+  g.strokeStyle='#2c343c'; g.lineWidth=2; g.beginPath(); g.moveTo(64,0);g.lineTo(64,128);g.moveTo(0,64);g.lineTo(128,64); g.stroke();
+  g.fillStyle='#39424b'; for(const [x,y] of [[10,10],[118,10],[10,118],[118,118]]){ g.beginPath(); g.arc(x,y,2.5,0,7); g.fill(); }
+  for(let i=0;i<60;i++){ g.globalAlpha=0.05; g.fillStyle='#20262c'; g.fillRect(Math.random()*128,Math.random()*128,Math.random()*8,Math.random()*8); }
+  g.globalAlpha=1; return tex(c);
+}
+function ceilTexture(){
+  const c=cvs(128,128), g=c.getContext('2d');
+  g.fillStyle='#3a434c'; g.fillRect(0,0,128,128);
+  g.strokeStyle='#272e35'; g.lineWidth=3; g.strokeRect(6,6,116,116);
+  g.strokeStyle='#272e35'; g.lineWidth=5; g.beginPath(); g.moveTo(0,20);g.lineTo(128,20);g.moveTo(0,108);g.lineTo(128,108); g.stroke();
+  return tex(c);
+}
+function gratingTexture(){
+  const c=cvs(64,64), g=c.getContext('2d');
+  g.clearRect(0,0,64,64);
+  g.fillStyle='rgba(10,13,16,0.9)'; g.fillRect(0,0,64,64);
+  g.strokeStyle='#5a646e'; g.lineWidth=3;
+  for(let i=8;i<64;i+=16){ g.beginPath(); g.moveTo(i,0);g.lineTo(i,64); g.stroke(); g.beginPath(); g.moveTo(0,i);g.lineTo(64,i); g.stroke(); }
+  g.fillStyle='#1a2026'; for(let x=8;x<64;x+=16)for(let y=8;y<64;y+=16){ g.fillRect(x+2,y+2,12,12); }
+  const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; return t;
+}
+function hazardTexture(){
+  const c=cvs(128,32), g=c.getContext('2d');
+  g.fillStyle='#1a1d22'; g.fillRect(0,0,128,32);
+  g.fillStyle='#c79a2a'; for(let x=-32;x<128;x+=24){ g.beginPath(); g.moveTo(x,0);g.lineTo(x+12,0);g.lineTo(x+12-32,32);g.lineTo(x-32,32); g.fill(); }
+  const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; return t;
+}
+function spaceTexture(withPlanet){
+  const c=cvs(256,256), g=c.getContext('2d');
+  const grd=g.createLinearGradient(0,0,0,256); grd.addColorStop(0,'#01030a'); grd.addColorStop(1,'#050211');
+  g.fillStyle=grd; g.fillRect(0,0,256,256);
+  for(let i=0;i<340;i++){ const x=Math.random()*256,y=Math.random()*256,r=Math.random()*1.3;
+    g.globalAlpha=0.3+Math.random()*0.7; g.fillStyle=Math.random()<0.15?'#bcd2ff':'#ffffff'; g.beginPath(); g.arc(x,y,r,0,7); g.fill(); }
+  g.globalAlpha=1;
+  // faint nebula wash
+  for(let i=0;i<3;i++){ const rg=g.createRadialGradient(60+i*70,80+i*40,2,60+i*70,80+i*40,90);
+    rg.addColorStop(0, ['rgba(60,90,160,0.18)','rgba(120,60,150,0.14)','rgba(40,120,130,0.12)'][i]); rg.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=rg; g.fillRect(0,0,256,256); }
+  if(withPlanet){ // a distant planet with a terminator and a thin rim light
+    const px=176,py=96,pr=46;
+    const pg=g.createRadialGradient(px-16,py-16,6,px,py,pr);
+    pg.addColorStop(0,'#5b7fae'); pg.addColorStop(0.55,'#2d4766'); pg.addColorStop(1,'#0a1422');
+    g.fillStyle=pg; g.beginPath(); g.arc(px,py,pr,0,7); g.fill();
+    g.globalAlpha=0.25; g.fillStyle='#7fb0d8'; for(let i=0;i<5;i++){ g.beginPath();
+      g.ellipse(px-10+Math.random()*30,py-20+Math.random()*40,10+Math.random()*12,3+Math.random()*4,0,0,7); g.fill(); }
+    g.globalAlpha=1; g.strokeStyle='rgba(180,210,255,0.5)'; g.lineWidth=1.5; g.beginPath(); g.arc(px,py,pr,-1.1,0.9); g.stroke();
+  }
+  const t=new THREE.CanvasTexture(c); t.magFilter=THREE.LinearFilter; t.minFilter=THREE.LinearFilter; return t;
+}
+
+const TEX = {};
+const matWall = new THREE.MeshPhongMaterial({ color:0xffffff, shininess:6, specular:0x0b1016 });
+const matFloor= new THREE.MeshPhongMaterial({ color:0xffffff, shininess:8, specular:0x0b1016 });
+const matCeil = new THREE.MeshPhongMaterial({ color:0xffffff, shininess:2, specular:0x05080a });
+
+// per-area accent colour for tinting walls/floors/lights so areas read distinctly
+function areaAccent(r,c){ const a=CONFIG.visual.areas[areaOf(r,c)]||CONFIG.visual.areas['the ship']; return a; }
 
 const WH = CONFIG.world.wallHeight;
 const lightCells = [];   // candidate ceiling fixtures
 
 function buildLevel(){
+  TEX.wall=wallTexture(); TEX.floor=floorTexture(); TEX.ceil=ceilTexture(); TEX.grating=gratingTexture();
+  matWall.map=TEX.wall; matFloor.map=TEX.floor; matCeil.map=TEX.ceil;
+  matWall.needsUpdate=matFloor.needsUpdate=matCeil.needsUpdate=true;
   // ---- gather cells ----
   const wallCells=[], floorCells=[], ceilCells=[];
   for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
@@ -409,15 +625,17 @@ function buildLevel(){
   // ---- walls (instanced) ----
   const wallGeo=new THREE.BoxGeometry(TILE,WH,TILE);
   const walls=new THREE.InstancedMesh(wallGeo, matWall, wallCells.length);
+  walls.receiveShadow=true; walls.castShadow=true;
   const m=new THREE.Matrix4(), col=new THREE.Color();
+  const baseWall=new THREE.Color(0x3a4650);
   wallCells.forEach(([r,c],i)=>{
     m.makeTranslation(cellX(c), WH/2, cellZ(r));
     walls.setMatrixAt(i,m);
-    // tint walls faintly by area + a little noise so faces read in flat shading
-    const base = new THREE.Color(COL.wall);
-    const tint = (areaOf(r,c)==='the Bridge') ? 0.0 : 0.0;
-    const j = 0.82 + 0.3*(( (r*7+c*13)%5 )/5);
-    col.copy(base).multiplyScalar(j);
+    // tint toward the area accent, with slight per-cell variation so faces differ
+    const a=areaAccent(r,c); const acc=new THREE.Color(a.accent);
+    col.copy(baseWall).lerp(acc, 0.22);
+    const j=0.80 + 0.26*(((r*7+c*13)%5)/5);
+    col.multiplyScalar(j);
     walls.setColorAt(i,col);
   });
   walls.instanceMatrix.needsUpdate=true; if(walls.instanceColor) walls.instanceColor.needsUpdate=true;
@@ -426,9 +644,12 @@ function buildLevel(){
   // ---- floor (instanced thin slabs) ----
   const fGeo=new THREE.BoxGeometry(TILE,0.12,TILE);
   const floor=new THREE.InstancedMesh(fGeo, matFloor, floorCells.length);
+  floor.receiveShadow=true;
+  const baseFloor=new THREE.Color(0x2c343c);
   floorCells.forEach(([r,c],i)=>{
     m.makeTranslation(cellX(c), -0.06, cellZ(r)); floor.setMatrixAt(i,m);
-    col.copy(new THREE.Color((r+c)%2? COL.floor:COL.floorAlt));
+    const a=areaAccent(r,c);
+    col.copy(baseFloor).lerp(new THREE.Color(a.accent),0.1).multiplyScalar((r+c)%2?1.0:0.86);
     floor.setColorAt(i,col);
   });
   floor.instanceMatrix.needsUpdate=true; if(floor.instanceColor) floor.instanceColor.needsUpdate=true;
@@ -442,64 +663,194 @@ function buildLevel(){
     if(isFix){ lightCells.push([r,c]); } else ceils.push([r,c]);
   });
   const ceil=new THREE.InstancedMesh(cGeo, matCeil, ceils.length);
-  ceils.forEach(([r,c],i)=>{ m.makeTranslation(cellX(c), WH, cellZ(r)); ceil.setMatrixAt(i,m); });
-  ceil.instanceMatrix.needsUpdate=true; scene.add(ceil);
+  const baseCeil=new THREE.Color(0x222a31);
+  ceils.forEach(([r,c],i)=>{ m.makeTranslation(cellX(c), WH, cellZ(r)); ceil.setMatrixAt(i,m);
+    col.copy(baseCeil).lerp(new THREE.Color(areaAccent(r,c).accent),0.08); ceil.setColorAt(i,col); });
+  ceil.instanceMatrix.needsUpdate=true; if(ceil.instanceColor) ceil.instanceColor.needsUpdate=true; scene.add(ceil);
 
+  buildGrating(floorCells);
+  buildStructure(floorCells);   // beams + ceiling pipes
   buildLights();
   buildProps();
+  buildWindows();
   buildSigns();
 }
 
+// floor grating strip down the centre of walkable cells
+function buildGrating(floorCells){
+  const mat=new THREE.MeshBasicMaterial({ map:TEX.grating, transparent:true, depthWrite:false });
+  const geo=new THREE.PlaneGeometry(TILE*0.5, TILE);
+  const mesh=new THREE.InstancedMesh(geo, mat, floorCells.length);
+  const m=new THREE.Matrix4(), q=new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI/2,0,0));
+  const s=new THREE.Vector3(1,1,1), p=new THREE.Vector3();
+  floorCells.forEach(([r,c],i)=>{ p.set(cellX(c),0.02,cellZ(r)); m.compose(p,q,s); mesh.setMatrixAt(i,m); });
+  mesh.instanceMatrix.needsUpdate=true; mesh.renderOrder=1; scene.add(mesh);
+}
+
+// ribs/beams across corridors + a pipe run near the ceiling
+function buildStructure(floorCells){
+  const beamMat=new THREE.MeshPhongMaterial({ color:0x2a333b, shininess:4 });
+  const pipeMat=new THREE.MeshPhongMaterial({ color:0x39434d, shininess:20, specular:0x20262c });
+  const beams=[], pipes=[];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    if(charAt(r,c)==='#'||charAt(r,c)==='C') continue;
+    // beam across the ceiling every ~3 tiles
+    if(c%3===0){ beams.push([r,c]); }
+  }
+  const bGeo=new THREE.BoxGeometry(TILE,0.35,0.3);
+  const bm=new THREE.InstancedMesh(bGeo,beamMat,beams.length); bm.castShadow=true;
+  const m=new THREE.Matrix4();
+  beams.forEach(([r,c],i)=>{ m.makeTranslation(cellX(c),WH-0.2,cellZ(r)); bm.setMatrixAt(i,m); });
+  bm.instanceMatrix.needsUpdate=true; scene.add(bm);
+  // a continuous pipe along the main corridor (row 9), tucked to one side near ceiling
+  const pr=9; const segs=[];
+  for(let c=1;c<=62;c++){ if(charAt(pr,c)!=='#'&&charAt(pr,c)!=='C') segs.push(c); }
+  const pGeo=new THREE.CylinderGeometry(0.1,0.1,TILE,6);
+  const pm=new THREE.InstancedMesh(pGeo,pipeMat,segs.length*2);
+  const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI/2,0,0)); const s=new THREE.Vector3(1,1,1),p=new THREE.Vector3();
+  let idx=0;
+  segs.forEach(c=>{
+    p.set(cellX(c),WH-0.45,cellZ(pr)-TILE*0.38); m.compose(p,q,s); pm.setMatrixAt(idx++,m);
+    p.set(cellX(c),WH-0.75,cellZ(pr)-TILE*0.30); m.compose(p,q,s); pm.setMatrixAt(idx++,m);
+  });
+  pm.instanceMatrix.needsUpdate=true; scene.add(pm);
+}
+
 const flickerLights=[], redLights=[], fixtureMeshes=[];
+const shaftMeshes=[];
 function buildLights(){
   // very dim ambient + hemisphere so unlit areas aren't pure black
-  scene.add(new THREE.AmbientLight(0x1a2740, 0.26));
-  const hemi=new THREE.HemisphereLight(0x27405a, 0x05070a, 0.34); scene.add(hemi);
+  scene.add(new THREE.AmbientLight(0x1a2740, 0.24));
+  const hemi=new THREE.HemisphereLight(0x27405a, 0x05070a, 0.30); scene.add(hemi);
 
-  // ceiling fixtures: emissive panels; a sparse subset gets a real flicker light
-  const fixGeo=new THREE.BoxGeometry(TILE*0.7,0.12,TILE*0.7);
-  const emMat=new THREE.MeshBasicMaterial({ color:COL.lightEm });
-  let realCount=0;
+  // ceiling fixtures: a housing + an emissive panel that leans toward the area colour;
+  // a sparse subset gets a real (shadowless) flicker light, and a few get a light shaft.
+  const housingGeo=new THREE.BoxGeometry(TILE*0.82,0.22,TILE*0.82);
+  const panelGeo=new THREE.BoxGeometry(TILE*0.62,0.08,TILE*0.62);
+  const housingMat=new THREE.MeshPhongMaterial({ color:0x202830, shininess:10 });
+  let realCount=0, shaftCount=0;
   lightCells.forEach(([r,c])=>{
-    const panel=new THREE.Mesh(fixGeo, emMat.clone());
-    panel.position.set(cellX(c), WH-0.12, cellZ(r));
-    panel.userData.base = 0.9 + Math.random()*0.1;
+    const a=areaAccent(r,c); const lc=new THREE.Color(a.light);
+    const housing=new THREE.Mesh(housingGeo, housingMat); housing.position.set(cellX(c),WH-0.1,cellZ(r)); scene.add(housing);
+    const panel=new THREE.Mesh(panelGeo, new THREE.MeshBasicMaterial({ color:emissive(a.light,1.3) }));
+    panel.position.set(cellX(c), WH-0.17, cellZ(r));
+    panel.userData={base:1.3, baseCol:lc};
     scene.add(panel); fixtureMeshes.push(panel);
-    if(realCount<6 && (c%10===3)){
-      const L=new THREE.PointLight(0xa9c6d6, 0.9, TILE*6.5, 2.0);
-      L.position.set(cellX(c), WH-0.4, cellZ(r));
-      L.userData={panel, base:0.9, flick:Math.random()*10};
+    if(realCount<6 && (c%9===3)){
+      const L=new THREE.PointLight(lc.getHex(), 0.9, TILE*7, 2.0);
+      L.position.set(cellX(c), WH-0.5, cellZ(r));
+      L.userData={panel, base:0.95, flick:Math.random()*10};
       scene.add(L); flickerLights.push(L); realCount++;
+    }
+    if(shaftCount<9 && c%6===3){
+      const shaftMat=new THREE.MeshBasicMaterial({ color:emissive(a.light,0.5), transparent:true, opacity:0.05,
+        blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide });
+      const shaft=new THREE.Mesh(new THREE.ConeGeometry(TILE*0.55, WH*1.1, 10, 1, true), shaftMat);
+      shaft.position.set(cellX(c), WH*0.45, cellZ(r)); shaft.renderOrder=2;
+      shaft.userData={panel}; scene.add(shaft); shaftMeshes.push(shaft); shaftCount++;
     }
   });
 
   // red emergency lights near each door, a few real
-  const redGeo=new THREE.SphereGeometry(0.14,6,5);
-  const redMat=new THREE.MeshBasicMaterial({ color:0xff3322 });
+  const redGeo=new THREE.SphereGeometry(0.12,8,6);
+  const redHousing=new THREE.BoxGeometry(0.3,0.3,0.18);
   let redReal=0;
   SIGNS.forEach((s,i)=>{
-    const x=cellX(s.c)+TILE*0.5, z=cellZ(s.r)-TILE*0.4, y=WH-0.3;
-    const b=new THREE.Mesh(redGeo, redMat.clone()); b.position.set(x,y,z); scene.add(b); fixtureMeshes.push(b);
+    const x=cellX(s.c)+TILE*0.5, z=cellZ(s.r)-TILE*0.42, y=WH-0.35;
+    const hs=new THREE.Mesh(redHousing, new THREE.MeshPhongMaterial({color:0x1a1416})); hs.position.set(x,y,z); scene.add(hs);
+    const b=new THREE.Mesh(redGeo, new THREE.MeshBasicMaterial({ color:emissive(0xff2a18,1.6) })); b.position.set(x,y,z+0.1); scene.add(b); fixtureMeshes.push(b);
     if(redReal<4 && i%3===0){
-      const L=new THREE.PointLight(0xff2a1a, 0.5, TILE*5, 2.2);
+      const L=new THREE.PointLight(0xff2a1a, 0.45, TILE*5, 2.2);
       L.position.set(x,y,z); L.userData={bulb:b, phase:Math.random()*6};
       scene.add(L); redLights.push(L); redReal++;
     }
   });
 }
 
-function makeBox(w,h,d,color,x,y,z,flat=true){
-  const mat=new THREE.MeshPhongMaterial({ color, flatShading:flat, shininess:4, specular:0x0a0f14 });
-  const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
-  mesh.position.set(x,y,z); scene.add(mesh); return mesh;
+// dust motes that only read inside the flashlight beam (parented to the player)
+let dustPoints=null;
+function buildDust(){
+  const n=CONFIG.visual.dust; const pos=new Float32Array(n*3);
+  for(let i=0;i<n;i++){ // scatter in a forward cone volume ahead of the camera
+    const d=1.0+Math.random()*CONFIG.flashlight.range*0.8;
+    const spread=d*0.22;
+    pos[i*3]=(Math.random()-0.5)*spread;
+    pos[i*3+1]=(Math.random()-0.5)*spread;
+    pos[i*3+2]=-d;
+  }
+  const geo=new THREE.BufferGeometry(); geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const mat=new THREE.PointsMaterial({ color:emissive(0xfff0d0,1.2), size:0.035, transparent:true, opacity:0.0,
+    blending:THREE.AdditiveBlending, depthWrite:false, sizeAttenuation:true });
+  dustPoints=new THREE.Points(geo,mat); dustPoints.frustumCulled=false;
+  player.obj.add(dustPoints);
 }
-function makeScreen(x,y,z,amber,rotY=0){
-  const mat=new THREE.MeshBasicMaterial({ color: amber?COL.screenAmber:COL.screen });
-  const s=new THREE.Mesh(new THREE.PlaneGeometry(0.7,0.5), mat);
+
+// a few windows looking out into space (purely decorative planes on wall faces)
+function buildWindows(){
+  const sky=spaceTexture(false), skyPlanet=spaceTexture(true);
+  const frameMat=new THREE.MeshPhongMaterial({color:0x2a333c, shininess:8});
+  // helper: place a window on wall cell (r,c) facing dir (dx,dz into the room)
+  function win(r,c, dx,dz, w,h, planet){
+    if(charAt(r,c)!=='#' && charAt(r,c)!=='C') return;
+    const x=cellX(c), z=cellZ(r), y=1.5;
+    const faceX=x+dx*(TILE*0.5+0.02), faceZ=z+dz*(TILE*0.5+0.02);
+    const rotY=Math.atan2(dx,dz);
+    const glass=new THREE.Mesh(new THREE.PlaneGeometry(w,h), new THREE.MeshBasicMaterial({map:planet?skyPlanet:sky}));
+    glass.position.set(faceX,y,faceZ); glass.rotation.y=rotY; scene.add(glass);
+    // frame
+    const fr=new THREE.Group();
+    const vt=new THREE.Mesh(new THREE.BoxGeometry(0.12,h+0.3,0.14),frameMat); vt.position.set(-w/2,0,0);
+    const vt2=vt.clone(); vt2.position.set(w/2,0,0);
+    const hz=new THREE.Mesh(new THREE.BoxGeometry(w+0.3,0.12,0.14),frameMat); hz.position.set(0,h/2,0);
+    const hz2=hz.clone(); hz2.position.set(0,-h/2,0);
+    const mull=new THREE.Mesh(new THREE.BoxGeometry(0.06,h,0.14),frameMat);
+    fr.add(vt,vt2,hz,hz2,mull); fr.position.set(faceX,y,faceZ); fr.rotation.y=rotY; scene.add(fr);
+  }
+  // corridor portholes (row 7 wall faces south into the hall; row 11 faces north)
+  win(7,10, 0,1, 2.0,1.3, false);     // Cargo Hold
+  win(7,33, 0,1, 2.0,1.3, false);     // Mess Hall
+  win(11,24,0,-1,2.0,1.3, false);     // Crew Quarters
+  win(7,44, 0,1, 2.0,1.3, false);     // Hydroponics
+  // the bridge forward viewport — the big one, straight ahead as you arrive
+  win(9,63, -1,0, 2.6,2.0, true);
+  win(8,63, -1,0, 2.6,2.0, true);
+  win(10,63,-1,0, 2.6,2.0, true);
+}
+
+function makeBox(w,h,d,color,x,y,z,flat=true){
+  const mat=new THREE.MeshPhongMaterial({ color, flatShading:flat, shininess:6, specular:0x0a0f14 });
+  const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
+  mesh.position.set(x,y,z); mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh); return mesh;
+}
+
+// ---- animated readout screens (shared pool of canvas textures) ----
+const screenPool=[];
+function makeScreenPool(){
+  const defs=[ {hue:'#49d8d0',kind:'wave'}, {hue:'#ffb347',kind:'bars'},
+               {hue:'#6fa0ff',kind:'grid'}, {hue:'#8fe6c0',kind:'wave'} ];
+  defs.forEach(d=>{ const c=cvs(64,48); const t=new THREE.CanvasTexture(c); t.magFilter=THREE.LinearFilter; t.minFilter=THREE.LinearFilter;
+    screenPool.push({canvas:c, ctx:c.getContext('2d'), tex:t, kind:d.kind, hue:d.hue, t:Math.random()*10}); });
+}
+function updateScreens(dt){
+  for(const s of screenPool){
+    s.t+=dt; const g=s.ctx; g.fillStyle='#04120f'; g.fillRect(0,0,64,48);
+    g.strokeStyle=s.hue; g.fillStyle=s.hue; g.lineWidth=1.5;
+    if(s.kind==='wave'){ g.beginPath(); for(let x=0;x<64;x++){ const y=24+Math.sin(x*0.3+s.t*4)*8*Math.sin(s.t*0.6)+Math.sin(x*0.11+s.t)*4; if(x===0)g.moveTo(x,y); else g.lineTo(x,y);} g.stroke(); }
+    else if(s.kind==='bars'){ for(let i=0;i<8;i++){ const h=6+((Math.sin(s.t*3+i)*0.5+0.5)*34); g.fillRect(3+i*7.6,46-h,5,h); } }
+    else { g.globalAlpha=0.5; for(let i=0;i<6;i++){ const y=(((s.t*12)+i*9)%54)-6; g.fillRect(4,y,56,2);} g.globalAlpha=1;
+      g.font='7px monospace'; g.fillText('SYS '+(Math.floor(s.t*3)%100),4,10); }
+    s.tex.needsUpdate=true;
+  }
+}
+function makeScreen(x,y,z,variant,rotY=0){
+  const sp=screenPool[variant%screenPool.length];
+  const mat=new THREE.MeshBasicMaterial({ color:emissive(0xffffff,1.35), map:sp.tex });
+  const s=new THREE.Mesh(new THREE.PlaneGeometry(0.72,0.52), mat);
   s.position.set(x,y,z); s.rotation.y=rotY; scene.add(s); return s;
 }
 
 function buildProps(){
+  makeScreenPool();
   for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
     const ch=charAt(r,c); const x=cellX(c), z=cellZ(r);
     if(ch==='H'){ // crate
@@ -507,14 +858,21 @@ function buildProps(){
       makeBox(TILE*0.55,0.5,TILE*0.55, 0x5a4e3a, x, 1.55, z);
     } else if(ch==='O'){ // console
       makeBox(TILE*0.8,1.0,TILE*0.6, COL.prop, x, 0.5, z);
-      makeScreen(x, 1.15, z+ (r>9?-TILE*0.33:TILE*0.33), (c+r)%2===0, r>9?0:Math.PI);
+      makeScreen(x, 1.15, z+ (r>9?-TILE*0.33:TILE*0.33), (c+r), r>9?0:Math.PI);
+      // small blinking indicator strip on the console lip (glows)
+      const led=new THREE.Mesh(new THREE.BoxGeometry(TILE*0.5,0.04,0.04),
+        new THREE.MeshBasicMaterial({color:emissive(areaAccent(r,c).accent,1.4)}));
+      led.position.set(x,1.02,z+(r>9?-TILE*0.3:TILE*0.3)); scene.add(led);
     } else if(ch==='U'){ // bunk
       makeBox(TILE*0.85,0.4,TILE*0.7, COL.bunk, x, 0.35, z);
       makeBox(TILE*0.85,0.1,TILE*0.7, 0x3a4650, x, 0.95, z);
+      makeBox(TILE*0.85,0.5,0.08, 0x252e36, x, 0.6, z-TILE*0.33); // headboard
     } else if(ch==='Y'){ // cryo pod
       makeBox(TILE*0.7,1.9,TILE*0.7, COL.pod, x, 0.95, z);
-      const g=new THREE.Mesh(new THREE.BoxGeometry(TILE*0.4,1.3,0.06),
-        new THREE.MeshBasicMaterial({color:0x183b42})); g.position.set(x,1.1,z+TILE*0.33); scene.add(g);
+      const g=new THREE.Mesh(new THREE.BoxGeometry(TILE*0.42,1.4,0.06),
+        new THREE.MeshBasicMaterial({color:emissive(0x2fa6c8,0.9)})); g.position.set(x,1.1,z+TILE*0.33); scene.add(g);
+      const cap=new THREE.Mesh(new THREE.BoxGeometry(TILE*0.74,0.12,TILE*0.74),
+        new THREE.MeshBasicMaterial({color:emissive(0x7fd8ff,1.1)})); cap.position.set(x,1.98,z); scene.add(cap);
     } else if(ch==='T'){ // table
       makeBox(TILE*0.9,0.1,TILE*0.6, 0x3b4751, x, 0.9, z);
       makeBox(0.1,0.9,0.1,0x2a333b, x-TILE*0.35,0.45,z);
@@ -560,35 +918,42 @@ function buildDoors(){
     }
   }
 }
+if(!TEX.hazard) TEX.hazard=hazardTexture();
 function createDoor(r,c,isAirlock){
   const x=cellX(c), z=cellZ(r);
   const grp=new THREE.Group();
   // two sliding leaves
-  const leafMat=new THREE.MeshPhongMaterial({ color: isAirlock?0x4a5a3a:COL.door, flatShading:true, shininess:6, specular:0x101418 });
-  const leafGeo=new THREE.BoxGeometry(0.28, WH-0.1, TILE*0.5);
-  const l1=new THREE.Mesh(leafGeo, leafMat); l1.position.set(0,(WH-0.1)/2, -TILE*0.25);
-  const l2=new THREE.Mesh(leafGeo, leafMat.clone()); l2.position.set(0,(WH-0.1)/2, TILE*0.25);
+  const leafMat=new THREE.MeshPhongMaterial({ color: isAirlock?0x586a46:0x44525e, flatShading:false, shininess:14, specular:0x141a20 });
+  const leafGeo=new THREE.BoxGeometry(0.26, WH-0.1, TILE*0.5);
+  const l1=new THREE.Mesh(leafGeo, leafMat); l1.position.set(0,(WH-0.1)/2, -TILE*0.25); l1.castShadow=true;
+  const l2=new THREE.Mesh(leafGeo, leafMat.clone()); l2.position.set(0,(WH-0.1)/2, TILE*0.25); l2.castShadow=true;
   grp.add(l1); grp.add(l2);
-  // red/green status panel on each side
-  const panelMat=new THREE.MeshBasicMaterial({ color:0xff3322 });
-  const pGeo=new THREE.PlaneGeometry(0.18,0.18);
-  const p1=new THREE.Mesh(pGeo, panelMat); p1.position.set(-0.16, 1.2, TILE*0.42); p1.rotation.y=Math.PI;
-  const p2=new THREE.Mesh(pGeo, panelMat.clone()); p2.position.set(0.16, 1.2, -TILE*0.42);
-  grp.add(p1); grp.add(p2);
+  // hazard-striped jamb posts on both sides of the opening
+  const hz=TEX.hazard.clone(); hz.needsUpdate=true; hz.repeat.set(1,4);
+  const jambMat=new THREE.MeshPhongMaterial({ map:hz, shininess:6 });
+  const jambGeo=new THREE.BoxGeometry(0.22, WH-0.1, 0.3);
+  const j1=new THREE.Mesh(jambGeo, jambMat); j1.position.set(0,(WH-0.1)/2, -TILE*0.5+0.1);
+  const j2=new THREE.Mesh(jambGeo, jambMat); j2.position.set(0,(WH-0.1)/2,  TILE*0.5-0.1);
+  grp.add(j1); grp.add(j2);
+  // glowing status light on each side (bloom picks these up)
+  const sGeo=new THREE.BoxGeometry(0.14,0.14,0.05);
+  const s1=new THREE.Mesh(sGeo, new THREE.MeshBasicMaterial({color:emissive(0xff2a18,1.6)})); s1.position.set(-0.18,1.35,TILE*0.5-0.02); s1.rotation.y=Math.PI;
+  const s2=new THREE.Mesh(sGeo, new THREE.MeshBasicMaterial({color:emissive(0xff2a18,1.6)})); s2.position.set(0.18,1.35,-TILE*0.5+0.02);
+  grp.add(s1); grp.add(s2);
   // lintel above
-  const lint=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,TILE), new THREE.MeshPhongMaterial({color:COL.doorFrame,flatShading:true}));
-  lint.position.set(0, WH-0.25, 0); grp.add(lint);
+  const lint=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,TILE), new THREE.MeshPhongMaterial({color:0x33404a,flatShading:false}));
+  lint.position.set(0, WH-0.25, 0); lint.castShadow=true; grp.add(lint);
   grp.position.set(x,0,z); scene.add(grp);
   return {
     r,c,x,z, isAirlock, isOpen:false, state:'closed', // closed|opening|open|closing
     open:0, timer:0, requested:false, locked:true,
-    grp, l1, l2, panels:[p1,p2],
-    setPanel(colr){ p1.material.color.setHex(colr); p2.material.color.setHex(colr); },
+    grp, l1, l2, lights:[s1,s2],
+    setPanel(col){ s1.material.color.copy(col); s2.material.color.copy(col); },
   };
 }
+const DOORCOL={ red:emissive(0xff2a18,1.6), green:emissive(0x33ff88,1.6), amber:emissive(0xffb020,1.7) };
 function updateDoors(dt){
   for(const d of doors){
-    let target = (d.state==='open'||d.state==='opening')?1:0;
     if(d.state==='opening'||d.state==='closing'){
       const sp = dt/CONFIG.doors.slideTime;
       d.open += (d.state==='opening'? sp : -sp);
@@ -599,8 +964,8 @@ function updateDoors(dt){
     const slide=(TILE*0.5)*d.open;
     d.l1.position.z = -TILE*0.25 - slide;
     d.l2.position.z =  TILE*0.25 + slide;
-    // panel color: red locked/closed, teal when open
-    d.setPanel(d.open>0.5 ? 0x33ff99 : 0xff3322);
+    // status light: red locked, green open, amber cycling
+    d.setPanel( (d.state==='opening'||d.state==='closing')?DOORCOL.amber : d.open>0.5?DOORCOL.green : DOORCOL.red );
   }
 }
 function beginOpen(d){ if(d.state==='open'||d.state==='opening') return; d.state='opening'; audio.doorHiss(); }
@@ -735,7 +1100,14 @@ function setupPlayer(){
   flashTarget=new THREE.Object3D();
   player.obj.add(flash); player.obj.add(flashTarget);
   flash.position.set(0,0,0); flashTarget.position.set(0,0,-1); flash.target=flashTarget;
+  if(CONFIG.visual.shadow.enabled){
+    flash.castShadow=true;
+    flash.shadow.mapSize.set(CONFIG.visual.shadow.size, CONFIG.visual.shadow.size);
+    flash.shadow.camera.near=0.3; flash.shadow.camera.far=CONFIG.flashlight.range;
+    flash.shadow.bias=-0.0012; flash.shadow.radius=2;
+  }
   camera.position.set(0,0,0); player.obj.add(camera);
+  buildDust();
   player.lastAreaName = areaOf(pr,pc);
 }
 
@@ -843,17 +1215,18 @@ function buildAliens(){
 }
 function createAlien(r,c){
   const grp=new THREE.Group();
-  const bodyMat=new THREE.MeshPhongMaterial({ color:0x0b1016, flatShading:true, shininess:8, specular:0x1a2230 });
+  // very dark body so it stays hidden in shadow; eyes are the only bright thing
+  const bodyMat=new THREE.MeshPhongMaterial({ color:0x090d12, flatShading:true, shininess:6, specular:0x12161c });
   // tall thin torso
-  const torso=new THREE.Mesh(new THREE.ConeGeometry(0.55,2.2,5), bodyMat); torso.position.y=1.5; torso.rotation.x=Math.PI;
-  const torso2=new THREE.Mesh(new THREE.ConeGeometry(0.42,1.6,5), bodyMat); torso2.position.y=1.9;
-  const head=new THREE.Mesh(new THREE.BoxGeometry(0.4,0.5,0.35), bodyMat); head.position.y=2.75;
+  const torso=new THREE.Mesh(new THREE.ConeGeometry(0.55,2.2,5), bodyMat); torso.position.y=1.5; torso.rotation.x=Math.PI; torso.castShadow=true;
+  const torso2=new THREE.Mesh(new THREE.ConeGeometry(0.42,1.6,5), bodyMat); torso2.position.y=1.9; torso2.castShadow=true;
+  const head=new THREE.Mesh(new THREE.BoxGeometry(0.4,0.5,0.35), bodyMat); head.position.y=2.75; head.castShadow=true;
   // limbs
   const armGeo=new THREE.BoxGeometry(0.1,1.5,0.1);
-  const arm1=new THREE.Mesh(armGeo,bodyMat); arm1.position.set(0.45,1.7,0); arm1.rotation.z=0.3;
-  const arm2=new THREE.Mesh(armGeo,bodyMat); arm2.position.set(-0.45,1.7,0); arm2.rotation.z=-0.3;
-  // glowing eyes
-  const eyeMat=new THREE.MeshBasicMaterial({ color:0xff6a2a });
+  const arm1=new THREE.Mesh(armGeo,bodyMat); arm1.position.set(0.45,1.7,0); arm1.rotation.z=0.3; arm1.castShadow=true;
+  const arm2=new THREE.Mesh(armGeo,bodyMat); arm2.position.set(-0.45,1.7,0); arm2.rotation.z=-0.3; arm2.castShadow=true;
+  // glowing eyes (emissive >1 so bloom gives them a soft halo when lit/near)
+  const eyeMat=new THREE.MeshBasicMaterial({ color:emissive(0xff6a2a,1.6) });
   const e1=new THREE.Mesh(new THREE.SphereGeometry(0.06,6,5),eyeMat); e1.position.set(0.1,2.78,0.2);
   const e2=new THREE.Mesh(new THREE.SphereGeometry(0.06,6,5),eyeMat.clone()); e2.position.set(-0.1,2.78,0.2);
   grp.add(torso); grp.add(torso2); grp.add(head); grp.add(arm1); grp.add(arm2); grp.add(e1); grp.add(e2);
@@ -975,7 +1348,7 @@ function updateAliens(dt){
     // bob/twitch
     a.obj.position.y = Math.abs(Math.sin(a.stepPhase))*0.08;
     const flick = 0.5+0.5*Math.sin(now*0.02 + a.stepPhase);
-    a.eyes.forEach(e=> e.material.color.setRGB(1.0*flick+0.2, 0.35*flick, 0.1));
+    a.eyes.forEach(e=> e.material.color.setRGB((1.0*flick+0.4)*1.5, (0.35*flick+0.05)*1.2, 0.08));
   }
 
   audio.alienProximity(nearest);
@@ -1479,19 +1852,31 @@ function placeInesFigure(){
 function restartAll(){ location.reload(); }
 
 /* flicker / light animation */
+const _c=new THREE.Color();
 function animateLights(dt){
   for(const L of flickerLights){
     const u=L.userData; u.flick+=dt;
-    let f = 0.75 + 0.25*Math.sin(u.flick*3.3);
-    if(Math.random()<0.012) f*=0.2;          // occasional dropout
-    L.intensity = 0.9*f;
-    if(u.panel) u.panel.material.color.setRGB(0.74*f+0.1, 0.82*f+0.1, 0.86*f+0.1);
+    let f = 0.78 + 0.22*Math.sin(u.flick*3.3);
+    if(Math.random()<0.010) f*=0.25;          // occasional dropout
+    L.intensity = 0.95*f;
+    if(u.panel){ _c.copy(u.panel.userData.baseCol).multiplyScalar(1.3*f); u.panel.material.color.copy(_c); }
   }
   for(const L of redLights){
     const u=L.userData; u.phase+=dt;
     const f=0.5+0.5*Math.sin(u.phase*2.2);
-    L.intensity=0.25+0.45*f;
-    if(u.bulb) u.bulb.material.color.setRGB(0.7+0.3*f,0.12*f,0.07*f);
+    L.intensity=0.22+0.4*f;
+    if(u.bulb) u.bulb.material.color.setRGB((0.9+0.6*f),0.16*f,0.07*f);
+  }
+  // light shafts pulse with their panel
+  for(const s of shaftMeshes){ const f=s.userData.panel? Math.max(0.3, s.userData.panel.material.color.g/1.5):1;
+    s.material.opacity = 0.045*f; }
+  // flashlight dust only visible when the beam is on
+  if(dustPoints){
+    const want = player.flashlight ? 0.5 : 0.0;
+    dustPoints.material.opacity += (want - dustPoints.material.opacity)*Math.min(1,dt*6);
+    dustPoints.rotation.z += dt*0.05;
+    const pa=dustPoints.geometry.attributes.position; // gentle drift
+    dustPoints._t=(dustPoints._t||0)+dt;
   }
 }
 
@@ -1538,6 +1923,7 @@ document.addEventListener('keydown', e=>{
   const k=e.key.toLowerCase();
   keys[k]=true;
   if(k==='escape'){ togglePause(); }
+  if(k==='t'){ cycleDither(); }     // dither toggle works in menu/pause/play
   if(state!=='play') { return; }
   if(k==='f'){ player.flashlight=!player.flashlight; el('flashicon').classList.toggle('on',player.flashlight); }
   if(k==='c'){ player.crouch=!player.crouch; el('crouchicon').textContent=player.crouch?'CROUCH':''; }
@@ -1565,6 +1951,22 @@ function togglePause(){
   if(state==='play'){ state='pause'; el('pause').classList.remove('hidden'); document.exitPointerLock&&document.exitPointerLock(); }
   else if(state==='pause'){ el('pause').classList.add('hidden'); state='play'; requestLock(); }
 }
+
+/* ---- dither mode: T key + pause menu, saved in localStorage ---- */
+const DITHER_ORDER=['off','subtle','strong'];
+const DITHER_LABEL={off:'Off',subtle:'Subtle',strong:'Strong'};
+function showToast(txt){ const t=el('toast'); t.textContent=txt; t.classList.add('on');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('on'),1500); }
+function applyDither(mode, announce){
+  if(!DITHER_ORDER.includes(mode)) mode='subtle';
+  CONFIG.visual.ditherMode=mode;
+  const sel=el('ditherSel'); if(sel) sel.value=mode;
+  try{ localStorage.setItem('deadair_dither', mode); }catch(e){}
+  if(announce) showToast('Dither: '+DITHER_LABEL[mode]);
+}
+function cycleDither(){ const i=DITHER_ORDER.indexOf(CONFIG.visual.ditherMode); applyDither(DITHER_ORDER[(i+1)%3], true); }
+function loadDither(){ let m='subtle'; try{ const s=localStorage.getItem('deadair_dither'); if(s) m=s; }catch(e){} applyDither(m,false); }
+el('ditherSel').onchange=e=>applyDither(e.target.value,true);
 
 /* UI buttons */
 el('startbtn').onclick=startGame;
@@ -1603,16 +2005,15 @@ function loop(t){
     updateDoors(dt);
   }
   animateLights(dt);
+  updateScreens(dt);
+  // tween fog toward the player's current area colour
+  { const pc=worldToCell(player.obj.position.x, player.obj.position.z); updateFog(areaOf(pc.r,pc.c), dt); }
 
   // radio auto-hide
   if(radioHideT>0){ radioHideT-=dt; if(radioHideT<=0) radioBox.classList.remove('on'); }
 
-  // render scene -> low-res target, then dither pass -> screen
-  renderer.setRenderTarget(rt);
-  renderer.clear();
-  renderer.render(scene, camera);
-  renderer.setRenderTarget(null);
-  renderer.render(postScene, postCam);
+  // render: scene -> HDR target -> bloom -> tonemap/dither/grain composite -> screen
+  renderScene();
 
   if(debugOn) drawDebug();
   drawDeathNoise();
@@ -1629,12 +2030,31 @@ function boot(){
   onResize();
   // reflect initial flashlight state in HUD
   el('flashicon').classList.toggle('on', player.flashlight);
+  loadDither();   // restore saved dither preference (default Subtle)
   // prime TTS voices
   if('speechSynthesis' in window){ speechSynthesis.getVoices(); }
   last=performance.now();
   requestAnimationFrame(loop);
 }
 boot();
+
+/* ===========================================================================
+   VISUAL TUNING — the CONFIG.visual knobs with the biggest effect on the look:
+
+   1. ditherMode ('off'|'subtle'|'strong')  — the headline switch (also T key).
+        off=smooth gradients, subtle=fine 8x8 grain on darks, strong=chunky retro.
+   2. exposure (1.12)        — overall brightness after ACES. Small changes matter;
+                               raise for a lifted look, lower for crushed blacks.
+   3. bloom.strength (0.5) + bloom.threshold (1.15) — how much screens/lights/eyes
+                               glow. Lower strength or raise threshold to calm it.
+   4. areas[...].fog / .light / .accent — each area's identity (fog tint, light
+                               colour, and the hue walls/floors/fixtures lean to).
+   5. ditherStrength.subtle (0.5) + paletteLevels.subtle (22) — how visible the
+                               subtle dither is (strength) and how banded (levels).
+   6. grain (0.04) and vignette (0.5) — film grain and corner falloff.
+   7. shadow.size (1024) and dust (360) — flashlight shadow crispness / mote count
+                               (the main perf levers if FPS dips on weak hardware).
+   =========================================================================== */
 </script>
 </body>
 </html>
