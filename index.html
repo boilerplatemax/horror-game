@@ -1047,25 +1047,32 @@ function buildWindows(){
     const toRoomY=Math.atan2(-ox,-oz);                       // face into the room
     const fy=floorY(ir,ic), top=ceilY(ir,ic);
     const big=w.size==='big', rect=w.size==='rect';
-    const ww = big?5.5: rect?2.4: 1.4, wh = big?3.6: rect?1.8: 1.4;
-    const wy = big? fy+2.0 : fy+1.7;
     const wx=cellX(w.c), wz=cellZ(w.r);
     // verify outer wall (debug)
     let rr=w.r,cc=w.c,outer=true; while(0<=rr&&rr<ROWS&&0<=cc&&cc<COLS){ if(AR[rr][cc]>=0){outer=false;break;} rr+=oz; cc+=ox; } if(!outer){ bad++; }
-    // frame (hazard-striped bolted border) + bolts
-    const th=0.25;
-    const vBar=new THREE.BoxGeometry(th, wh+0.5, th*1.4), hBar=new THREE.BoxGeometry(ww+0.5, th, th*1.4);
-    function placeInWall(mesh,dx,dy){ // dx along wall tangent, dy vertical
-      const tx = (ox!==0)? 0 : dx;   // tangent axis: if outward is x, tangent is z
-      const tz = (ox!==0)? dx : 0;
-      mesh.position.set(wx - ox*TILE*0.48 + tx, wy+dy, wz - oz*TILE*0.48 + tz); mesh.rotation.y=toRoomY; scene.add(mesh);
-    }
-    placeInWall(new THREE.Mesh(vBar,frameMat), -ww/2,0); placeInWall(new THREE.Mesh(vBar,frameMat), ww/2,0);
-    placeInWall(new THREE.Mesh(hBar,frameMat), 0, wh/2); placeInWall(new THREE.Mesh(hBar,frameMat), 0,-wh/2);
-    // glass (scratched / frosted; a couple cracked+taped)
-    const cracked = (wi%5===0);
-    const glass=new THREE.Mesh(new THREE.PlaneGeometry(ww,wh), new THREE.MeshBasicMaterial({map:glassTex(cracked), transparent:true, opacity:0.5, fog:false, depthWrite:false}));
-    glass.position.set(wx - ox*TILE*0.46, wy, wz - oz*TILE*0.46); glass.rotation.y=toRoomY; glass.renderOrder=3; scene.add(glass);
+    // window hole, clamped to the cell so the wall fully seals around it
+    const ww = Math.min(big?4.0:rect?2.4:1.4, TILE*0.86);
+    const maxH = top-fy-0.4;
+    const wh = Math.min(big?3.4:rect?1.8:1.4, Math.max(0.8,maxH));
+    const wy = Math.min(top-0.25, fy + (big?2.0:1.6));
+    const y0w = Math.max(fy+0.08, wy-wh/2), y1w = Math.min(top-0.06, wy+wh/2), hw=ww/2;
+    // boundary plane = the interior cell edge facing the window (the gap the main
+    // wall loop left open). Seal it with sill/lintel/jambs; only the glass is open.
+    const bx=cellX(ic)+ox*TILE*0.5, bz=cellZ(ir)+oz*TILE*0.5;
+    const frameM=new THREE.MeshLambertMaterial({map:TEX.wall, color:0x5a6560});
+    const hazM=new THREE.MeshLambertMaterial({map:TEX.hazard, color:0x8a8a70});
+    function axisBox(wTan,h,thick,tOff,yc,mat){ if(h<=0.01) return;
+      const g=new THREE.BoxGeometry((ox!==0)?thick:wTan, h, (ox!==0)?wTan:thick);
+      const mesh=new THREE.Mesh(g,mat); mesh.position.set(bx+(ox!==0?0:tOff), yc, bz+(ox!==0?tOff:0)); mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh); }
+    axisBox(TILE, y0w-fy, 0.22, 0, (fy+y0w)/2, frameM);                              // sill
+    axisBox(TILE, top-y1w, 0.22, 0, (top+y1w)/2, frameM);                            // lintel
+    axisBox(TILE/2-hw, y1w-y0w, 0.22, -(hw+(TILE/2-hw)/2), (y0w+y1w)/2, frameM);     // left jamb
+    axisBox(TILE/2-hw, y1w-y0w, 0.22,  (hw+(TILE/2-hw)/2), (y0w+y1w)/2, frameM);     // right jamb
+    axisBox(ww+0.2, 0.14, 0.3, 0, y0w+0.02, hazM);                                   // hazard sill lip
+    // glass fills exactly the opening (scratched/frosted; a few cracked+taped)
+    const cracked=(wi%5===0);
+    const glass=new THREE.Mesh(new THREE.PlaneGeometry(ww, y1w-y0w), new THREE.MeshBasicMaterial({map:glassTex(cracked), transparent:true, opacity:0.32, fog:false, depthWrite:false}));
+    glass.position.set(bx+ox*0.02, (y0w+y1w)/2, bz+oz*0.02); glass.rotation.y=toRoomY; glass.renderOrder=3; scene.add(glass);
     // exterior view feature (planet/moon/galaxy/asteroid) placed outside, facing the ship
     if(w.view!=='star'){ const dist = big?40:48; const fs = big?70: w.view==='planet'?30: w.view==='asteroid'?26:22;
       const feat=new THREE.Mesh(new THREE.PlaneGeometry(fs,fs), new THREE.MeshBasicMaterial({map:texByView[w.view], transparent:true, fog:false, depthWrite:false, color:em(0xffffff, big?1.3:1.0)}));
