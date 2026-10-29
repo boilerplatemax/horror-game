@@ -58,8 +58,9 @@ export const BONE = {
 };
 
 const HEAD_BASE_R = 0.26, HEAD_YSCALE = 1.12, HEAD_ANCHOR_Y = 1.02, WAIST_Y = 0.73;
-const CELL = 0.024;        // marching-cubes voxel size
-const BLEND = 0.05;        // smooth-min radius (joint fillet)
+const CELL = 0.021;        // marching-cubes voxel size
+const KT = 0.03;           // fillet within torso (neck/waist/head) — smooth
+const KJ = 0.02;           // fillet where a LIMB meets the body — small, to avoid puffy joints
 
 // ---- signed-distance primitives (scalar math, negative = inside) ----------
 function sdRoundCone(px, py, pz, ax, ay, az, bx, by, bz, r1, r2) {
@@ -125,42 +126,57 @@ export function buildMii(options = {}) {
         cSkin = colL(colors.skin), cShoes = colL(colors.shoes);
 
   // Each segment: SDF + a core (for skin weighting) + bone + base color + region.
+  // Limbs are grouped so their own cones are joined with a plain union (no bulge
+  // along the limb); only the limb->body junction gets a small smooth fillet.
   const segs = [];
   const cone = (ax, ay, az, bx, by, bz, r1, r2, bone, color, region) =>
     segs.push({ kind: 'cone', ax, ay, az, bx, by, bz, r1, r2, reff: Math.max(r1, r2),
-                bi: boneIdx(bone), color, region });
+                bi: boneIdx(bone), color, region }) - 1;
   const ballSeg = (cx, cy, cz, r, bone, color, region) =>
     segs.push({ kind: 'ball', ax: cx, ay: cy, az: cz, bx: cx, by: cy, bz: cz, r, reff: r,
-                bi: boneIdx(bone), color, region });
+                bi: boneIdx(bone), color, region }) - 1;
 
   // torso (tapered tube), split across spine bones; colored by waist height
-  cone(0, 0.62, 0, 0, 0.82, 0, 0.125, 0.132, 'mixamorigSpine', cShirt, 'torso');
-  cone(0, 0.82, 0, 0, 0.99, 0, 0.132, 0.088, 'mixamorigSpine1', cShirt, 'torso');
-  cone(0, 0.96, 0, 0, 1.055, 0, 0.052, 0.048, 'mixamorigNeck', cSkin, 'skin');
-  segs.push({ kind: 'ellipsoid', cx: C.x, cy: C.y, cz: C.z, rx: headRadii[0], ry: headRadii[1], rz: headRadii[2],
-              ax: C.x, ay: C.y, az: C.z, bx: C.x, by: C.y, bz: C.z, reff: Rh, bi: boneIdx('mixamorigHead'), color: cSkin, region: 'skin' });
+  const gTorso = [
+    cone(0, 0.62, 0, 0, 0.82, 0, 0.122, 0.128, 'mixamorigSpine', cShirt, 'torso'),
+    cone(0, 0.82, 0, 0, 0.99, 0, 0.128, 0.085, 'mixamorigSpine1', cShirt, 'torso'),
+    cone(0, 0.96, 0, 0, 1.055, 0, 0.05, 0.046, 'mixamorigNeck', cSkin, 'skin'),
+    segs.push({ kind: 'ellipsoid', cx: C.x, cy: C.y, cz: C.z, rx: headRadii[0], ry: headRadii[1], rz: headRadii[2],
+      ax: C.x, ay: C.y, az: C.z, bx: C.x, by: C.y, bz: C.z, reff: Rh, bi: boneIdx('mixamorigHead'), color: cSkin, region: 'skin' }) - 1,
+  ];
+  const limbs = [];
   for (const [g, A, F, Hd, U, L, Ft] of [
     [1, 'mixamorigLeftArm', 'mixamorigLeftForeArm', 'mixamorigLeftHand', 'mixamorigLeftUpLeg', 'mixamorigLeftLeg', 'mixamorigLeftFoot'],
     [-1, 'mixamorigRightArm', 'mixamorigRightForeArm', 'mixamorigRightHand', 'mixamorigRightUpLeg', 'mixamorigRightLeg', 'mixamorigRightFoot'],
   ]) {
-    cone(g * 0.14, 0.96, 0, g * 0.33, 0.96, 0, 0.055, 0.047, A, cShirt, 'skinClothes'); // sleeve
-    cone(g * 0.33, 0.96, 0, g * 0.50, 0.96, 0, 0.047, 0.044, F, cShirt, 'skinClothes');
-    ballSeg(g * 0.555, 0.96, 0, 0.06, Hd, cSkin, 'skin');                                // ball hand
-    cone(g * 0.095, 0.62, 0, g * 0.095, 0.34, 0, 0.072, 0.056, U, cPants, 'legs');       // thigh
-    cone(g * 0.095, 0.34, 0, g * 0.095, 0.10, 0, 0.056, 0.05, L, cPants, 'legs');        // shin
-    cone(g * 0.095, 0.085, -0.02, g * 0.095, 0.05, 0.12, 0.052, 0.04, Ft, cShoes, 'shoes'); // foot
+    limbs.push([ // arm: upper, fore, hand — matched radii so it's a smooth tube
+      cone(g * 0.14, 0.96, 0, g * 0.33, 0.96, 0, 0.05, 0.044, A, cShirt, 'skinClothes'),
+      cone(g * 0.33, 0.96, 0, g * 0.50, 0.96, 0, 0.044, 0.04, F, cShirt, 'skinClothes'),
+      ballSeg(g * 0.555, 0.96, 0, 0.051, Hd, cSkin, 'skin'),
+    ]);
+    limbs.push([ // leg: thigh, shin, foot
+      cone(g * 0.095, 0.62, 0, g * 0.095, 0.34, 0, 0.064, 0.05, U, cPants, 'legs'),
+      cone(g * 0.095, 0.34, 0, g * 0.095, 0.10, 0, 0.05, 0.044, L, cPants, 'legs'),
+      cone(g * 0.095, 0.085, -0.02, g * 0.095, 0.05, 0.12, 0.05, 0.038, Ft, cShoes, 'shoes'),
+    ]);
   }
 
+  const sdfOf = (s, x, y, z) => s.kind === 'cone'
+    ? sdRoundCone(x, y, z, s.ax, s.ay, s.az, s.bx, s.by, s.bz, s.r1, s.r2)
+    : s.kind === 'ellipsoid'
+      ? sdEllipsoid(x, y, z, s.cx, s.cy, s.cz, s.rx, s.ry, s.rz)
+      : Math.hypot(x - s.ax, y - s.ay, z - s.az) - s.r;
+
   function field(x, y, z) {
+    // torso + neck + head: smoothly blended (these joints SHOULD be round)
     let f = 1e9;
-    for (let i = 0; i < segs.length; i++) {
-      const s = segs[i];
-      const d = s.kind === 'cone'
-        ? sdRoundCone(x, y, z, s.ax, s.ay, s.az, s.bx, s.by, s.bz, s.r1, s.r2)
-        : s.kind === 'ellipsoid'
-          ? sdEllipsoid(x, y, z, s.cx, s.cy, s.cz, s.rx, s.ry, s.rz)
-          : Math.hypot(x - s.ax, y - s.ay, z - s.az) - s.r;
-      f = smin(f, d, BLEND);
+    for (const i of gTorso) f = smin(f, sdfOf(segs[i], x, y, z), KT);
+    // each limb: plain union of its own cones (no bulge along the limb), then a
+    // small smooth fillet only where it meets the body.
+    for (const limb of limbs) {
+      let d = 1e9;
+      for (const i of limb) { const v = sdfOf(segs[i], x, y, z); if (v < d) d = v; }
+      f = smin(f, d, KJ);
     }
     return f;
   }

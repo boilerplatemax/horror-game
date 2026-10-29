@@ -38,9 +38,10 @@ The body is **one cohesive, smoothly-skinned mesh**, not a pile of overlapping
 primitives:
 
 * **Implicit surface.** The body is defined as a signed-distance *field* — a
-  smooth-min blend of tapered capsules (round cones) plus an ellipsoid head.
-  Overlapping parts fuse into one surface with filleted joints (the soft,
-  seamless "toy" look).
+  blend of tapered capsules (round cones) plus an ellipsoid head. Each limb's
+  own cones are joined with a plain union (so elbows/knees stay slim tubes, no
+  bulge), and only the torso joints and limb-to-body junctions get a small
+  smooth fillet — seamless but not puffy.
 * **Marching cubes.** That field is polygonized into a single watertight mesh
   (`src/mii.js` runs a compact marching-cubes pass, reusing the standard
   `edgeTable`/`triTable` from three's `MarchingCubes` addon). Vertex normals
