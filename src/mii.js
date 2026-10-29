@@ -39,12 +39,12 @@ const SKELETON = [
   ['mixamorigRightArm',      -0.140, 0.96, 0.00, 'mixamorigRightShoulder'],
   ['mixamorigRightForeArm',  -0.330, 0.96, 0.00, 'mixamorigRightArm'],
   ['mixamorigRightHand',     -0.500, 0.96, 0.00, 'mixamorigRightForeArm'],
-  ['mixamorigLeftUpLeg',      0.095, 0.62, 0.00, 'mixamorigHips'],
-  ['mixamorigLeftLeg',        0.095, 0.34, 0.00, 'mixamorigLeftUpLeg'],
-  ['mixamorigLeftFoot',       0.095, 0.07, 0.00, 'mixamorigLeftLeg'],
-  ['mixamorigRightUpLeg',    -0.095, 0.62, 0.00, 'mixamorigHips'],
-  ['mixamorigRightLeg',      -0.095, 0.34, 0.00, 'mixamorigRightUpLeg'],
-  ['mixamorigRightFoot',     -0.095, 0.07, 0.00, 'mixamorigRightLeg'],
+  ['mixamorigLeftUpLeg',      0.075, 0.60, 0.00, 'mixamorigHips'],
+  ['mixamorigLeftLeg',        0.075, 0.33, 0.00, 'mixamorigLeftUpLeg'],
+  ['mixamorigLeftFoot',       0.075, 0.07, 0.00, 'mixamorigLeftLeg'],
+  ['mixamorigRightUpLeg',    -0.075, 0.60, 0.00, 'mixamorigHips'],
+  ['mixamorigRightLeg',      -0.075, 0.33, 0.00, 'mixamorigRightUpLeg'],
+  ['mixamorigRightFoot',     -0.075, 0.07, 0.00, 'mixamorigRightLeg'],
 ];
 
 export const BONE = {
@@ -58,7 +58,7 @@ export const BONE = {
   RUpLeg: 'mixamorigRightUpLeg', RLeg: 'mixamorigRightLeg', RFoot: 'mixamorigRightFoot',
 };
 
-const WAIST_Y = 0.75;
+const WAIST_Y = 0.70;
 const CELL = 0.02;         // marching-cubes voxel size
 const KT = 0.03;           // fillet within torso (neck/waist/head) — smooth
 const KJ = 0.02;           // fillet where a LIMB meets the body — small, to avoid puffy joints
@@ -101,7 +101,7 @@ function distSeg(px, py, pz, ax, ay, az, bx, by, bz) {
 
 export function buildMii(options = {}) {
   const colors = { ...DEFAULT_COLORS, ...(options.colors || {}) };
-  const h = Math.max(0.3, Math.min(3, options.headScale || 1));
+  const h = 0.6; // fixed head size (small, attached to the body)
 
   // --- Bones ---------------------------------------------------------------
   const bonesByName = {}, bones = [], worldPos = {};
@@ -146,8 +146,8 @@ export function buildMii(options = {}) {
 
   // torso (tapered tube), split across spine bones; colored by waist height
   const gTorso = [
-    cone(0, 0.63, 0, 0, 0.80, 0, 0.100, 0.096, 'mixamorigSpine', cShirt, 'torso'),   // slim hips -> waist
-    cone(0, 0.80, 0, 0, 0.97, 0, 0.096, 0.134, 'mixamorigSpine1', cShirt, 'torso'),  // waist -> chest
+    cone(0, 0.58, 0, 0, 0.78, 0, 0.082, 0.098, 'mixamorigSpine', cShirt, 'torso'),   // narrow pelvis bottom -> waist
+    cone(0, 0.78, 0, 0, 0.97, 0, 0.098, 0.132, 'mixamorigSpine1', cShirt, 'torso'),  // waist -> chest
     cone(0, 0.95, 0, 0, 1.03, 0, 0.05, 0.046, 'mixamorigNeck', cSkin, 'skin'),       // neck
   ]; // (the head is a separate clean lathe mesh, added below, so the face sits on an exact surface)
   const limbs = [];
@@ -161,9 +161,9 @@ export function buildMii(options = {}) {
       ballSeg(g * 0.525, 0.96, 0, 0.043, Hd, cSkin, 'skin'),
     ]);
     limbs.push([ // leg tapers from hip to ankle, small forward foot
-      cone(g * 0.086, 0.62, 0, g * 0.086, 0.34, 0, 0.061, 0.051, U, cPants, 'legs'),
-      cone(g * 0.086, 0.34, 0, g * 0.086, 0.09, 0, 0.051, 0.044, L, cPants, 'legs'),
-      cone(g * 0.086, 0.08, -0.02, g * 0.086, 0.045, 0.115, 0.049, 0.035, Ft, cShoes, 'shoes'),
+      cone(g * 0.075, 0.60, 0, g * 0.075, 0.33, 0, 0.057, 0.05, U, cPants, 'legs'),
+      cone(g * 0.075, 0.33, 0, g * 0.075, 0.08, 0, 0.05, 0.044, L, cPants, 'legs'),
+      cone(g * 0.075, 0.07, -0.02, g * 0.075, 0.045, 0.11, 0.048, 0.035, Ft, cShoes, 'shoes'),
     ]);
   }
 

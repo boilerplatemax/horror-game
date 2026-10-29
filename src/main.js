@@ -91,7 +91,7 @@ scene.add(platform);
 // Mii + animation
 // ---------------------------------------------------------------------------
 // Current appearance state.
-const look = { colors: { ...DEFAULT_COLORS }, headScale: 1 };
+const look = { colors: { ...DEFAULT_COLORS } };
 const faceTexture = defaultFaceTexture();
 let facePanel = null;
 
@@ -161,49 +161,9 @@ function setActiveButton(name) {
 function setStatus(msg) { statusEl.textContent = msg; }
 
 // ---------------------------------------------------------------------------
-// Head-to-body ratio control (slider + presets) + randomize appearance
+// Randomize appearance
 // ---------------------------------------------------------------------------
 const toolsEl = document.getElementById('tools');
-const ratioEl = document.getElementById('ratio');
-
-// Preset ratio buttons, like the reference sheet (0.5 / 1 / 1.5 / 2)
-const presetWrap = document.createElement('div');
-presetWrap.id = 'presets';
-ratioEl.appendChild(presetWrap);
-const PRESETS = [['0.5×', 0.5], ['1×', 1], ['1.5×', 1.5], ['2×', 2]];
-const presetBtns = {};
-for (const [label, v] of PRESETS) {
-  const b = document.createElement('button');
-  b.textContent = label;
-  b.className = 'ratio-btn';
-  b.addEventListener('click', () => setHeadScale(v));
-  presetWrap.appendChild(b);
-  presetBtns[v] = b;
-}
-
-// Slider for fine control. The implicit-surface rebuild is a bit heavy, so we
-// update the label live while dragging and rebuild the mesh on release.
-const slider = document.getElementById('headSlider');
-const sliderVal = document.getElementById('headVal');
-slider.addEventListener('input', () => updateRatioLabel(parseFloat(slider.value)));
-slider.addEventListener('change', () => setHeadScale(parseFloat(slider.value)));
-
-function updateRatioLabel(v) {
-  sliderVal.textContent = v.toFixed(2).replace(/\.?0+$/, '') + '×';
-  for (const key in presetBtns) presetBtns[key].classList.toggle('active', Math.abs(+key - v) < 0.001);
-}
-updateRatioLabel(1); // sync UI to default ratio without rebuilding
-
-let rebuildQueued = false;
-function setHeadScale(v) {
-  look.headScale = v;
-  slider.value = String(v);
-  updateRatioLabel(v);
-  if (!rebuildQueued) {
-    rebuildQueued = true;
-    requestAnimationFrame(() => { rebuildQueued = false; rebuildMii(); });
-  }
-}
 
 const randomBtn = document.createElement('button');
 randomBtn.textContent = '🎲 Randomize look';
