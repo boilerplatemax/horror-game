@@ -57,8 +57,8 @@ export const BONE = {
   RUpLeg: 'mixamorigRightUpLeg', RLeg: 'mixamorigRightLeg', RFoot: 'mixamorigRightFoot',
 };
 
-const HEAD_BASE_R = 0.26, HEAD_YSCALE = 1.12, HEAD_ANCHOR_Y = 1.02, WAIST_Y = 0.73;
-const CELL = 0.021;        // marching-cubes voxel size
+const WAIST_Y = 0.75;
+const CELL = 0.02;         // marching-cubes voxel size
 const KT = 0.03;           // fillet within torso (neck/waist/head) — smooth
 const KJ = 0.02;           // fillet where a LIMB meets the body — small, to avoid puffy joints
 
@@ -118,9 +118,13 @@ export function buildMii(options = {}) {
   const boneIdx = (n) => bones.indexOf(bonesByName[n]);
 
   // --- Implicit body definition (bind pose) --------------------------------
-  const Rh = HEAD_BASE_R * h;
-  const C = new THREE.Vector3(0, HEAD_ANCHOR_Y + Rh * HEAD_YSCALE, 0);
-  const headRadii = [Rh, Rh * HEAD_YSCALE, Rh * 0.95];
+  // Egg head: a vertical tapered capsule (domed crown -> narrow chin), anchored
+  // so the chin bottom stays at the neck as the head grows.
+  const RC = 0.13 * h, RT = 0.265 * h;       // chin radius, crown radius
+  const chinY = 1.0 + RC;                     // chin core point
+  const crownY = chinY + 0.22 * h;            // crown core point
+  const headTop = crownY + RT;
+  const C = new THREE.Vector3(0, chinY + 0.17 * h, 0); // face anchor (eye region)
   const colL = (c) => new THREE.Color(c).convertSRGBToLinear();
   const cShirt = colL(colors.shirt), cPants = colL(colors.pants),
         cSkin = colL(colors.skin), cShoes = colL(colors.shoes);
@@ -138,26 +142,25 @@ export function buildMii(options = {}) {
 
   // torso (tapered tube), split across spine bones; colored by waist height
   const gTorso = [
-    cone(0, 0.62, 0, 0, 0.82, 0, 0.122, 0.128, 'mixamorigSpine', cShirt, 'torso'),
-    cone(0, 0.82, 0, 0, 0.99, 0, 0.128, 0.085, 'mixamorigSpine1', cShirt, 'torso'),
-    cone(0, 0.96, 0, 0, 1.055, 0, 0.05, 0.046, 'mixamorigNeck', cSkin, 'skin'),
-    segs.push({ kind: 'ellipsoid', cx: C.x, cy: C.y, cz: C.z, rx: headRadii[0], ry: headRadii[1], rz: headRadii[2],
-      ax: C.x, ay: C.y, az: C.z, bx: C.x, by: C.y, bz: C.z, reff: Rh, bi: boneIdx('mixamorigHead'), color: cSkin, region: 'skin' }) - 1,
+    cone(0, 0.64, 0, 0, 0.80, 0, 0.126, 0.106, 'mixamorigSpine', cShirt, 'torso'),   // hips -> waist
+    cone(0, 0.80, 0, 0, 0.97, 0, 0.106, 0.138, 'mixamorigSpine1', cShirt, 'torso'),  // waist -> chest
+    cone(0, 0.95, 0, 0, 1.03, 0, 0.052, 0.047, 'mixamorigNeck', cSkin, 'skin'),      // neck
+    cone(0, crownY, 0, 0, chinY, 0, RT, RC, 'mixamorigHead', cSkin, 'skin'),          // egg head
   ];
   const limbs = [];
   for (const [g, A, F, Hd, U, L, Ft] of [
     [1, 'mixamorigLeftArm', 'mixamorigLeftForeArm', 'mixamorigLeftHand', 'mixamorigLeftUpLeg', 'mixamorigLeftLeg', 'mixamorigLeftFoot'],
     [-1, 'mixamorigRightArm', 'mixamorigRightForeArm', 'mixamorigRightHand', 'mixamorigRightUpLeg', 'mixamorigRightLeg', 'mixamorigRightFoot'],
   ]) {
-    limbs.push([ // arm: upper, fore, hand — matched radii so it's a smooth tube
-      cone(g * 0.14, 0.96, 0, g * 0.33, 0.96, 0, 0.05, 0.044, A, cShirt, 'skinClothes'),
-      cone(g * 0.33, 0.96, 0, g * 0.50, 0.96, 0, 0.044, 0.04, F, cShirt, 'skinClothes'),
-      ballSeg(g * 0.555, 0.96, 0, 0.051, Hd, cSkin, 'skin'),
+    limbs.push([ // arm tapers from shoulder to wrist, ending in a small rounded hand
+      cone(g * 0.14, 0.96, 0, g * 0.33, 0.96, 0, 0.058, 0.043, A, cShirt, 'skinClothes'),
+      cone(g * 0.33, 0.96, 0, g * 0.50, 0.96, 0, 0.043, 0.032, F, cShirt, 'skinClothes'),
+      ballSeg(g * 0.525, 0.96, 0, 0.043, Hd, cSkin, 'skin'),
     ]);
-    limbs.push([ // leg: thigh, shin, foot
-      cone(g * 0.095, 0.62, 0, g * 0.095, 0.34, 0, 0.064, 0.05, U, cPants, 'legs'),
-      cone(g * 0.095, 0.34, 0, g * 0.095, 0.10, 0, 0.05, 0.044, L, cPants, 'legs'),
-      cone(g * 0.095, 0.085, -0.02, g * 0.095, 0.05, 0.12, 0.05, 0.038, Ft, cShoes, 'shoes'),
+    limbs.push([ // leg tapers from hip to ankle, small forward foot
+      cone(g * 0.095, 0.62, 0, g * 0.095, 0.34, 0, 0.078, 0.056, U, cPants, 'legs'),
+      cone(g * 0.095, 0.34, 0, g * 0.095, 0.09, 0, 0.056, 0.044, L, cPants, 'legs'),
+      cone(g * 0.095, 0.08, -0.02, g * 0.095, 0.045, 0.115, 0.05, 0.035, Ft, cShoes, 'shoes'),
     ]);
   }
 
@@ -190,7 +193,8 @@ export function buildMii(options = {}) {
   }
 
   // --- Marching cubes over the field --------------------------------------
-  const min = [-0.66, -0.02, -0.22], max = [0.66, C.y + headRadii[1] + 0.08, 0.25];
+  const zr = Math.max(0.26, RT + 0.05);
+  const min = [-0.7, -0.03, -zr], max = [0.7, headTop + 0.06, zr];
   const nx = Math.ceil((max[0] - min[0]) / CELL), ny = Math.ceil((max[1] - min[1]) / CELL), nz = Math.ceil((max[2] - min[2]) / CELL);
   const gx = nx + 1, gy = ny + 1, gz = nz + 1;
   const grid = new Float32Array(gx * gy * gz);
@@ -206,16 +210,18 @@ export function buildMii(options = {}) {
   const vtx = new Array(12);
   const tmpCol = new THREE.Color();
 
+  const EPSW = 0.015;
   function emitVertex(px, py, pz) {
     positions.push(px, py, pz);
     const n = grad(px, py, pz); normals.push(n[0], n[1], n[2]);
-    // skin weights: nearest segments by inverse distance, top 4
-    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, w0 = 0, w1 = 0, w2 = 0, w3 = 0, best = -1, bestW = -1;
+    // skin weights + color by proximity to each segment's SURFACE (|SDF|), so a
+    // vertex is owned by the part whose skin it actually lies on.
+    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, w0 = 0, w1 = 0, w2 = 0, w3 = 0, best = 0, bestAbs = 1e9;
     for (let i = 0; i < segs.length; i++) {
       const s = segs[i];
-      const d = distSeg(px, py, pz, s.ax, s.ay, s.az, s.bx, s.by, s.bz);
-      const w = Math.pow(s.reff / (d + 1e-4), 3);
-      if (w > bestW) { bestW = w; best = i; }
+      const a = Math.abs(sdfOf(s, px, py, pz));
+      if (a < bestAbs) { bestAbs = a; best = i; }
+      const w = 1 / ((a + EPSW) * (a + EPSW));
       if (w > w0) { w3=w2;b3=b2; w2=w1;b2=b1; w1=w0;b1=b0; w0=w;b0=s.bi; }
       else if (w > w1) { w3=w2;b3=b2; w2=w1;b2=b1; w1=w;b1=s.bi; }
       else if (w > w2) { w3=w2;b3=b2; w2=w;b2=s.bi; }
@@ -224,7 +230,6 @@ export function buildMii(options = {}) {
     const sum = w0 + w1 + w2 + w3 || 1;
     skinI.push(b0, b1, b2, b3);
     skinW.push(w0 / sum, w1 / sum, w2 / sum, w3 / sum);
-    // color from the dominant segment (crisp clothing edges); torso by waist line
     const s = segs[best];
     let c = s.color;
     if (s.region === 'torso') c = py < WAIST_Y ? cPants : cShirt;
@@ -291,9 +296,9 @@ export function buildMii(options = {}) {
     tagOverlay(geo, color);
   };
   // hair cap + lower back
-  const hairMat = new THREE.Matrix4().compose(C, new THREE.Quaternion(), new THREE.Vector3(h * 1.03, h * HEAD_YSCALE * 1.02, h * 0.99));
-  const cap = new THREE.SphereGeometry(HEAD_BASE_R + 0.012, 30, 24, 0, Math.PI * 2, 0, 1.42); cap.applyMatrix4(hairMat); tagOverlay(cap, colors.hair);
-  const back = new THREE.SphereGeometry(HEAD_BASE_R + 0.004, 30, 24, Math.PI * 1.02, Math.PI * 0.96, 0, 1.6); back.applyMatrix4(hairMat); tagOverlay(back, colors.hair);
+  const capMat = new THREE.Matrix4().compose(new THREE.Vector3(0, crownY, 0), new THREE.Quaternion(), new THREE.Vector3(1.04, 1.04, 1.04));
+  const cap = new THREE.SphereGeometry(RT + 0.006, 32, 26, 0, Math.PI * 2, 0, 1.72); cap.applyMatrix4(capMat); tagOverlay(cap, colors.hair);
+  const back = new THREE.SphereGeometry(RT + 0.002, 32, 26, Math.PI * 1.02, Math.PI * 0.96, 0, 1.98); back.applyMatrix4(capMat); tagOverlay(back, colors.hair);
   // face
   for (const s of [1, -1]) {
     headBall(s * 0.105, -0.005, 0.205, 0.062, [1.0, 1.32, 0.52], colors.eyeWhite);
@@ -322,6 +327,6 @@ export function buildMii(options = {}) {
   mesh.bind(skeleton);
   mesh.normalizeSkinWeights();
 
-  const topY = C.y + Rh * HEAD_YSCALE + h * 0.05;
+  const topY = headTop + 0.03;
   return { mesh, skeleton, bones, bonesByName, hipsRestY: root.position.y, topY, headScale: h };
 }
