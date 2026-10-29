@@ -3,6 +3,7 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildMii, DEFAULT_COLORS } from './mii.js';
 import { createClips } from './animations.js';
 import { loadMixamoClip } from './mixamo.js';
@@ -19,71 +20,82 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
 
 const scene = new THREE.Scene();
-scene.background = makeGradient('#cfe3ff', '#f3f5fb');
-scene.fog = new THREE.Fog(0xeef1f7, 9, 16);
+scene.background = makeGradient('#bfe4f5', '#fbf3ea'); // soft sky -> warm cream
+scene.fog = new THREE.Fog(0xf2ecf2, 11, 20);
 
-const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
-camera.position.set(0.8, 1.35, 3.3);
+// Soft image-based lighting for that premium, rounded "toy" look.
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+camera.position.set(0.9, 1.15, 3.1);
 
 const controls = new OrbitControls(camera, canvas);
-controls.target.set(0, 1.0, 0);
+controls.target.set(0, 0.82, 0);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
-controls.minDistance = 1.5;
-controls.maxDistance = 8;
-controls.maxPolarAngle = Math.PI * 0.52;
+controls.minDistance = 1.4;
+controls.maxDistance = 7;
+controls.maxPolarAngle = Math.PI * 0.54;
 
 // ---------------------------------------------------------------------------
-// Lighting
+// Lighting — soft key + warm fill + cool rim, on top of the environment
 // ---------------------------------------------------------------------------
-scene.add(new THREE.HemisphereLight(0xffffff, 0xb6bccb, 0.65));
+scene.add(new THREE.HemisphereLight(0xfff4e8, 0xcfd6e6, 0.45));
 
-const key = new THREE.DirectionalLight(0xffffff, 2.1);
-key.position.set(3, 5.5, 3);
+const key = new THREE.DirectionalLight(0xfff2e0, 2.0);
+key.position.set(2.6, 4.6, 2.8);
 key.castShadow = true;
 key.shadow.mapSize.set(2048, 2048);
 key.shadow.camera.near = 0.5;
-key.shadow.camera.far = 20;
-key.shadow.camera.left = -2.5;
-key.shadow.camera.right = 2.5;
-key.shadow.camera.top = 3;
+key.shadow.camera.far = 16;
+key.shadow.camera.left = -2;
+key.shadow.camera.right = 2;
+key.shadow.camera.top = 2.5;
 key.shadow.camera.bottom = -0.5;
 key.shadow.bias = -0.0004;
-key.shadow.radius = 4;
+key.shadow.radius = 5;
+key.shadow.normalBias = 0.02;
 scene.add(key);
 
-const rim = new THREE.DirectionalLight(0xbcd4ff, 0.5);
-rim.position.set(-4, 3, -3);
+const rim = new THREE.DirectionalLight(0xbfe0ff, 0.6);
+rim.position.set(-3.5, 2.5, -3);
 scene.add(rim);
 
 // ---------------------------------------------------------------------------
-// Ground
+// Stage — rounded pastel platform the character stands on
 // ---------------------------------------------------------------------------
 const ground = new THREE.Mesh(
-  new THREE.CircleGeometry(7, 64),
-  new THREE.MeshStandardMaterial({ color: 0xe6e9f0, roughness: 1, metalness: 0 })
+  new THREE.CircleGeometry(8, 64),
+  new THREE.MeshStandardMaterial({ color: 0xf3eef0, roughness: 0.95, metalness: 0 })
 );
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 scene.add(ground);
 
-const grid = new THREE.GridHelper(14, 28, 0xc2c8d6, 0xd4d9e4);
-grid.position.y = 0.002;
-grid.material.transparent = true;
-grid.material.opacity = 0.5;
-scene.add(grid);
+const platform = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.75, 0.82, 0.06, 56),
+  new THREE.MeshStandardMaterial({ color: 0xa9e0d2, roughness: 0.6, metalness: 0 })
+);
+platform.position.y = 0.03;
+platform.receiveShadow = true;
+platform.castShadow = true;
+scene.add(platform);
 
 // ---------------------------------------------------------------------------
 // Mii + animation
 // ---------------------------------------------------------------------------
 let mii = buildMii();
+mii.mesh.position.y = 0.06; // stand on the platform
 scene.add(mii.mesh);
 
 // builtinClips are authored once; bone names are identical after any rebuild,
 // so the same clips can be re-bound to a fresh mesh/mixer.
-const builtinClips = createClips();
+const builtinClips = createClips(mii.hipsRestY);
 const importedClips = {};
 const actions = {};
 let current = null;
@@ -161,6 +173,7 @@ function rebuildMii(colors) {
   mii.mesh.geometry.dispose();
   mii.mesh.material.dispose();
   mii = buildMii({ colors });
+  mii.mesh.position.y = 0.06;
   scene.add(mii.mesh);
   // rebuild mixer + actions against the new mesh/skeleton
   mixerRef.m.stopAllAction();

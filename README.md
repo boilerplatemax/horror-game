@@ -1,9 +1,9 @@
 # Mii Playground
 
-A small Three.js scene with a **procedurally-built, flat-shaded Mii** that is
-rigged to a Mixamo-compatible humanoid skeleton. Click a button to switch
-between hand-authored animations, randomize the character's look, or drop in a
-real Mixamo animation file.
+A small Three.js scene with a **procedurally-built, smooth-shaded chibi
+character** that is rigged to a Mixamo-compatible humanoid skeleton. Click a
+button to switch between hand-authored animations, randomize the character's
+look, or drop in a real Mixamo animation file.
 
 ![screenshot](assets/hero.png)
 
@@ -33,12 +33,13 @@ vendor/             Three.js r160 + addons (OrbitControls, loaders, SkeletonUtil
 
 ## How the rigging works
 
-* The character is one `SkinnedMesh`. Each body part is a primitive authored in
-  the bind (T) pose and bound 100% to a single bone (rigid skinning); spheres at
-  the joints hide the gaps when limbs bend. All parts merge into one geometry
-  with a per-vertex `color` attribute, so a single
-  `MeshStandardMaterial({ vertexColors, flatShading })` renders the whole
-  character.
+* The character is one `SkinnedMesh`. Each body part is a primitive (capsules
+  for limbs, spheres for everything else) authored in the bind (T) pose and
+  bound 100% to a single bone (rigid skinning); capsule caps and joint balls
+  overlap so the seams blend when limbs bend. All parts merge into one geometry
+  with a per-vertex `color` attribute, so a single smooth
+  `MeshStandardMaterial({ vertexColors })` renders the whole character, lit by
+  an image-based `RoomEnvironment` for a soft, rounded toy look.
 * The skeleton uses **Mixamo's bone names** (`mixamorigHips`,
   `mixamorigLeftArm`, …) in a standard T-pose. That's what lets Mixamo clips
   retarget cleanly onto it.

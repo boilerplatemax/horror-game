@@ -11,7 +11,10 @@ import * as THREE from 'three';
 import { BONE } from './mii.js';
 
 const D = Math.PI / 180;
-const HIP_Y = 0.84; // Hips rest height (local == world, it's the root)
+// Hip rest height + vertical-motion scale are set by createClips() so the
+// clips follow the character's proportions (chibi hips sit lower than before).
+let HIP_Y = 0.52;
+let VSCALE = 0.52 / 0.84;
 
 // Build one QuaternionKeyframeTrack from Euler keyframes.
 function quatTrack(boneName, times, eulersDeg) {
@@ -31,9 +34,9 @@ function quatTrack(boneName, times, eulersDeg) {
 function hipTrack(times, offsets) {
   const values = new Float32Array(offsets.length * 3);
   for (let i = 0; i < offsets.length; i++) {
-    values[i * 3] = offsets[i][0];
-    values[i * 3 + 1] = HIP_Y + offsets[i][1];
-    values[i * 3 + 2] = offsets[i][2];
+    values[i * 3] = offsets[i][0] * VSCALE;
+    values[i * 3 + 1] = HIP_Y + offsets[i][1] * VSCALE;
+    values[i * 3 + 2] = offsets[i][2] * VSCALE;
   }
   return new THREE.VectorKeyframeTrack(BONE.Hips + '.position', times, values);
 }
@@ -56,7 +59,9 @@ function clip(name, duration, def) {
 // Natural "arms down" base rotations.
 const LARM_DOWN = -78, RARM_DOWN = 78;
 
-export function createClips() {
+export function createClips(hipsRestY = 0.52) {
+  HIP_Y = hipsRestY;
+  VSCALE = hipsRestY / 0.84;
   const clips = {};
 
   // ---- T-Pose (shows the rig) --------------------------------------------
@@ -80,14 +85,14 @@ export function createClips() {
   // ---- Wave (right arm raised, forearm waving) ---------------------------
   {
     const t = [0, 0.3, 0.6, 0.9, 1.2, 1.5, 1.8, 2.1, 2.4];
-    const wave = (a) => a.map((z) => [-8, 0, z]);
+    const wave = (a) => a.map((z) => [-4, 0, z]);
     clips['Wave'] = clip('Wave', 2.4, {
       LArm:  { t: [0], k: [[0, 0, LARM_DOWN]] },
       LFore: { t: [0], k: [[0, 0, -6]] },
-      RArm:  { t: [0], k: [[-12, 0, -58]] },
-      RFore: { t, k: wave([-18, -42, -18, 8, -18, -42, -18, 8, -18]) },
-      RHand: { t: [0, 0.6, 1.2, 1.8, 2.4], k: [[0, 0, 0], [0, 0, 18], [0, 0, 0], [0, 0, 18], [0, 0, 0]] },
-      Head:  { t: [0, 1.2, 2.4], k: [[0, -6, 4], [0, -6, 4], [0, -6, 4]] },
+      RArm:  { t: [0], k: [[-5, 0, -22]] },  // upper arm up & well out so the hand clears the head
+      RFore: { t, k: wave([-34, -62, -34, -10, -34, -62, -34, -10, -34]) },
+      RHand: { t: [0, 0.6, 1.2, 1.8, 2.4], k: [[0, 0, 0], [0, 0, 20], [0, 0, 0], [0, 0, 20], [0, 0, 0]] },
+      Head:  { t: [0], k: [[0, -8, 3]] },
       Spine: { t: [0, 1.2, 2.4], k: [[0, 0, 0], [2, 0, 0], [0, 0, 0]] },
     });
   }
@@ -136,8 +141,8 @@ export function createClips() {
       RUpLeg: { t, k: [[0, 0, 0], [34, 0, 0], [6, 0, 0], [12, 0, 0], [6, 0, 0], [34, 0, 0], [0, 0, 0]] },
       LLeg:   { t, k: [[4, 0, 0], [62, 0, 0], [12, 0, 0], [8, 0, 0], [12, 0, 0], [62, 0, 0], [4, 0, 0]] },
       RLeg:   { t, k: [[4, 0, 0], [62, 0, 0], [12, 0, 0], [8, 0, 0], [12, 0, 0], [62, 0, 0], [4, 0, 0]] },
-      LArm:   { t, k: [[0, 0, LARM_DOWN], [34, 0, -42], [10, 0, 70], [0, 0, 150], [10, 0, 70], [34, 0, -42], [0, 0, LARM_DOWN]] },
-      RArm:   { t, k: [[0, 0, RARM_DOWN], [34, 0, 42], [10, 0, -70], [0, 0, -150], [10, 0, -70], [34, 0, 42], [0, 0, RARM_DOWN]] },
+      LArm:   { t, k: [[0, 0, LARM_DOWN], [34, 0, -45], [10, 0, 70], [0, 0, 112], [10, 0, 70], [34, 0, -45], [0, 0, LARM_DOWN]] },
+      RArm:   { t, k: [[0, 0, RARM_DOWN], [34, 0, 45], [10, 0, -70], [0, 0, -112], [10, 0, -70], [34, 0, 45], [0, 0, RARM_DOWN]] },
       Spine:  { t, k: [[0, 0, 0], [22, 0, 0], [-6, 0, 0], [-10, 0, 0], [-6, 0, 0], [22, 0, 0], [0, 0, 0]] },
     });
   }
@@ -149,10 +154,10 @@ export function createClips() {
       hips:   { t, k: [[0, 0, 0], [0.06, -0.04, 0], [0, 0, 0], [-0.06, -0.04, 0], [0, 0, 0]] },
       Spine:  { t, k: [[0, 0, 0], [3, 16, 0], [0, 0, 0], [3, -16, 0], [0, 0, 0]] },
       Head:   { t, k: [[6, 0, 0], [0, 10, 0], [6, 0, 0], [0, -10, 0], [6, 0, 0]] },
-      LArm:   { t, k: [[0, 0, 124], [10, 0, 140], [0, 0, 124], [10, 0, 140], [0, 0, 124]] },
-      RArm:   { t, k: [[0, 0, -124], [10, 0, -140], [0, 0, -124], [10, 0, -140], [0, 0, -124]] },
-      LFore:  { t, k: [[0, 0, 20], [0, 0, 40], [0, 0, 20], [0, 0, 40], [0, 0, 20]] },
-      RFore:  { t, k: [[0, 0, -20], [0, 0, -40], [0, 0, -20], [0, 0, -40], [0, 0, -20]] },
+      LArm:   { t, k: [[0, 0, 62], [10, 0, 86], [0, 0, 62], [10, 0, 86], [0, 0, 62]] },
+      RArm:   { t, k: [[0, 0, -62], [10, 0, -86], [0, 0, -62], [10, 0, -86], [0, 0, -62]] },
+      LFore:  { t, k: [[0, 0, 30], [0, 0, 10], [0, 0, 30], [0, 0, 10], [0, 0, 30]] },
+      RFore:  { t, k: [[0, 0, -30], [0, 0, -10], [0, 0, -30], [0, 0, -10], [0, 0, -30]] },
       LLeg:   { t, k: [[8, 0, 0], [26, 0, 0], [8, 0, 0], [20, 0, 0], [8, 0, 0]] },
       RLeg:   { t, k: [[8, 0, 0], [20, 0, 0], [8, 0, 0], [26, 0, 0], [8, 0, 0]] },
     });
