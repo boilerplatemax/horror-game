@@ -65,6 +65,25 @@
     font-size: 12px; opacity: 0.6; min-height: 15px; text-align: center;
   }
 
+  /* Head-to-body ratio control */
+  #ratio {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 14px; padding: 8px 14px; backdrop-filter: blur(8px);
+    box-shadow: 0 1px 3px rgba(30,40,70,0.08);
+  }
+  #ratio label { font-size: 12.5px; font-weight: 600; letter-spacing: 0.02em; }
+  #ratio #headVal { color: var(--accent); font-variant-numeric: tabular-nums; }
+  #headSlider { width: 130px; accent-color: var(--accent); cursor: pointer; }
+  #presets { display: flex; gap: 5px; }
+  .ratio-btn {
+    font: inherit; font-size: 12px; font-weight: 600; padding: 4px 10px;
+    border-radius: 999px; cursor: pointer; border: 1px solid var(--panel-border);
+    background: rgba(255,255,255,0.6); color: var(--ink); transition: all .12s ease;
+  }
+  .ratio-btn:hover { background: #fff; }
+  .ratio-btn.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
   /* Drag-and-drop overlay */
   #dropzone {
     position: fixed; inset: 0; z-index: 50; display: none;
@@ -114,6 +133,11 @@
   <div id="bar">
     <div id="status"></div>
     <div id="buttons"></div>
+    <div id="ratio">
+      <label for="headSlider">Head size <span id="headVal">1×</span></label>
+      <input id="headSlider" type="range" min="0.5" max="2" step="0.05" value="1">
+      <!-- preset buttons injected by JS -->
+    </div>
     <div id="tools">
       <button id="importBtn">📁 Import Mixamo clip</button>
     </div>

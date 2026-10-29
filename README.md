@@ -2,8 +2,9 @@
 
 A small Three.js scene with a **procedurally-built, smooth-shaded chibi
 character** that is rigged to a Mixamo-compatible humanoid skeleton. Click a
-button to switch between hand-authored animations, randomize the character's
-look, or drop in a real Mixamo animation file.
+button to switch between hand-authored animations, **slide the head-to-body
+ratio** (0.5×–2×), randomize the character's look, or drop in a real Mixamo
+animation file.
 
 ![screenshot](assets/hero.png)
 

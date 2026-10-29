@@ -1,22 +1,19 @@
-// mii.js — builds a charming, chibi-proportioned character as a single
-// SkinnedMesh bound to a Mixamo-compatible humanoid skeleton.
+// mii.js — builds a charming chibi character as a single SkinnedMesh bound to
+// a Mixamo-compatible humanoid skeleton.
 //
-// Charm comes from: big head + small rounded body, capsule limbs with
-// overlapping ends (so joints blend), SMOOTH shading, soft PBR materials,
-// and an expressive face (big shiny eyes with catchlights, blush, a smile).
+// Proportions follow a tall-ish "Mii" template: egg head, a long tapered
+// TUBE torso (capsules, not a ball), thin tube limbs with little ball hands
+// and feet. The head size is adjustable (options.headScale) so you can slide
+// the head-to-body ratio from small to huge.
 //
 // Rigging: every part is a primitive authored in the bind ("T") pose world
-// space and bound 100% to a single bone (rigid skinning); capsule caps and
-// joint balls overlap to hide the seams when limbs bend. All parts merge into
-// ONE geometry carrying a per-vertex `color`, so a single smooth
-// MeshStandardMaterial draws the whole character.
+// space, bound 100% to one bone (rigid skinning); capsule caps and joint balls
+// overlap so seams blend when limbs bend. All parts merge into ONE geometry
+// with a per-vertex `color`, drawn by a single smooth MeshStandardMaterial.
 
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
-// ---------------------------------------------------------------------------
-// Palette — warm, cohesive, Animal-Crossing-ish
-// ---------------------------------------------------------------------------
 export const DEFAULT_COLORS = {
   skin:  '#ffce9e',
   nose:  '#f2b488',
@@ -33,32 +30,32 @@ export const DEFAULT_COLORS = {
 };
 
 // Skeleton: [mixamorigName, x, y, z, parent]. Bind (T) pose, +Z toward camera,
-// character's LEFT is +X (Mixamo convention). Chibi proportions.
+// character's LEFT is +X (Mixamo convention). Taller, lankier template.
 const SKELETON = [
-  ['mixamorigHips',          0.00, 0.52, 0.00, null],
-  ['mixamorigSpine',         0.00, 0.58, 0.00, 'mixamorigHips'],
-  ['mixamorigSpine1',        0.00, 0.65, 0.00, 'mixamorigSpine'],
-  ['mixamorigSpine2',        0.00, 0.73, 0.00, 'mixamorigSpine1'],
-  ['mixamorigNeck',          0.00, 0.79, 0.00, 'mixamorigSpine2'],
-  ['mixamorigHead',          0.00, 0.85, 0.00, 'mixamorigNeck'],
+  ['mixamorigHips',          0.000, 0.64, 0.00, null],
+  ['mixamorigSpine',         0.000, 0.74, 0.00, 'mixamorigHips'],
+  ['mixamorigSpine1',        0.000, 0.84, 0.00, 'mixamorigSpine'],
+  ['mixamorigSpine2',        0.000, 0.96, 0.00, 'mixamorigSpine1'],
+  ['mixamorigNeck',          0.000, 1.02, 0.00, 'mixamorigSpine2'],
+  ['mixamorigHead',          0.000, 1.08, 0.00, 'mixamorigNeck'],
 
-  ['mixamorigLeftShoulder',  0.07, 0.75, 0.00, 'mixamorigSpine2'],
-  ['mixamorigLeftArm',       0.16, 0.73, 0.00, 'mixamorigLeftShoulder'],
-  ['mixamorigLeftForeArm',   0.28, 0.73, 0.00, 'mixamorigLeftArm'],
-  ['mixamorigLeftHand',      0.38, 0.73, 0.00, 'mixamorigLeftForeArm'],
+  ['mixamorigLeftShoulder',  0.090, 0.97, 0.00, 'mixamorigSpine2'],
+  ['mixamorigLeftArm',       0.140, 0.96, 0.00, 'mixamorigLeftShoulder'],
+  ['mixamorigLeftForeArm',   0.330, 0.96, 0.00, 'mixamorigLeftArm'],
+  ['mixamorigLeftHand',      0.500, 0.96, 0.00, 'mixamorigLeftForeArm'],
 
-  ['mixamorigRightShoulder', -0.07, 0.75, 0.00, 'mixamorigSpine2'],
-  ['mixamorigRightArm',      -0.16, 0.73, 0.00, 'mixamorigRightShoulder'],
-  ['mixamorigRightForeArm',  -0.28, 0.73, 0.00, 'mixamorigRightArm'],
-  ['mixamorigRightHand',     -0.38, 0.73, 0.00, 'mixamorigRightForeArm'],
+  ['mixamorigRightShoulder', -0.090, 0.97, 0.00, 'mixamorigSpine2'],
+  ['mixamorigRightArm',      -0.140, 0.96, 0.00, 'mixamorigRightShoulder'],
+  ['mixamorigRightForeArm',  -0.330, 0.96, 0.00, 'mixamorigRightArm'],
+  ['mixamorigRightHand',     -0.500, 0.96, 0.00, 'mixamorigRightForeArm'],
 
-  ['mixamorigLeftUpLeg',      0.10, 0.50, 0.00, 'mixamorigHips'],
-  ['mixamorigLeftLeg',        0.10, 0.28, 0.00, 'mixamorigLeftUpLeg'],
-  ['mixamorigLeftFoot',       0.10, 0.07, 0.00, 'mixamorigLeftLeg'],
+  ['mixamorigLeftUpLeg',      0.095, 0.62, 0.00, 'mixamorigHips'],
+  ['mixamorigLeftLeg',        0.095, 0.34, 0.00, 'mixamorigLeftUpLeg'],
+  ['mixamorigLeftFoot',       0.095, 0.07, 0.00, 'mixamorigLeftLeg'],
 
-  ['mixamorigRightUpLeg',    -0.10, 0.50, 0.00, 'mixamorigHips'],
-  ['mixamorigRightLeg',      -0.10, 0.28, 0.00, 'mixamorigRightUpLeg'],
-  ['mixamorigRightFoot',     -0.10, 0.07, 0.00, 'mixamorigRightLeg'],
+  ['mixamorigRightUpLeg',    -0.095, 0.62, 0.00, 'mixamorigHips'],
+  ['mixamorigRightLeg',      -0.095, 0.34, 0.00, 'mixamorigRightUpLeg'],
+  ['mixamorigRightFoot',     -0.095, 0.07, 0.00, 'mixamorigRightLeg'],
 ];
 
 export const BONE = {
@@ -72,11 +69,13 @@ export const BONE = {
   RUpLeg: 'mixamorigRightUpLeg', RLeg: 'mixamorigRightLeg', RFoot: 'mixamorigRightFoot',
 };
 
-const HEAD_C = new THREE.Vector3(0, 1.20, 0);
-const HEAD_R = 0.38;
+const HEAD_BASE_R = 0.26;         // base egg radius (headScale = 1)
+const HEAD_YSCALE = 1.12;         // egg is taller than wide
+const HEAD_ANCHOR_Y = 1.02;       // head's underside rests here, regardless of size
 
 export function buildMii(options = {}) {
   const colors = { ...DEFAULT_COLORS, ...(options.colors || {}) };
+  const h = Math.max(0.3, Math.min(3, options.headScale || 1)); // head-to-body ratio
 
   // --- Bones ---------------------------------------------------------------
   const bonesByName = {};
@@ -124,15 +123,14 @@ export function buildMii(options = {}) {
     parts.push(geo);
     return geo;
   }
-
   const Y = new THREE.Vector3(0, 1, 0);
-  function capsule(a, b, r, color, boneName) {
+  function capsule(a, b, r, color, boneName, sz = 1) {
     const dir = new THREE.Vector3().subVectors(b, a);
     const len = dir.length();
     const geo = new THREE.CapsuleGeometry(r, Math.max(len, 0.001), 10, 18);
     const q = new THREE.Quaternion().setFromUnitVectors(Y, dir.clone().normalize());
     const mid = a.clone().add(b).multiplyScalar(0.5);
-    geo.applyMatrix4(new THREE.Matrix4().compose(mid, q, new THREE.Vector3(1, 1, 1)));
+    geo.applyMatrix4(new THREE.Matrix4().compose(mid, q, new THREE.Vector3(1, 1, sz)));
     return tag(geo, color, idx(boneName));
   }
   function ball(x, y, z, r, color, boneName, scale = [1, 1, 1], euler = null) {
@@ -142,82 +140,76 @@ export function buildMii(options = {}) {
       new THREE.Vector3(x, y, z), q, new THREE.Vector3(scale[0], scale[1], scale[2])));
     return tag(geo, color, idx(boneName));
   }
-  function torusArc(x, y, z, R, tube, color, boneName, euler) {
-    const geo = new THREE.TorusGeometry(R, tube, 10, 24, Math.PI);
-    const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(...euler));
-    geo.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(1, 1, 1)));
-    return tag(geo, color, idx(boneName));
-  }
 
-  // --- Torso / hips / neck -------------------------------------------------
-  ball(0, 0.52, 0, 1, colors.pants, 'mixamorigHips', [0.20, 0.14, 0.18]);   // hips/pants
-  ball(0, 0.67, 0, 1, colors.shirt, 'mixamorigSpine1', [0.235, 0.24, 0.205]); // shirt body
-  capsule(new THREE.Vector3(0, 0.74, 0), new THREE.Vector3(0, 0.84, 0), 0.055, colors.skin, 'mixamorigNeck');
+  // --- Torso: long tapered TUBE (two flattened capsules) -------------------
+  capsule(new THREE.Vector3(0, 0.70, 0), new THREE.Vector3(0, 0.98, 0), 0.118, colors.shirt, 'mixamorigSpine1', 0.82); // shirt
+  capsule(new THREE.Vector3(0, 0.60, 0), new THREE.Vector3(0, 0.72, 0), 0.108, colors.pants, 'mixamorigHips', 0.82);   // pelvis/pants
+  capsule(new THREE.Vector3(0, 1.00, 0), new THREE.Vector3(0, 1.08, 0), 0.044, colors.skin, 'mixamorigNeck');          // neck
 
-  // --- Head ----------------------------------------------------------------
-  ball(HEAD_C.x, HEAD_C.y, HEAD_C.z, HEAD_R, colors.skin, 'mixamorigHead', [1.0, 1.04, 0.97]);
-  ball(0.372, 1.20, 0, 0.05, colors.skin, 'mixamorigHead', [0.7, 1, 1]);  // ears
-  ball(-0.372, 1.20, 0, 0.05, colors.skin, 'mixamorigHead', [0.7, 1, 1]);
+  // --- Head (scales with `h`) ---------------------------------------------
+  const C = new THREE.Vector3(0, HEAD_ANCHOR_Y + HEAD_BASE_R * HEAD_YSCALE * h, 0);
+  const headBall = (ox, oy, oz, r, scale, color, euler = null) =>
+    ball(C.x + h * ox, C.y + h * oy, C.z + h * oz, r * h, color, 'mixamorigHead', scale, euler);
 
-  // Hair: cap + lower back + a little fringe + cowlick.
-  const hairCap = new THREE.SphereGeometry(0.40, 28, 22, 0, Math.PI * 2, 0, 1.4);
-  hairCap.applyMatrix4(new THREE.Matrix4().compose(HEAD_C, new THREE.Quaternion(), new THREE.Vector3(1.01, 1.05, 0.99)));
-  tag(hairCap, colors.hair, idx('mixamorigHead'));
-  const hairBack = new THREE.SphereGeometry(0.395, 28, 22, Math.PI * 1.02, Math.PI * 0.96, 0, 1.62);
-  hairBack.applyMatrix4(new THREE.Matrix4().compose(HEAD_C, new THREE.Quaternion(), new THREE.Vector3(1.01, 1.05, 0.99)));
-  tag(hairBack, colors.hair, idx('mixamorigHead'));
-  ball(0, 1.30, 0.30, 1, colors.hair, 'mixamorigHead', [0.22, 0.07, 0.08]);           // fringe
-  ball(0.05, 1.56, -0.03, 0.055, colors.hair, 'mixamorigHead', [1, 1.6, 1], [0.5, 0, 0.3]); // cowlick
+  headBall(0, 0, 0, HEAD_BASE_R, [1.0, HEAD_YSCALE, 0.95], colors.skin);         // head egg
+  headBall(0.252, -0.01, 0, 0.045, [0.6, 1, 1], colors.skin);                    // ears
+  headBall(-0.252, -0.01, 0, 0.045, [0.6, 1, 1], colors.skin);
 
-  // Face --------------------------------------------------------------------
-  // eyes: white base + pupil + catchlight
+  // hair cap + lower back + fringe + cowlick (all scale with head)
+  const hairMat = new THREE.Matrix4().compose(C, new THREE.Quaternion(), new THREE.Vector3(h * 1.02, h * HEAD_YSCALE * 1.01, h * 0.97));
+  const hairCap = new THREE.SphereGeometry(HEAD_BASE_R + 0.012, 28, 22, 0, Math.PI * 2, 0, 1.42);
+  hairCap.applyMatrix4(hairMat); tag(hairCap, colors.hair, idx('mixamorigHead'));
+  const hairBack = new THREE.SphereGeometry(HEAD_BASE_R + 0.006, 28, 22, Math.PI * 1.02, Math.PI * 0.96, 0, 1.6);
+  hairBack.applyMatrix4(hairMat); tag(hairBack, colors.hair, idx('mixamorigHead'));
+
+  // face
   for (const s of [1, -1]) {
-    ball(s * 0.15, 1.175, 0.335, 1, colors.eyeWhite, 'mixamorigHead', [0.085, 0.115, 0.05]);
-    ball(s * 0.155, 1.17, 0.365, 1, colors.pupil, 'mixamorigHead', [0.058, 0.08, 0.045]);
-    ball(s * 0.175, 1.20, 0.40, 0.02, colors.shine, 'mixamorigHead', [1, 1, 1]);
-    // eyebrow
-    ball(s * 0.15, 1.275, 0.33, 1, colors.brows, 'mixamorigHead', [0.075, 0.016, 0.03], [0, 0, s * -0.12]);
-    // blush
-    ball(s * 0.235, 1.115, 0.285, 1, colors.blush, 'mixamorigHead', [0.062, 0.045, 0.02]);
+    headBall(s * 0.105, -0.005, 0.205, 0.062, [1.0, 1.32, 0.52], colors.eyeWhite);
+    headBall(s * 0.112, -0.012, 0.235, 0.042, [1.0, 1.3, 0.6], colors.pupil);
+    headBall(s * 0.132, 0.03, 0.262, 0.016, [1, 1, 1], colors.shine);
+    headBall(s * 0.108, 0.07, 0.212, 0.044, [1.35, 0.26, 0.5], colors.brows, [0, 0, s * -0.16]);
+    headBall(s * 0.172, -0.058, 0.178, 0.046, [1.2, 0.85, 0.34], colors.blush);
   }
-  ball(0, 1.14, 0.37, 0.024, colors.nose, 'mixamorigHead', [1, 0.85, 0.9]);  // nose
-  torusArc(0, 1.085, 0.355, 0.045, 0.013, colors.mouth, 'mixamorigHead', [0, 0, Math.PI]); // smile
-
-  // --- Arms ----------------------------------------------------------------
-  for (const s of [{ a: 'mixamorigLeftArm', f: 'mixamorigLeftForeArm', h: 'mixamorigLeftHand', g: 1 },
-                   { a: 'mixamorigRightArm', f: 'mixamorigRightForeArm', h: 'mixamorigRightHand', g: -1 }]) {
-    ball(W(s.a).x, W(s.a).y, 0, 0.068, colors.shirt, s.a);                 // shoulder
-    capsule(W(s.a), W(s.f), 0.055, colors.shirt, s.a);                     // upper arm
-    capsule(W(s.f), W(s.h), 0.05, colors.shirt, s.f);                      // forearm
-    ball(s.g * 0.42, 0.73, 0, 0.07, colors.skin, s.h, [1.1, 1.0, 0.95]);   // mitten hand
+  headBall(0, -0.03, 0.245, 0.021, [1, 0.85, 0.9], colors.nose);
+  // smile
+  {
+    const geo = new THREE.TorusGeometry(0.042 * h, 0.011 * h, 10, 24, Math.PI);
+    const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, Math.PI));
+    geo.applyMatrix4(new THREE.Matrix4().compose(
+      new THREE.Vector3(C.x, C.y - h * 0.088, C.z + h * 0.222), q, new THREE.Vector3(1, 1, 1)));
+    tag(geo, colors.mouth, idx('mixamorigHead'));
   }
 
-  // --- Legs ----------------------------------------------------------------
+  // --- Arms (thin tubes + ball hands) --------------------------------------
+  for (const s of [{ a: 'mixamorigLeftArm', f: 'mixamorigLeftForeArm', hd: 'mixamorigLeftHand', g: 1 },
+                   { a: 'mixamorigRightArm', f: 'mixamorigRightForeArm', hd: 'mixamorigRightHand', g: -1 }]) {
+    ball(W(s.a).x, W(s.a).y, 0, 0.056, colors.shirt, s.a);                // shoulder
+    capsule(W(s.a), W(s.f), 0.043, colors.shirt, s.a);                    // upper arm
+    capsule(W(s.f), W(s.hd), 0.039, colors.shirt, s.f);                   // forearm
+    ball(s.g * 0.545, 0.96, 0, 0.06, colors.skin, s.hd, [1.05, 1.0, 0.95]); // ball hand
+  }
+
+  // --- Legs (thin tubes + little feet) -------------------------------------
   for (const s of [{ u: 'mixamorigLeftUpLeg', l: 'mixamorigLeftLeg', f: 'mixamorigLeftFoot', g: 1 },
                    { u: 'mixamorigRightUpLeg', l: 'mixamorigRightLeg', f: 'mixamorigRightFoot', g: -1 }]) {
-    ball(W(s.u).x, W(s.u).y, 0, 0.082, colors.pants, s.u);                 // hip
-    capsule(W(s.u), W(s.l), 0.072, colors.pants, s.u);                     // thigh
-    capsule(W(s.l), W(s.f), 0.06, colors.pants, s.l);                      // shin
-    ball(s.g * 0.10, 0.05, 0.045, 1, colors.shoes, s.f, [0.085, 0.062, 0.125]); // rounded shoe
-    ball(s.g * 0.10, 0.075, -0.015, 0.062, colors.shoes, s.f);            // heel
+    ball(W(s.u).x, W(s.u).y, 0, 0.066, colors.pants, s.u);                // hip
+    capsule(W(s.u), W(s.l), 0.052, colors.pants, s.u);                    // thigh
+    capsule(W(s.l), W(s.f), 0.045, colors.pants, s.l);                    // shin
+    ball(s.g * 0.095, 0.045, 0.05, 1, colors.shoes, s.f, [0.07, 0.052, 0.11]); // shoe
+    ball(s.g * 0.095, 0.075, -0.015, 0.052, colors.shoes, s.f);           // heel
   }
 
   // --- Merge & build -------------------------------------------------------
   const geometry = mergeGeometries(parts, false);
-
   const material = new THREE.MeshStandardMaterial({
-    vertexColors: true,
-    flatShading: false,
-    roughness: 0.5,
-    metalness: 0.0,
-    envMapIntensity: 0.75,
+    vertexColors: true, flatShading: false, roughness: 0.5, metalness: 0.0, envMapIntensity: 0.75,
   });
-
   const mesh = new THREE.SkinnedMesh(geometry, material);
   mesh.castShadow = true;
   mesh.add(root);
   mesh.bind(skeleton);
   mesh.normalizeSkinWeights();
 
-  return { mesh, skeleton, bones, bonesByName, hipsRestY: root.position.y };
+  const topY = C.y + h * HEAD_BASE_R * HEAD_YSCALE + h * 0.08; // incl. hair
+  return { mesh, skeleton, bones, bonesByName, hipsRestY: root.position.y, topY, headScale: h };
 }

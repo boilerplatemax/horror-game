@@ -89,9 +89,13 @@ scene.add(platform);
 // ---------------------------------------------------------------------------
 // Mii + animation
 // ---------------------------------------------------------------------------
-let mii = buildMii();
+// Current appearance state (colors + head-to-body ratio).
+const look = { colors: { ...DEFAULT_COLORS }, headScale: 1 };
+
+let mii = buildMii(look);
 mii.mesh.position.y = 0.06; // stand on the platform
 scene.add(mii.mesh);
+frameCharacter(mii.topY);
 
 // builtinClips are authored once; bone names are identical after any rebuild,
 // so the same clips can be re-bound to a fresh mesh/mixer.
@@ -140,8 +144,49 @@ function setActiveButton(name) {
 }
 function setStatus(msg) { statusEl.textContent = msg; }
 
-// Extra control: randomize appearance
+// ---------------------------------------------------------------------------
+// Head-to-body ratio control (slider + presets) + randomize appearance
+// ---------------------------------------------------------------------------
 const toolsEl = document.getElementById('tools');
+const ratioEl = document.getElementById('ratio');
+
+// Preset ratio buttons, like the reference sheet (0.5 / 1 / 1.5 / 2)
+const presetWrap = document.createElement('div');
+presetWrap.id = 'presets';
+ratioEl.appendChild(presetWrap);
+const PRESETS = [['0.5×', 0.5], ['1×', 1], ['1.5×', 1.5], ['2×', 2]];
+const presetBtns = {};
+for (const [label, v] of PRESETS) {
+  const b = document.createElement('button');
+  b.textContent = label;
+  b.className = 'ratio-btn';
+  b.addEventListener('click', () => setHeadScale(v));
+  presetWrap.appendChild(b);
+  presetBtns[v] = b;
+}
+
+// Slider for fine control
+const slider = document.getElementById('headSlider');
+const sliderVal = document.getElementById('headVal');
+slider.addEventListener('input', () => setHeadScale(parseFloat(slider.value)));
+
+// Sync UI to the default ratio without rebuilding.
+sliderVal.textContent = '1×';
+presetBtns[1].classList.add('active');
+
+let rebuildQueued = false;
+function setHeadScale(v) {
+  look.headScale = v;
+  slider.value = String(v);
+  sliderVal.textContent = v.toFixed(2).replace(/\.?0+$/, '') + '×';
+  for (const key in presetBtns) presetBtns[key].classList.toggle('active', Math.abs(+key - v) < 0.001);
+  // Coalesce rapid slider events into one rebuild per frame.
+  if (!rebuildQueued) {
+    rebuildQueued = true;
+    requestAnimationFrame(() => { rebuildQueued = false; rebuildMii(); });
+  }
+}
+
 const randomBtn = document.createElement('button');
 randomBtn.textContent = '🎲 Randomize look';
 randomBtn.className = 'tool-btn';
@@ -155,7 +200,7 @@ const SKINS = ['#f2c9a0', '#e8b48a', '#d49a6a', '#b07a4e', '#8a5a36'];
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
 function randomizeLook() {
-  const colors = {
+  look.colors = {
     ...DEFAULT_COLORS,
     hair: pick(HAIR_COLORS),
     brows: '#3a2a18',
@@ -163,18 +208,19 @@ function randomizeLook() {
     pants: pick(PANTS_COLORS),
     skin: pick(SKINS),
   };
-  colors.nose = colors.skin;
-  rebuildMii(colors);
+  look.colors.nose = look.colors.skin;
+  rebuildMii();
 }
 
-function rebuildMii(colors) {
+function rebuildMii() {
   const playing = current ? Object.keys(actions).find((n) => actions[n] === current) : 'Idle';
   scene.remove(mii.mesh);
   mii.mesh.geometry.dispose();
   mii.mesh.material.dispose();
-  mii = buildMii({ colors });
+  mii = buildMii(look);
   mii.mesh.position.y = 0.06;
   scene.add(mii.mesh);
+  frameCharacter(mii.topY);
   // rebuild mixer + actions against the new mesh/skeleton
   mixerRef.m.stopAllAction();
   const newMixer = new THREE.AnimationMixer(mii.mesh);
@@ -185,6 +231,21 @@ function rebuildMii(colors) {
   for (const name in builtinClips) actions[name] = newMixer.clipAction(builtinClips[name]);
   for (const name in importedClips) actions[name] = newMixer.clipAction(importedClips[name]);
   play(playing || 'Idle', 0);
+}
+
+// Keep the whole character framed as its height changes with head size.
+// Preserves the user's current orbit angle, only refits target height + distance.
+function frameCharacter(topY) {
+  const top = (topY || 1.6) + 0.06;         // + platform offset
+  const center = top * 0.52;
+  const dir = camera.position.clone().sub(controls.target);
+  if (dir.lengthSq() < 1e-6) dir.set(0.5, 0.1, 1);
+  dir.normalize();
+  const halfFov = THREE.MathUtils.degToRad(camera.fov * 0.5);
+  const dist = THREE.MathUtils.clamp((top * 0.62) / Math.tan(halfFov), 2.2, 6.5);
+  controls.target.set(0, center, 0);
+  camera.position.copy(controls.target).add(dir.multiplyScalar(dist));
+  controls.update();
 }
 
 // ---------------------------------------------------------------------------
