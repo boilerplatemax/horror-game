@@ -1,0 +1,257 @@
+// main.js — scene setup, Mii creation, animation switching, and the optional
+// drag-and-drop Mixamo loader.
+
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { buildMii, DEFAULT_COLORS } from './mii.js';
+import { createClips } from './animations.js';
+import { loadMixamoClip } from './mixamo.js';
+
+const canvas = document.getElementById('scene');
+const statusEl = document.getElementById('status');
+const buttonsEl = document.getElementById('buttons');
+
+// ---------------------------------------------------------------------------
+// Renderer / scene / camera
+// ---------------------------------------------------------------------------
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+scene.background = makeGradient('#cfe3ff', '#f3f5fb');
+scene.fog = new THREE.Fog(0xeef1f7, 9, 16);
+
+const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+camera.position.set(0.8, 1.35, 3.3);
+
+const controls = new OrbitControls(camera, canvas);
+controls.target.set(0, 1.0, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 1.5;
+controls.maxDistance = 8;
+controls.maxPolarAngle = Math.PI * 0.52;
+
+// ---------------------------------------------------------------------------
+// Lighting
+// ---------------------------------------------------------------------------
+scene.add(new THREE.HemisphereLight(0xffffff, 0xb6bccb, 0.65));
+
+const key = new THREE.DirectionalLight(0xffffff, 2.1);
+key.position.set(3, 5.5, 3);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.near = 0.5;
+key.shadow.camera.far = 20;
+key.shadow.camera.left = -2.5;
+key.shadow.camera.right = 2.5;
+key.shadow.camera.top = 3;
+key.shadow.camera.bottom = -0.5;
+key.shadow.bias = -0.0004;
+key.shadow.radius = 4;
+scene.add(key);
+
+const rim = new THREE.DirectionalLight(0xbcd4ff, 0.5);
+rim.position.set(-4, 3, -3);
+scene.add(rim);
+
+// ---------------------------------------------------------------------------
+// Ground
+// ---------------------------------------------------------------------------
+const ground = new THREE.Mesh(
+  new THREE.CircleGeometry(7, 64),
+  new THREE.MeshStandardMaterial({ color: 0xe6e9f0, roughness: 1, metalness: 0 })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+const grid = new THREE.GridHelper(14, 28, 0xc2c8d6, 0xd4d9e4);
+grid.position.y = 0.002;
+grid.material.transparent = true;
+grid.material.opacity = 0.5;
+scene.add(grid);
+
+// ---------------------------------------------------------------------------
+// Mii + animation
+// ---------------------------------------------------------------------------
+let mii = buildMii();
+scene.add(mii.mesh);
+
+// builtinClips are authored once; bone names are identical after any rebuild,
+// so the same clips can be re-bound to a fresh mesh/mixer.
+const builtinClips = createClips();
+const importedClips = {};
+const actions = {};
+let current = null;
+const BUILTIN = ['Idle', 'Wave', 'Walk', 'Run', 'Jump', 'Dance', 'T-Pose'];
+
+// mixerRef lets us swap the active mixer when the Mii is rebuilt (randomize).
+const mixerRef = { m: new THREE.AnimationMixer(mii.mesh) };
+for (const name in builtinClips) actions[name] = mixerRef.m.clipAction(builtinClips[name]);
+
+function play(name, fade = 0.3) {
+  const next = actions[name];
+  if (!next || next === current) return;
+  next.reset();
+  next.enabled = true;
+  next.setEffectiveWeight(1);
+  next.play();
+  if (current) current.crossFadeTo(next, fade, false);
+  current = next;
+  setActiveButton(name);
+  setStatus('Playing: ' + name);
+}
+
+// ---------------------------------------------------------------------------
+// UI: animation buttons
+// ---------------------------------------------------------------------------
+function makeButton(name, group) {
+  const b = document.createElement('button');
+  b.textContent = name;
+  b.className = 'anim-btn';
+  b.dataset.anim = name;
+  if (group) b.dataset.group = group;
+  b.addEventListener('click', () => play(name));
+  buttonsEl.appendChild(b);
+  return b;
+}
+for (const name of BUILTIN) makeButton(name);
+
+function setActiveButton(name) {
+  for (const b of buttonsEl.children) {
+    b.classList.toggle('active', b.dataset.anim === name);
+  }
+}
+function setStatus(msg) { statusEl.textContent = msg; }
+
+// Extra control: randomize appearance
+const toolsEl = document.getElementById('tools');
+const randomBtn = document.createElement('button');
+randomBtn.textContent = '🎲 Randomize look';
+randomBtn.className = 'tool-btn';
+randomBtn.addEventListener('click', randomizeLook);
+toolsEl.appendChild(randomBtn);
+
+const HAIR_COLORS = ['#5a3a22', '#2b2320', '#1c1c1c', '#8a5a2b', '#c9a23f', '#b4442f', '#dcdcdc'];
+const SHIRT_COLORS = ['#f5f6f8', '#e4504f', '#4f8be4', '#4caf6a', '#f2b33d', '#8b5cf6', '#2c2f38'];
+const PANTS_COLORS = ['#8d93a0', '#3a4152', '#5a4636', '#2c2f38', '#6d7684'];
+const SKINS = ['#f2c9a0', '#e8b48a', '#d49a6a', '#b07a4e', '#8a5a36'];
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+
+function randomizeLook() {
+  const colors = {
+    ...DEFAULT_COLORS,
+    hair: pick(HAIR_COLORS),
+    brows: '#3a2a18',
+    shirt: pick(SHIRT_COLORS),
+    pants: pick(PANTS_COLORS),
+    skin: pick(SKINS),
+  };
+  colors.nose = colors.skin;
+  rebuildMii(colors);
+}
+
+function rebuildMii(colors) {
+  const playing = current ? Object.keys(actions).find((n) => actions[n] === current) : 'Idle';
+  scene.remove(mii.mesh);
+  mii.mesh.geometry.dispose();
+  mii.mesh.material.dispose();
+  mii = buildMii({ colors });
+  scene.add(mii.mesh);
+  // rebuild mixer + actions against the new mesh/skeleton
+  mixerRef.m.stopAllAction();
+  const newMixer = new THREE.AnimationMixer(mii.mesh);
+  mixerRef.m = newMixer;
+  for (const k in actions) delete actions[k];
+  current = null;
+  // Bone names are identical after a rebuild, so clips are reusable as-is.
+  for (const name in builtinClips) actions[name] = newMixer.clipAction(builtinClips[name]);
+  for (const name in importedClips) actions[name] = newMixer.clipAction(importedClips[name]);
+  play(playing || 'Idle', 0);
+}
+
+// ---------------------------------------------------------------------------
+// Drag-and-drop / file input for Mixamo animations
+// ---------------------------------------------------------------------------
+const dropZone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+document.getElementById('importBtn').addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', (e) => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+['dragenter', 'dragover'].forEach((ev) =>
+  window.addEventListener(ev, (e) => { e.preventDefault(); dropZone.classList.add('show'); }));
+['dragleave', 'drop'].forEach((ev) =>
+  window.addEventListener(ev, (e) => {
+    e.preventDefault();
+    if (ev === 'drop' || e.target === document || !e.relatedTarget) dropZone.classList.remove('show');
+  }));
+window.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('show');
+  const f = e.dataTransfer.files[0];
+  if (f) handleFile(f);
+});
+
+async function handleFile(file) {
+  setStatus('Loading ' + file.name + ' …');
+  try {
+    const clip = await loadMixamoClip(file, mii.mesh);
+    const name = clip.name || file.name;
+    importedClips[name] = clip;
+    actions[name] = mixerRef.m.clipAction(clip);
+    if (!buttonsEl.querySelector(`[data-anim="${CSS.escape(name)}"]`)) {
+      const b = makeButton(name, 'imported');
+      b.classList.add('imported');
+    }
+    play(name);
+    setStatus('Imported: ' + name);
+  } catch (err) {
+    console.error(err);
+    setStatus('⚠ Could not import ' + file.name + ' — ' + err.message);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Render loop
+// ---------------------------------------------------------------------------
+play('Idle', 0);
+
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  mixerRef.m.update(dt);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+function makeGradient(top, bottom) {
+  const c = document.createElement('canvas');
+  c.width = 2; c.height = 256;
+  const ctx = c.getContext('2d');
+  const g = ctx.createLinearGradient(0, 0, 0, 256);
+  g.addColorStop(0, top);
+  g.addColorStop(1, bottom);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 2, 256);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function resize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+resize();
