@@ -1,6 +1,5 @@
 // face.js — the face is a flat textured decal that hugs the front of the head
-// (like a real Mii / PS1 character), not 3D eyeballs. Default face is drawn on
-// a canvas; the user can upload their own image to paste on instead.
+// (like a real Mii), not 3D eyeballs. The face is drawn on a canvas.
 
 import * as THREE from 'three';
 
@@ -51,19 +50,6 @@ export function defaultFaceTexture() {
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;
   return tex;
-}
-
-// Load an uploaded image file into a texture (pasted on the face).
-export function textureFromFile(file) {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    new THREE.TextureLoader().load(url, (tex) => {
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.anisotropy = 4;
-      URL.revokeObjectURL(url);
-      resolve(tex);
-    }, undefined, (e) => { URL.revokeObjectURL(url); reject(e); });
-  });
 }
 
 // Build a face patch that hugs the front of a surface of revolution (the head).

@@ -5,10 +5,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildMii, DEFAULT_COLORS } from './mii.js';
-import { buildLowpoly } from './miiLowpoly.js';
 import { createClips } from './animations.js';
 import { loadMixamoClip } from './mixamo.js';
-import { defaultFaceTexture, textureFromFile } from './face.js';
+import { defaultFaceTexture } from './face.js';
 
 const canvas = document.getElementById('scene');
 const statusEl = document.getElementById('status');
@@ -91,32 +90,24 @@ scene.add(platform);
 // ---------------------------------------------------------------------------
 // Mii + animation
 // ---------------------------------------------------------------------------
-// Current appearance + render-mode state.
+// Current appearance state.
 const look = { colors: { ...DEFAULT_COLORS }, headScale: 1 };
-let mode = 'smooth';                 // 'smooth' | 'ps1'
-let faceTexture = defaultFaceTexture();
-let faceIsUploaded = false;
+const faceTexture = defaultFaceTexture();
 let facePanel = null;
 
-function buildActive() {
-  return mode === 'ps1' ? buildLowpoly(look) : buildMii(look);
-}
-// The face is a flat textured panel attached to the head bone (so it follows
-// animation), not 3D geometry — like a real Mii / PS1 character.
+// The face is a flat textured decal attached to the head bone (so it follows
+// animation), hugging the front of the head — like a real Mii.
 function attachFace(m) {
   if (facePanel) { facePanel.material.dispose(); facePanel.removeFromParent(); facePanel = null; }
-  if (mode === 'ps1') { faceTexture.magFilter = THREE.NearestFilter; faceTexture.minFilter = THREE.NearestFilter; }
-  else { faceTexture.magFilter = THREE.LinearFilter; faceTexture.minFilter = THREE.LinearMipmapLinearFilter; }
-  faceTexture.needsUpdate = true;
-  const mat = mode === 'ps1'
-    ? new THREE.MeshBasicMaterial({ map: faceTexture, transparent: !faceIsUploaded, depthWrite: true, side: THREE.DoubleSide })
-    : new THREE.MeshStandardMaterial({ map: faceTexture, transparent: !faceIsUploaded, roughness: 0.6, metalness: 0, depthWrite: true, side: THREE.DoubleSide });
+  const mat = new THREE.MeshStandardMaterial({
+    map: faceTexture, transparent: true, roughness: 0.6, metalness: 0, depthWrite: true, side: THREE.DoubleSide,
+  });
   facePanel = new THREE.Mesh(m.faceGeometry, mat);
   facePanel.renderOrder = 2;
   m.headBone.add(facePanel);
 }
 
-let mii = buildActive();
+let mii = buildMii(look);
 mii.mesh.position.y = 0.06; // stand on the platform
 scene.add(mii.mesh);
 attachFace(mii);
@@ -220,41 +211,6 @@ randomBtn.className = 'tool-btn';
 randomBtn.addEventListener('click', randomizeLook);
 toolsEl.appendChild(randomBtn);
 
-// Render-mode toggle: Smooth vs PS1 low-poly
-const modeWrap = document.getElementById('modes');
-const modeBtns = {};
-for (const [label, m] of [['✨ Smooth', 'smooth'], ['🎮 PS1 low-poly', 'ps1']]) {
-  const b = document.createElement('button');
-  b.textContent = label; b.className = 'mode-btn'; b.dataset.mode = m;
-  b.addEventListener('click', () => setMode(m));
-  modeWrap.appendChild(b); modeBtns[m] = b;
-}
-modeBtns.smooth.classList.add('active');
-function setMode(m) {
-  if (m === mode) return;
-  mode = m;
-  for (const k in modeBtns) modeBtns[k].classList.toggle('active', k === m);
-  rebuildMii();
-  setStatus(m === 'ps1' ? 'PS1 low-poly mode' : 'Smooth mode');
-}
-
-// Face-image upload (pasted on the face)
-const faceInput = document.getElementById('faceInput');
-const faceBtn = document.createElement('button');
-faceBtn.textContent = '🙂 Upload face';
-faceBtn.className = 'tool-btn';
-faceBtn.addEventListener('click', () => faceInput.click());
-toolsEl.appendChild(faceBtn);
-faceInput.addEventListener('change', async (e) => {
-  const f = e.target.files[0]; if (!f) return;
-  try {
-    faceTexture = await textureFromFile(f);
-    faceIsUploaded = true;
-    attachFace(mii);
-    setStatus('Face image applied' + (mode === 'smooth' ? ' (try PS1 mode too)' : ''));
-  } catch (err) { console.error(err); setStatus('Could not load that image'); }
-});
-
 const HAIR_COLORS = ['#5a3a22', '#2b2320', '#1c1c1c', '#8a5a2b', '#c9a23f', '#b4442f', '#dcdcdc'];
 const SHIRT_COLORS = ['#f5f6f8', '#e4504f', '#4f8be4', '#4caf6a', '#f2b33d', '#8b5cf6', '#2c2f38'];
 const PANTS_COLORS = ['#8d93a0', '#3a4152', '#5a4636', '#2c2f38', '#6d7684'];
@@ -279,7 +235,7 @@ function rebuildMii() {
   scene.remove(mii.mesh);
   mii.mesh.geometry.dispose();
   mii.mesh.material.dispose();
-  mii = buildActive();
+  mii = buildMii(look);
   mii.mesh.position.y = 0.06;
   scene.add(mii.mesh);
   attachFace(mii);
