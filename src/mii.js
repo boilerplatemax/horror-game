@@ -15,6 +15,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { edgeTable, triTable } from 'three/addons/objects/MarchingCubes.js';
+import { buildFacePatch } from './face.js';
 
 export const DEFAULT_COLORS = {
   skin:  '#ffce9e', nose: '#f2b488', blush: '#ff9d8e',
@@ -126,6 +127,12 @@ export function buildMii(options = {}) {
   const headTop = crownY + RT;
   const C = new THREE.Vector3(0, chinY + 0.17 * h, 0); // face anchor (eye region)
   const colL = (c) => new THREE.Color(c).convertSRGBToLinear();
+  // Egg cross-section radius at world height y (0 at the poles).
+  const radiusAt = (y) => {
+    if (y >= chinY && y <= crownY) { const t = (crownY - y) / (crownY - chinY); return RT + t * (RC - RT); }
+    if (y < chinY) { const d = chinY - y; return Math.sqrt(Math.max(RC * RC - d * d, 1e-6)); }
+    const d = y - crownY; return Math.sqrt(Math.max(RT * RT - d * d, 1e-6));
+  };
   const cShirt = colL(colors.shirt), cPants = colL(colors.pants),
         cSkin = colL(colors.skin), cShoes = colL(colors.shoes);
 
@@ -144,9 +151,8 @@ export function buildMii(options = {}) {
   const gTorso = [
     cone(0, 0.64, 0, 0, 0.80, 0, 0.126, 0.106, 'mixamorigSpine', cShirt, 'torso'),   // hips -> waist
     cone(0, 0.80, 0, 0, 0.97, 0, 0.106, 0.138, 'mixamorigSpine1', cShirt, 'torso'),  // waist -> chest
-    cone(0, 0.95, 0, 0, 1.03, 0, 0.052, 0.047, 'mixamorigNeck', cSkin, 'skin'),      // neck
-    cone(0, crownY, 0, 0, chinY, 0, RT, RC, 'mixamorigHead', cSkin, 'skin'),          // egg head
-  ];
+    cone(0, 0.95, 0, 0, 1.04, 0, 0.052, 0.047, 'mixamorigNeck', cSkin, 'skin'),      // neck
+  ]; // (the head is a separate clean lathe mesh, added below, so the face sits on an exact surface)
   const limbs = [];
   for (const [g, A, F, Hd, U, L, Ft] of [
     [1, 'mixamorigLeftArm', 'mixamorigLeftForeArm', 'mixamorigLeftHand', 'mixamorigLeftUpLeg', 'mixamorigLeftLeg', 'mixamorigLeftFoot'],
@@ -193,8 +199,7 @@ export function buildMii(options = {}) {
   }
 
   // --- Marching cubes over the field --------------------------------------
-  const zr = Math.max(0.26, RT + 0.05);
-  const min = [-0.7, -0.03, -zr], max = [0.7, headTop + 0.06, zr];
+  const min = [-0.7, -0.03, -0.26], max = [0.7, 1.12, 0.26]; // body only; head is separate
   const nx = Math.ceil((max[0] - min[0]) / CELL), ny = Math.ceil((max[1] - min[1]) / CELL), nz = Math.ceil((max[2] - min[2]) / CELL);
   const gx = nx + 1, gy = ny + 1, gz = nz + 1;
   const grid = new Float32Array(gx * gy * gz);
@@ -288,33 +293,19 @@ export function buildMii(options = {}) {
     geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
     overlays.push(geo);
   }
-  const headBall = (ox, oy, oz, r, scale, color, euler = null) => {
-    const geo = new THREE.SphereGeometry(r * h, 22, 16);
-    const q = euler ? new THREE.Quaternion().setFromEuler(new THREE.Euler(...euler)) : new THREE.Quaternion();
-    geo.applyMatrix4(new THREE.Matrix4().compose(
-      new THREE.Vector3(C.x + h * ox, C.y + h * oy, C.z + h * oz), q, new THREE.Vector3(scale[0], scale[1], scale[2])));
-    tagOverlay(geo, color);
-  };
-  // hair cap + lower back
+  // clean smooth egg head (lathe), so the face patch sits on an exact surface
+  const headPts = [];
+  for (let i = 0; i <= 30; i++) {
+    const y = 1.0 + (headTop - 1.0) * i / 30;
+    headPts.push(new THREE.Vector2(Math.max(radiusAt(y), 1e-4), y));
+  }
+  const headGeo = new THREE.LatheGeometry(headPts, 30);
+  tagOverlay(headGeo, colors.skin);
+
+  // hair cap + lower back (the face itself is a textured panel added by main)
   const capMat = new THREE.Matrix4().compose(new THREE.Vector3(0, crownY, 0), new THREE.Quaternion(), new THREE.Vector3(1.04, 1.04, 1.04));
   const cap = new THREE.SphereGeometry(RT + 0.006, 32, 26, 0, Math.PI * 2, 0, 1.72); cap.applyMatrix4(capMat); tagOverlay(cap, colors.hair);
   const back = new THREE.SphereGeometry(RT + 0.002, 32, 26, Math.PI * 1.02, Math.PI * 0.96, 0, 1.98); back.applyMatrix4(capMat); tagOverlay(back, colors.hair);
-  // face
-  for (const s of [1, -1]) {
-    headBall(s * 0.105, -0.005, 0.205, 0.062, [1.0, 1.32, 0.52], colors.eyeWhite);
-    headBall(s * 0.112, -0.012, 0.235, 0.042, [1.0, 1.3, 0.6], colors.pupil);
-    headBall(s * 0.132, 0.03, 0.262, 0.016, [1, 1, 1], colors.shine);
-    headBall(s * 0.108, 0.07, 0.212, 0.044, [1.35, 0.26, 0.5], colors.brows, [0, 0, s * -0.16]);
-    headBall(s * 0.172, -0.058, 0.178, 0.046, [1.2, 0.85, 0.34], colors.blush);
-  }
-  headBall(0, -0.03, 0.245, 0.021, [1, 0.85, 0.9], colors.nose);
-  {
-    const geo = new THREE.TorusGeometry(0.042 * h, 0.011 * h, 10, 24, Math.PI);
-    geo.applyMatrix4(new THREE.Matrix4().compose(
-      new THREE.Vector3(C.x, C.y - h * 0.088, C.z + h * 0.222),
-      new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, Math.PI)), new THREE.Vector3(1, 1, 1)));
-    tagOverlay(geo, colors.mouth);
-  }
 
   // --- Merge & build -------------------------------------------------------
   const geometry = mergeGeometries([body, ...overlays], false);
@@ -328,5 +319,13 @@ export function buildMii(options = {}) {
   mesh.normalizeSkinWeights();
 
   const topY = headTop + 0.03;
-  return { mesh, skeleton, bones, bonesByName, hipsRestY: root.position.y, topY, headScale: h };
+  // Face patch that hugs the front of the (clean) egg head. Head bone at y=1.08.
+  const faceGeometry = buildFacePatch({
+    radiusAt, yBottom: 1.0 + 0.05 * h, yTop: 1.0 + 0.30 * h,
+    angH: 0.82, eps: 0.01, zScale: 1, yOffset: -1.08,
+  });
+  return {
+    mesh, skeleton, bones, bonesByName, headBone: bonesByName['mixamorigHead'],
+    hipsRestY: root.position.y, topY, headScale: h, faceGeometry,
+  };
 }

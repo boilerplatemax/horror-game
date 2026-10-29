@@ -1,10 +1,18 @@
 # Mii Playground
 
-A small Three.js scene with a **procedurally-built, smooth-shaded chibi
-character** that is rigged to a Mixamo-compatible humanoid skeleton. Click a
-button to switch between hand-authored animations, **slide the head-to-body
-ratio** (0.5×–2×), randomize the character's look, or drop in a real Mixamo
-animation file.
+A small Three.js scene with a procedurally-built chibi character rigged to a
+Mixamo-compatible humanoid skeleton. You can:
+
+- switch between hand-authored animations (idle, wave, walk, run, jump, dance),
+- toggle between a **Smooth** look and a **PS1 low-poly** look (two models, same
+  rig),
+- **upload your own face image** (pasted onto the face; a clean default face is
+  drawn otherwise),
+- slide the **head-to-body ratio** (0.5×–2×), randomize colors,
+- or drop in a real Mixamo animation file.
+
+The face is a flat textured decal that hugs the front of the head (like a real
+Mii), not 3D eyeballs.
 
 ![screenshot](assets/hero.png)
 

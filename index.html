@@ -65,6 +65,16 @@
     font-size: 12px; opacity: 0.6; min-height: 15px; text-align: center;
   }
 
+  /* Render-mode toggle */
+  #modes { display: flex; gap: 6px; background: rgba(255,255,255,0.5);
+    border: 1px solid var(--panel-border); border-radius: 999px; padding: 4px; backdrop-filter: blur(8px); }
+  .mode-btn {
+    font: inherit; font-size: 13px; font-weight: 600; padding: 7px 16px;
+    border-radius: 999px; cursor: pointer; border: none; background: transparent; color: var(--ink);
+    transition: all .15s ease;
+  }
+  .mode-btn.active { background: var(--accent); color: var(--accent-ink); box-shadow: 0 2px 8px rgba(59,130,246,0.35); }
+
   /* Head-to-body ratio control */
   #ratio {
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;
@@ -132,6 +142,7 @@
 
   <div id="bar">
     <div id="status"></div>
+    <div id="modes"></div>
     <div id="buttons"></div>
     <div id="ratio">
       <label for="headSlider">Head size <span id="headVal">1×</span></label>
@@ -145,6 +156,7 @@
 
   <div id="dropzone"><div>Drop your Mixamo animation to import ↓</div></div>
   <input type="file" id="fileInput" accept=".fbx,.glb,.gltf" style="display:none">
+  <input type="file" id="faceInput" accept="image/*" style="display:none">
 
   <script type="module" src="./src/main.js"></script>
 </body>
