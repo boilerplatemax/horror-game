@@ -165,22 +165,24 @@ for (const [label, v] of PRESETS) {
   presetBtns[v] = b;
 }
 
-// Slider for fine control
+// Slider for fine control. The implicit-surface rebuild is a bit heavy, so we
+// update the label live while dragging and rebuild the mesh on release.
 const slider = document.getElementById('headSlider');
 const sliderVal = document.getElementById('headVal');
-slider.addEventListener('input', () => setHeadScale(parseFloat(slider.value)));
+slider.addEventListener('input', () => updateRatioLabel(parseFloat(slider.value)));
+slider.addEventListener('change', () => setHeadScale(parseFloat(slider.value)));
 
-// Sync UI to the default ratio without rebuilding.
-sliderVal.textContent = '1×';
-presetBtns[1].classList.add('active');
+function updateRatioLabel(v) {
+  sliderVal.textContent = v.toFixed(2).replace(/\.?0+$/, '') + '×';
+  for (const key in presetBtns) presetBtns[key].classList.toggle('active', Math.abs(+key - v) < 0.001);
+}
+updateRatioLabel(1); // sync UI to default ratio without rebuilding
 
 let rebuildQueued = false;
 function setHeadScale(v) {
   look.headScale = v;
   slider.value = String(v);
-  sliderVal.textContent = v.toFixed(2).replace(/\.?0+$/, '') + '×';
-  for (const key in presetBtns) presetBtns[key].classList.toggle('active', Math.abs(+key - v) < 0.001);
-  // Coalesce rapid slider events into one rebuild per frame.
+  updateRatioLabel(v);
   if (!rebuildQueued) {
     rebuildQueued = true;
     requestAnimationFrame(() => { rebuildQueued = false; rebuildMii(); });

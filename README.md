@@ -34,13 +34,25 @@ vendor/             Three.js r160 + addons (OrbitControls, loaders, SkeletonUtil
 
 ## How the rigging works
 
-* The character is one `SkinnedMesh`. Each body part is a primitive (capsules
-  for limbs, spheres for everything else) authored in the bind (T) pose and
-  bound 100% to a single bone (rigid skinning); capsule caps and joint balls
-  overlap so the seams blend when limbs bend. All parts merge into one geometry
-  with a per-vertex `color` attribute, so a single smooth
-  `MeshStandardMaterial({ vertexColors })` renders the whole character, lit by
-  an image-based `RoomEnvironment` for a soft, rounded toy look.
+The body is **one cohesive, smoothly-skinned mesh**, not a pile of overlapping
+primitives:
+
+* **Implicit surface.** The body is defined as a signed-distance *field* — a
+  smooth-min blend of tapered capsules (round cones) plus an ellipsoid head.
+  Overlapping parts fuse into one surface with filleted joints (the soft,
+  seamless "toy" look).
+* **Marching cubes.** That field is polygonized into a single watertight mesh
+  (`src/mii.js` runs a compact marching-cubes pass, reusing the standard
+  `edgeTable`/`triTable` from three's `MarchingCubes` addon). Vertex normals
+  come from the field gradient, so the surface is smooth at any resolution.
+* **Automatic smooth skinning.** Each generated vertex is weighted to its 2–3
+  nearest bones with a falloff, so elbows and knees deform as one continuous
+  skin instead of creasing. Vertex colors come from the nearest body region
+  (with a crisp waistline), drawn by a single `MeshStandardMaterial`.
+* **Face + hair** are separate overlay pieces merged into the same mesh — they
+  sit flush on the surface, which is standard practice.
+* Everything is lit by an image-based `RoomEnvironment` for a soft, rounded
+  look. Changing the head size re-runs the field + marching-cubes pass.
 * The skeleton uses **Mixamo's bone names** (`mixamorigHips`,
   `mixamorigLeftArm`, …) in a standard T-pose. That's what lets Mixamo clips
   retarget cleanly onto it.
