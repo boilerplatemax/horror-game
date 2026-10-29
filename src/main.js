@@ -101,6 +101,7 @@ function attachFace(m) {
   if (facePanel) { facePanel.material.dispose(); facePanel.removeFromParent(); facePanel = null; }
   const mat = new THREE.MeshStandardMaterial({
     map: faceTexture, transparent: true, roughness: 0.6, metalness: 0, depthWrite: true, side: THREE.DoubleSide,
+    polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4, // decal: always draw over the head surface
   });
   facePanel = new THREE.Mesh(m.faceGeometry, mat);
   facePanel.renderOrder = 2;

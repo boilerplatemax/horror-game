@@ -101,7 +101,7 @@ function distSeg(px, py, pz, ax, ay, az, bx, by, bz) {
 
 export function buildMii(options = {}) {
   const colors = { ...DEFAULT_COLORS, ...(options.colors || {}) };
-  const h = 0.6; // fixed head size (small, attached to the body)
+  const h = 0.72; // head size (proportional to the reference)
 
   // --- Bones ---------------------------------------------------------------
   const bonesByName = {}, bones = [], worldPos = {};
@@ -119,12 +119,11 @@ export function buildMii(options = {}) {
   const boneIdx = (n) => bones.indexOf(bonesByName[n]);
 
   // --- Implicit body definition (bind pose) --------------------------------
-  // Egg head: a vertical tapered capsule (domed crown -> narrow chin), anchored
-  // so the chin bottom stays at the neck as the head grows.
-  // Round, cute head: a simple ellipsoid (just slightly taller than wide),
-  // anchored so its base sits at the neck as the head grows.
-  const HRx = 0.255 * h, HRy = 0.285 * h;
-  const Cy = 1.0 + HRy * 0.9;
+  // Round, cute head — a slightly-tall ellipsoid. It is part of the implicit
+  // surface (below), blended with the neck so head -> neck -> shoulders is one
+  // continuous mesh with a real neck (not a ball slapped on top).
+  const HRx = 0.26 * h, HRy = 0.29 * h, HRz = 0.235 * h;
+  const Cy = 1.03 + HRy;
   const headTop = Cy + HRy, headBot = Cy - HRy;
   const C = new THREE.Vector3(0, Cy, 0);
   const colL = (c) => new THREE.Color(c).convertSRGBToLinear();
@@ -148,8 +147,11 @@ export function buildMii(options = {}) {
   const gTorso = [
     cone(0, 0.58, 0, 0, 0.78, 0, 0.082, 0.098, 'mixamorigSpine', cShirt, 'torso'),   // narrow pelvis bottom -> waist
     cone(0, 0.78, 0, 0, 0.97, 0, 0.098, 0.132, 'mixamorigSpine1', cShirt, 'torso'),  // waist -> chest
-    cone(0, 0.95, 0, 0, 1.03, 0, 0.05, 0.046, 'mixamorigNeck', cSkin, 'skin'),       // neck
-  ]; // (the head is a separate clean lathe mesh, added below, so the face sits on an exact surface)
+    cone(0, 0.93, 0, 0, headBot + 0.06, 0, 0.078, 0.05, 'mixamorigNeck', cSkin, 'skin'), // neck: shoulders -> up into the head
+    // head ellipsoid, blended with the neck so head -> neck -> shoulders flows as one surface
+    segs.push({ kind: 'ellipsoid', cx: C.x, cy: C.y, cz: C.z, rx: HRx, ry: HRy, rz: HRz,
+      ax: C.x, ay: C.y, az: C.z, bx: C.x, by: C.y, bz: C.z, reff: HRx, bi: boneIdx('mixamorigHead'), color: cSkin, region: 'skin' }) - 1,
+  ];
   const limbs = [];
   for (const [g, A, F, Hd, U, L, Ft] of [
     [1, 'mixamorigLeftArm', 'mixamorigLeftForeArm', 'mixamorigLeftHand', 'mixamorigLeftUpLeg', 'mixamorigLeftLeg', 'mixamorigLeftFoot'],
@@ -196,7 +198,8 @@ export function buildMii(options = {}) {
   }
 
   // --- Marching cubes over the field --------------------------------------
-  const min = [-0.7, -0.03, -0.26], max = [0.7, 1.12, 0.26]; // body only; head is separate
+  const zr = Math.max(0.26, HRz + 0.06);
+  const min = [-0.7, -0.03, -zr], max = [0.7, headTop + 0.05, zr]; // includes the head
   const nx = Math.ceil((max[0] - min[0]) / CELL), ny = Math.ceil((max[1] - min[1]) / CELL), nz = Math.ceil((max[2] - min[2]) / CELL);
   const gx = nx + 1, gy = ny + 1, gz = nz + 1;
   const grid = new Float32Array(gx * gy * gz);
@@ -290,17 +293,9 @@ export function buildMii(options = {}) {
     geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
     overlays.push(geo);
   }
-  // clean smooth egg head (lathe), so the face patch sits on an exact surface
-  const headPts = [];
-  for (let i = 0; i <= 32; i++) {
-    const y = headBot + (headTop - headBot) * i / 32;
-    headPts.push(new THREE.Vector2(Math.max(radiusAt(y), 1e-4), y));
-  }
-  const headGeo = new THREE.LatheGeometry(headPts, 32);
-  tagOverlay(headGeo, colors.skin);
-
-  // hair cap + lower back (the face itself is a textured panel added by main)
-  const hairMat = new THREE.Matrix4().compose(C, new THREE.Quaternion(), new THREE.Vector3(HRx * 1.05, HRy * 1.05, HRx * 0.97 * 1.05));
+  // hair cap + lower back (the head itself is part of the mesh above; the face
+  // is a textured decal added by main)
+  const hairMat = new THREE.Matrix4().compose(C, new THREE.Quaternion(), new THREE.Vector3(HRx * 1.06, HRy * 1.06, HRz * 1.06));
   const cap = new THREE.SphereGeometry(1, 36, 28, 0, Math.PI * 2, 0, 1.42); cap.applyMatrix4(hairMat); tagOverlay(cap, colors.hair);
   const back = new THREE.SphereGeometry(0.99, 36, 28, Math.PI * 1.02, Math.PI * 0.96, 0, 1.8); back.applyMatrix4(hairMat); tagOverlay(back, colors.hair);
 
@@ -318,8 +313,8 @@ export function buildMii(options = {}) {
   const topY = headTop + 0.03;
   // Face patch that hugs the front of the (clean) egg head. Head bone at y=1.08.
   const faceGeometry = buildFacePatch({
-    radiusAt, yBottom: Cy - HRy * 0.72, yTop: Cy + HRy * 0.30,
-    angH: 0.82, eps: 0.012, zScale: 1, yOffset: -1.08,
+    radiusAt, yBottom: Cy - HRy * 0.68, yTop: Cy + HRy * 0.32,
+    angH: 0.82, eps: 0.014, zScale: HRz / HRx, yOffset: -1.08,
   });
   return {
     mesh, skeleton, bones, bonesByName, headBone: bonesByName['mixamorigHead'],
