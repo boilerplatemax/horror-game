@@ -31,4 +31,15 @@ cpSync(r('vendor'), r('docs/vendor'), { recursive: true });
 if (existsSync(r('assets'))) cpSync(r('assets'), r('docs/assets'), { recursive: true });
 if (existsSync(r('worlds'))) cpSync(r('worlds'), r('docs/worlds'), { recursive: true });
 
-console.log(`Built docs/index.html (${Math.round(html.length / 1024)} KB) + vendor/assets/worlds.`);
+// Also emit a single self-contained file at the repo root (libraries inlined),
+// so it runs from any one-file link (GitHub Pages, raw.githack.com, jsDelivr)
+// with no sibling files needed.
+const inline = (h, src) => {
+  const js = read(src).replace(/<\/script>/gi, '<\\/script>');
+  return h.replace(`<script src="${src}"></script>`, `<script>\n${js}\n</script>`);
+};
+let standalone = html;
+for (const v of ['vendor/three.min.js', 'vendor/GLTFLoader.js', 'vendor/OBJLoader.js']) standalone = inline(standalone, v);
+writeFileSync(r('play.html'), standalone);
+
+console.log(`Built docs/index.html (${Math.round(html.length / 1024)} KB) + vendor/assets/worlds, and play.html (${Math.round(standalone.length / 1024)} KB, self-contained).`);
