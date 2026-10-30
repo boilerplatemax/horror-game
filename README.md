@@ -1,87 +1,99 @@
-# Mii Playground
+# PSX Level Maker
 
-A small Three.js scene with a procedurally-built, smooth-shaded chibi character
-rigged to a Mixamo-compatible humanoid skeleton. You can switch between
-hand-authored animations (idle, wave, walk, run, jump, dance), slide the
-**head-to-body ratio** (0.5×–2×), randomize colors, or drop in a real Mixamo
-animation file.
+A PS1-style, low-poly **browser level maker + player**. Build rooms on a grid,
+drop in characters, author branching dialogue, set the time of day, and walk
+the world in first or third person — all in one self-contained page, no backend.
 
-The face is a flat textured decal that hugs the front of the round head (like a
-real Mii), not 3D eyeballs.
+Built with **Three.js r128** (vendored, no CDN). Everything runs from a plain
+static file server and deploys to GitHub Pages.
 
-![screenshot](assets/hero.png)
-
-## Run it
-
-It's plain HTML + ES modules with Three.js vendored locally (no build step,
-no internet needed). Serve the folder with any static server:
+## Quick start
 
 ```bash
-python3 -m http.server 8000
-# then open http://localhost:8000
+node build.mjs          # assembles docs/index.html from src/ + vendor/
+# then serve docs/ with any static server, e.g.:
+python3 -m http.server -d docs 8080      # http://localhost:8080
+# or:  npx serve docs
 ```
 
-(Opening `index.html` directly won't work — ES modules need to be served over
-`http://`.)
+Open the page, click **Edit** to build, **▶ Play** to walk around.
 
-## What's inside
+## How it's wired
+
+The player is one HTML page assembled from a template + three engine scripts:
 
 ```
-index.html          UI, styles, import map
-src/mii.js          builds the Mii SkinnedMesh + skeleton (Mixamo bone names)
-src/animations.js   hand-authored AnimationClips (Idle, Wave, Walk, Run, …)
-src/mixamo.js       loads & retargets a dropped Mixamo .fbx/.glb onto the rig
-src/main.js         scene, lights, render loop, animation switching, UI
-vendor/             Three.js r160 + addons (OrbitControls, loaders, SkeletonUtils)
+src/
+  index-template.html   the page shell (HUD, panels, <script> slots)
+  char-engine.js        window.createPSXCharacter — low-poly characters + faces
+  room-engine.js        window.createPSXRoom — rooms, materials, imported models/textures
+  game.js               the runtime: movement, cameras, dialogue, the in-page editor
+vendor/
+  three.min.js          Three.js r128
+  GLTFLoader.js         glTF/glb loader (r128)
+  OBJLoader.js          .obj loader (r128)
+build.mjs               injects src/ into the template, copies vendor/assets/worlds -> docs/
+docs/                   build output (gitignored; regenerated + deployed by CI)
+assets/                 model + texture files, served at /assets  (see "Assets" below)
+worlds/                 saved world JSON exports
 ```
 
-## How the rigging works
+`build.mjs` references the libraries from `vendor/` and inlines the three
+engines into `docs/index.html`. **Edit the files in `src/`, then rebuild** —
+never edit `docs/index.html` by hand (it's overwritten).
 
-The body is **one cohesive, smoothly-skinned mesh**, not a pile of overlapping
-primitives:
+## Content model
 
-* **Implicit surface.** The body is defined as a signed-distance *field* — a
-  blend of tapered capsules (round cones) plus an ellipsoid head. Each limb's
-  own cones are joined with a plain union (so elbows/knees stay slim tubes, no
-  bulge), and only the torso joints and limb-to-body junctions get a small
-  smooth fillet — seamless but not puffy.
-* **Marching cubes.** That field is polygonized into a single watertight mesh
-  (`src/mii.js` runs a compact marching-cubes pass, reusing the standard
-  `edgeTable`/`triTable` from three's `MarchingCubes` addon). Vertex normals
-  come from the field gradient, so the surface is smooth at any resolution.
-* **Automatic smooth skinning.** Each generated vertex is weighted to its 2–3
-  nearest bones with a falloff, so elbows and knees deform as one continuous
-  skin instead of creasing. Vertex colors come from the nearest body region
-  (with a crisp waistline), drawn by a single `MeshStandardMaterial`.
-* **Face + hair** are separate overlay pieces merged into the same mesh — they
-  sit flush on the surface, which is standard practice.
-* Everything is lit by an image-based `RoomEnvironment` for a soft, rounded
-  look. Changing the head size re-runs the field + marching-cubes pass.
-* The skeleton uses **Mixamo's bone names** (`mixamorigHips`,
-  `mixamorigLeftArm`, …) in a standard T-pose. That's what lets Mixamo clips
-  retarget cleanly onto it.
+Three layers, kept separate so the engines can change without breaking content:
 
-## Using your own Mixamo animations
+- **Characters** — a `"PSX1.…"` code string or a settings object (`createPSXCharacter`).
+- **Rooms** — a room JSON of placed objects (`createPSXRoom`).
+- **World** — one JSON tying it together: `start`, `player`, `sky`, `flicker`,
+  and per room its `room`, `npcs` (with behaviours + dialogue), and `exits`.
 
-1. Grab an animation from [mixamo.com](https://www.mixamo.com) — **Download**
-   as **FBX** (or glTF/GLB). "Without Skin" is fine since we only need the clip.
-2. Drag the file onto the page (or click **Import Mixamo clip**).
-3. A new button appears for it; the motion is retargeted onto the Mii.
+The in-page **Edit** mode authors all of this visually (Build / Compose tabs),
+and **Export world JSON** gives you a world file to drop in `worlds/`.
 
-The retargeter (`three/addons/utils/SkeletonUtils` → `retargetClip`) transfers
-the source skeleton's rotations onto the Mii while keeping the Mii's own bone
-lengths. Root translation is stripped so clips play in place.
+## Assets
 
-### Adding more built-in animations
+Today, models (`.glb/.gltf/.obj`) and textures (`.png`) imported in the Build
+tab are **embedded** in the world JSON as data URIs — self-contained, but heavy.
 
-Edit `src/animations.js`. Each clip is just per-bone Euler keyframes (degrees):
+This repo is set up to move to **file-based assets** served from `/assets`:
 
-```js
-clips['MyMove'] = clip('MyMove', 1.5, {
-  RArm: { t: [0, 0.75, 1.5], k: [[0,0,78],[0,0,-60],[0,0,78]] },
-  // bone aliases: Hips, Spine, Head, LArm, LFore, LUpLeg, LLeg, ... (see mii.js BONE)
-  // `hips` is special: { t, k:[[dx,dy,dz],...] } drives Hips position (bob/jump)
-});
-```
+- Put model files in `assets/models/`, textures in `assets/textures/`.
+- List them in `assets/manifest.json`:
+  ```json
+  {
+    "models":   [{ "id": "chair", "name": "Chair", "path": "models/chair.glb", "scale": 1 }],
+    "textures": [{ "id": "brick", "name": "Brick", "path": "textures/brick.png" }]
+  }
+  ```
+- Because the player and `/assets` are served from the same origin, the page can
+  `fetch` them with no CORS issues.
 
-Then add the name to the `BUILTIN` array in `src/main.js`.
+> **Load-by-path isn't wired up yet** — see Roadmap. Until then, use the Build
+> tab's Import buttons (embeds the file). Download CC0 packs (Kenney, Quaternius,
+> Poly Pizza) or convert itch `.blend`/`.fbx` packs to `.glb` in Blender first.
+
+If `assets/` grows past ~50 MB, enable **Git LFS** for `assets/**` and note it here.
+
+## Deploy (GitHub Pages)
+
+`.github/workflows/deploy.yml` builds and deploys `docs/` on every push to `main`.
+In your repo: **Settings → Pages → Build and deployment → Source: GitHub Actions.**
+Your game goes live at `https://<user>.github.io/<repo>/`.
+
+## Roadmap — load assets by path
+
+The next step (great first task for a coding agent): make the player load assets
+from `/assets` by reference, in addition to the current embedded flow.
+
+- A model placement may be `{ "asset": "model", "ref": "models/chair.glb", "node": "...", "position": [...], "rotationY": 0, "scale": 1 }` — fetched + parsed (GLTFLoader for glb/gltf, OBJLoader for obj) and cached, exactly like today's embedded path. Keep `{ src/modelId + embedded data }` working for back-compat.
+- A material `"texref:textures/brick.png"` loads that texture.
+- Add an **Asset Library** panel in the Build tab that reads `assets/manifest.json`
+  and lists models/textures for one-click placement by `ref` (no embedding).
+- Add **Export (refs)** alongside the current embedded export.
+
+Keep it dependency-free and static; Three.js stays r128; don't change the game's
+visual behaviour — this is about asset storage and hosting only.

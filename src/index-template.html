@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PSX Level Player</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root{ --ink:#e8e8f0; --muted:#aeb2c8; --accent:#f1cf6a; --panel:#1b1d27; --panel2:#232634; --line:#323649;
+    --font:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace; color-scheme:dark; }
+  *{box-sizing:border-box} html,body{height:100%;margin:0}
+  body{background:#11131a;color:var(--ink);font-family:var(--font);overflow:hidden}
+  #stage{position:absolute;inset:0}
+  #stage canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none;cursor:grab}
+  #stage canvas:active{cursor:grabbing}
+  .hud{position:absolute;pointer-events:none;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+  #hudTop{top:14px;left:16px;font-size:13px}
+  #hudTop b{color:var(--accent);font-size:16px;letter-spacing:.03em}
+  #hudHelp{top:14px;right:16px;text-align:right;color:var(--muted);font-size:11.5px;line-height:1.7}
+  #hudHelp kbd{background:rgba(27,29,39,.85);border:1px solid var(--line);border-radius:3px;padding:0 5px;color:var(--ink)}
+  #hudExit{left:50%;transform:translateX(-50%);bottom:72px;background:rgba(241,207,106,.92);color:#1b1910;font-weight:600;padding:7px 14px;border-radius:6px;font-size:13px;display:none;pointer-events:auto;cursor:pointer}
+  #joy{position:absolute;left:24px;bottom:28px;width:108px;height:108px;border-radius:50%;background:rgba(27,29,39,.42);border:1px solid var(--line);touch-action:none;display:none;z-index:8}
+  #joy.show{display:block}
+  #joyKnob{position:absolute;left:36px;top:36px;width:36px;height:36px;border-radius:50%;background:rgba(241,207,106,.85);pointer-events:none}
+  #hudMsg{left:50%;transform:translateX(-50%);bottom:30px;color:var(--muted);font-size:12px}
+  .bar{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:flex;gap:8px;pointer-events:auto;z-index:6}
+  .bar button{font:inherit;color:var(--ink);background:rgba(27,29,39,.9);border:1px solid var(--line);border-radius:6px;padding:7px 13px;cursor:pointer}
+  .bar button:hover{border-color:#4a4f68}
+  .bar button.on{background:var(--accent);color:#1b1910;border-color:var(--accent);font-weight:600}
+
+  /* dialogue */
+  #dialogue{left:50%;transform:translateX(-50%);bottom:12px;width:min(620px,94%);height:112px;box-sizing:border-box;background:rgba(20,22,30,.96);border:1px solid var(--line);border-radius:12px;padding:14px;display:none;pointer-events:none;align-items:center;gap:14px}
+  #dialogue.choosing{height:auto;min-height:112px}
+  #portrait{flex:0 0 auto;width:84px;height:84px;border-radius:8px;overflow:hidden;background:#14161e;border:1px solid var(--line);box-shadow:inset 0 0 0 1px rgba(0,0,0,.3)}
+  #portrait canvas{width:84px;height:84px;display:block;image-rendering:pixelated}
+  #dialogue .dlgtext{flex:1;min-width:0;align-self:stretch;display:flex;flex-direction:column;justify-content:center}
+  #dialogue .who{color:var(--accent);font-weight:600;font-size:12px;margin-bottom:5px}
+  #dialogue .line{font-size:14px;line-height:1.45}
+  #dialogue .adv{color:var(--muted);font-size:11px;margin-top:8px;text-align:right}
+  #dlgChoices{display:none;flex-direction:column;gap:6px;margin-top:9px;pointer-events:auto}
+  #dlgChoices .dchoice{pointer-events:auto;text-align:left;background:var(--panel2);border:1px solid var(--line);color:var(--ink);font-family:var(--font);font-size:13px;padding:7px 10px;border-radius:6px;cursor:pointer}
+  #dlgChoices .dchoice:hover{border-color:var(--accent);color:var(--accent)}
+
+  /* edit panel */
+  .editpanel{position:absolute;top:0;right:0;width:300px;height:100%;background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;z-index:7;display:none;flex-direction:column}
+  .editpanel.open{display:flex}
+  .ep-sec{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+  .ep-sec h3{margin:0;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent)}
+  .ep-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .ep-row label{color:var(--muted);font-size:11px;min-width:64px}
+  .editpanel input,.editpanel select,.editpanel textarea{background:var(--panel2);border:1px solid var(--line);border-radius:5px;color:var(--ink);font-family:var(--font);font-size:11.5px;padding:5px 7px}
+  .editpanel input,.editpanel select{flex:1;min-width:0}
+  .editpanel textarea{width:100%;min-height:44px;resize:vertical}
+  .editpanel button{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:6px 9px;cursor:pointer;font-size:11.5px}
+  .editpanel button:hover{border-color:#4a4f68}
+  .editpanel button.primary{background:var(--accent);color:#1b1910;border-color:var(--accent);font-weight:600}
+  .editpanel button.on{background:var(--accent);color:#1b1910;border-color:var(--accent);font-weight:600}
+  .ep-tabs{flex-direction:row !important;gap:6px;padding:10px 14px}
+  .ep-tabs .tab{flex:1;text-align:center;font-weight:600}
+  #epPieceLib{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+  #epPieceLib .pcBtn{font-size:10px;padding:6px 3px;line-height:1.2}
+  #epPieceLib .modelBtn{background:#2a2438;border-color:#54496e}
+  #epPieceLib .modelBtn.on{background:var(--accent);color:#1b1910;border-color:var(--accent)}
+  #epPieceMat{display:flex;flex-wrap:wrap;gap:4px}
+  #epPieceMat .sw{width:22px;height:22px;border-radius:4px;border:1px solid var(--line);cursor:pointer;padding:0}
+  #epPieceMat .sw.on{outline:2px solid var(--accent);outline-offset:1px}
+  .npc-card{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px;display:flex;flex-direction:column;gap:6px}
+  .npc-card .hd{display:flex;justify-content:space-between;align-items:center}
+  .npc-card .hd b{font-size:12px}
+  .mini{color:var(--muted);font-size:11px;line-height:1.5}
+  .del{color:#e09088;border-color:#5a3b38 !important}
+  /* dialogue authoring */
+  .dlged{display:flex;flex-direction:column;gap:6px}
+  .dlg-lines{display:flex;flex-direction:column;gap:4px}
+  .dlg-line,.dlg-choice{display:flex;gap:3px;align-items:center}
+  .dlged .dlg-txt{flex:1;min-width:0;background:#12141c;border:1px solid var(--line);border-radius:5px;color:var(--ink);font-family:var(--font);font-size:11px;padding:4px 6px}
+  .dlged .dlg-sel{background:var(--panel2);border:1px solid var(--line);border-radius:5px;color:var(--ink);font-family:var(--font);font-size:10.5px;padding:3px 2px;max-width:80px}
+  .dlged .mini-btn{background:var(--panel2);border:1px solid var(--line);border-radius:5px;color:var(--muted);font:inherit;font-size:10px;padding:3px 5px;cursor:pointer;line-height:1}
+  .dlged .mini-btn:hover{border-color:#4a4f68;color:var(--ink)}
+  .dlged .mini-btn.add{color:var(--accent);border-color:#4a442a}
+  .dlged .mini-btn.del{color:#e09088}
+  .dlg-variant,.dlg-node{border:1px solid var(--line);border-radius:6px;padding:7px;background:rgba(0,0,0,.14);display:flex;flex-direction:column;gap:5px}
+  .dlg-vhd{display:flex;justify-content:space-between;align-items:center}
+  .dlg-vlbl{color:var(--accent);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase}
+  .dlg-choice .arrow{color:var(--muted);font-size:11px;padding:0 1px}
+
+  /* modals */
+  .modal{position:absolute;inset:0;background:rgba(10,11,16,.72);display:none;align-items:center;justify-content:center;z-index:20}
+  .modal.open{display:flex}
+  .modal .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;width:min(640px,92%);max-height:86%;display:flex;flex-direction:column;gap:12px}
+  .modal h2{margin:0;font-size:14px;color:var(--accent)}
+  .modal p{margin:0;color:var(--muted);font-size:12px;line-height:1.6}
+  .modal input{background:#12141c;border:1px solid var(--line);border-radius:6px;color:var(--ink);font-family:var(--font);font-size:12px;padding:8px}
+  .modal textarea{flex:1;min-height:260px;background:#12141c;border:1px solid var(--line);border-radius:6px;color:var(--ink);font-family:var(--font);font-size:11px;padding:10px;resize:vertical;white-space:pre}
+  .modal .row{display:flex;gap:8px;justify-content:flex-end;align-items:center}
+  .modal .row .msg{margin-right:auto;color:var(--muted);font-size:11.5px}
+  .modal button{font:inherit;color:var(--ink);background:#232634;border:1px solid var(--line);border-radius:6px;padding:8px 14px;cursor:pointer}
+  .modal button.primary{background:var(--accent);color:#1b1910;border-color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+  <div id="stage"></div>
+
+  <div class="hud" id="hudTop"><div id="hudLabel">ROOM</div><b id="hudRoom">—</b></div>
+  <div class="hud" id="hudExit"></div>
+  <div class="hud" id="hudMsg"></div>
+  <div id="joy"><div id="joyKnob"></div></div>
+  <div class="hud" id="dialogue"><div id="portrait"></div><div class="dlgtext"><div class="who" id="dlgWho"></div><div class="line" id="dlgLine"></div><div id="dlgChoices"></div><div class="adv" id="dlgAdv">E ▸</div></div></div>
+
+  <div class="bar">
+    <button id="btnMode">Edit</button>
+    <button id="btnLoadWorld">Load world…</button>
+    <button id="btnView">1st person</button>
+    <button id="btnFlash">Flashlight</button>
+    <button id="btnLowres">Low-res</button>
+  </div>
+
+  <!-- compose / build / edit panel -->
+  <aside class="editpanel" id="editPanel">
+    <div class="ep-sec ep-tabs">
+      <button id="epTabBuild" class="tab on">🧱 Build</button>
+      <button id="epTabCompose" class="tab">🎭 Compose</button>
+    </div>
+    <div class="ep-sec">
+      <h3>Room</h3>
+      <div class="ep-row"><label>Editing</label><select id="epRoomSel"></select></div>
+      <div class="ep-row"><button id="epAddRoom">Add room…</button><button id="epNewRoom">New empty</button><button id="epDelRoom" class="del">Remove</button></div>
+      <div class="ep-row"><label>Wall height</label><button id="epWHDn">−</button><b id="epWHLbl" style="min-width:34px;text-align:center">2.3</b><button id="epWHUp">+</button><span class="mini">this room</span></div>
+      <div class="ep-row"><button id="epBlank" style="flex:1">✦ Start fresh — blank world</button></div>
+    </div>
+
+    <!-- BUILD -->
+    <div id="buildSecs">
+      <div class="ep-sec">
+        <h3>Pieces</h3>
+        <div id="epPieceLib"></div>
+        <div class="ep-row" style="margin-top:2px"><button id="epImportBtn" style="flex:1">➕ Import .glb / .gltf model</button></div>
+        <input type="file" id="epImportFile" accept=".glb,.gltf,model/gltf-binary,model/gltf+json" style="display:none">
+        <div class="ep-row"><input id="epImportUrlIn" placeholder="…or paste a model URL" style="flex:1"><button id="epImportUrl">Add</button></div>
+        <p class="mini" id="importNote">Import a <b>.glb</b>, <b>.gltf</b> or <b>.obj</b> — it's embedded in your file, so it works offline. A pack with many models becomes <b>one palette piece per object</b>. Instant sources: Poly&nbsp;Pizza, Kenney, Quaternius (all .glb). From an itch.io <b>.blend</b>/<b>.fbx</b> pack, open it in Blender (free) and <i>File ▸ Export ▸ glTF (.glb)</i> first.</p>
+        <div class="ep-row"><label>Material</label><div id="epPieceMat"></div></div>
+        <div class="ep-row"><button id="epTexBtn">＋ Import texture (.png)</button></div>
+        <input type="file" id="epTexFile" accept="image/png,image/jpeg,image/webp" style="display:none">
+        <div class="ep-row"><button id="epRotPiece">Rotate ⟳ <b id="epRotLbl">0°</b></button><button id="epEraser">Eraser</button></div>
+        <div class="ep-row"><label>Model size</label><button id="epScaleDn">−</button><b id="epScaleLbl" style="min-width:42px;text-align:center">1.0×</b><button id="epScaleUp">+</button></div>
+        <p class="mini" id="buildHint">Pick a piece, then click the floor grid to place it. Walls &amp; doors snap to grid lines; floors, furniture, models &amp; markers snap to tiles. <kbd>R</kbd> rotates. Eraser removes a clicked piece.</p>
+      </div>
+    </div>
+
+    <!-- COMPOSE -->
+    <div id="composeSecs">
+      <div class="ep-sec">
+        <h3>World</h3>
+        <div class="ep-row"><label>Start room</label><select id="epStart"></select></div>
+        <div class="ep-row"><label>Sky / time</label><select id="epSky"><option value="day">Day</option><option value="dawn">Dawn</option><option value="dusk">Dusk</option><option value="night">Night</option><option value="overcast">Overcast</option><option value="blackout">Blackout</option></select></div>
+        <div class="ep-row"><label>Flicker</label><label style="min-width:auto;color:var(--muted);font-size:11px"><input type="checkbox" id="epFlicker"> lights stutter (eerie)</label></div>
+        <div class="ep-row"><label>Player</label><input id="epPlayer" placeholder="PSX1… / blank for default"></div>
+      </div>
+      <div class="ep-sec">
+        <h3>NPCs in this room</h3>
+        <button id="epPlaceNpc">+ Place NPC &nbsp;(then click the floor)</button>
+        <div id="epNpcList" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+      <div class="ep-sec">
+        <h3>Exits</h3>
+        <div id="epExitList" style="display:flex;flex-direction:column;gap:8px"></div>
+        <p class="mini" id="epExitEmpty">No exit markers in this room. Place an <b>exit</b> marker in Build to link rooms.</p>
+      </div>
+    </div>
+
+    <div class="ep-sec">
+      <h3>Export</h3>
+      <div class="ep-row"><button id="epPlaytest" class="primary">▶ Playtest</button><button id="epExport">Export world JSON</button><button id="epCopy">Copy</button></div>
+      <textarea id="epOut" spellcheck="false" placeholder="Exported world JSON appears here."></textarea>
+    </div>
+  </aside>
+
+  <!-- load world (play) -->
+  <div class="modal" id="loader">
+    <div class="card">
+      <h2>Load a world</h2>
+      <p>Paste a <b>world file</b>: start room, player character, and for each room its embedded room JSON, NPCs, and exit links. Pre-filled with the sample — edit it or paste your own.</p>
+      <textarea id="worldBox" spellcheck="false"></textarea>
+      <div class="row">
+        <span class="msg" id="loaderMsg"></span>
+        <button id="btnSample">Reset to sample</button>
+        <button id="loaderClose">Cancel</button>
+        <button id="btnApplyWorld" class="primary">Load</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- add room (edit) -->
+  <div class="modal" id="roomModal">
+    <div class="card">
+      <h2>Add a room</h2>
+      <p>Give it a name, then paste a <b>room JSON</b> exported from the Room Builder.</p>
+      <input id="roomName" placeholder="Room name (e.g. kitchen)">
+      <textarea id="roomJson" spellcheck="false" placeholder='{ "version": 2, "objects": [ … ] }'></textarea>
+      <div class="row">
+        <span class="msg" id="roomMsg"></span>
+        <button id="roomCancel">Cancel</button>
+        <button id="roomAdd" class="primary">Add room</button>
+      </div>
+    </div>
+  </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>/*__GLTF_LOADER__*/</script>
+<script>/*__OBJ_LOADER__*/</script>
+<script>/*__CHAR_ENGINE__*/</script>
+<script>/*__ROOM_ENGINE__*/</script>
+<script>/*__GAME__*/</script>
+</body>
+</html>
