@@ -93,6 +93,7 @@
   var player = null, pPos = new THREE.Vector3(), pYaw = 0, pAnim = 'idle';
   var CHAR_H = 1.2, PR = 0.22, lowres = false, EXIT_NEAR = 0.85, FACE_DOT = 0.3, HANDOVER = 1.3, TRANS_COOL = 0.4, transCool = 0;
   var TALK_NEAR = 1.9;   // how close you must stand to talk to an NPC (tweak freely)
+  var TALK_HINT = TALK_NEAR + 2.4;   // tapping an NPC within this nudges "step closer"; farther than this stays silent
 
   /* ---------- shared asset catalog (single source of truth: the room engine) ---------- */
   var CAT = window.createPSXRoom.catalog ? window.createPSXRoom.catalog(THREE) : { assets: [], materials: [], swatch: {} };
@@ -498,7 +499,9 @@
     var hit = raycastNpc(e);
     if (hit && hasDialogue(hit.data.dialogue)) {
       var dd = Math.hypot(pPos.x - hit.api.root.position.x, pPos.z - hit.api.root.position.z);
-      if (dd <= TALK_NEAR) startDialogue(hit); else $('hudMsg').textContent = 'Step closer to talk.';
+      if (dd <= TALK_NEAR) startDialogue(hit);
+      else if (dd <= TALK_HINT) $('hudMsg').textContent = 'Step closer to talk.';
+      // farther than TALK_HINT: they're across the room — don't nag
       return;
     }
     if (nearExit) { interact(); return; }
