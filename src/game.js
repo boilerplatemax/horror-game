@@ -92,7 +92,7 @@
   var roomObj = null, roomGroup = null;
   var player = null, pPos = new THREE.Vector3(), pYaw = 0, pAnim = 'idle';
   var CHAR_H = 1.2, PR = 0.22, lowres = false, EXIT_NEAR = 0.85, FACE_DOT = 0.3, HANDOVER = 1.3, TRANS_COOL = 0.4, transCool = 0;
-  var TALK_NEAR = 1.9;   // how close you must stand to talk to an NPC (tweak freely)
+  var TALK_NEAR = 3.0;   // how close you must stand to talk to an NPC (tweak freely)
   var TALK_HINT = TALK_NEAR + 2.4;   // tapping an NPC within this nudges "step closer"; farther than this stays silent
 
   /* ---------- shared asset catalog (single source of truth: the room engine) ---------- */
@@ -439,7 +439,7 @@
     // Score every candidate by how directly you're facing it; the thing you're looking at most is the action offered.
     // A door and a character can both be close, so facing decides: look at the door → exit, look at the person → talk.
     var exCand = null, exScore = -1;
-    if (transCool <= 0) teleportExits.forEach(function (ez) { var dx = ez.x - pPos.x, dz = ez.z - pPos.z, dist = Math.hypot(dx, dz); if (dist > EXIT_NEAR) return; var facing = dist < 0.5 ? 1 : (fx * dx + fz * dz) / dist; if (facing < FACE_DOT) return; var s = facing - dist * 0.15; if (s > exScore) { exScore = s; exCand = ez; } });
+    if (transCool <= 0) teleportExits.forEach(function (ez) { var dx = ez.x - pPos.x, dz = ez.z - pPos.z, dist = Math.hypot(dx, dz); if (dist > EXIT_NEAR) return; var facing = dist < 0.2 ? 1 : (fx * dx + fz * dz) / dist; if (facing < FACE_DOT) return; var s = facing - dist * 0.15; if (s > exScore) { exScore = s; exCand = ez; } });
     var npCand = null, npScore = -1;
     npcs.forEach(function (n) { if (!hasDialogue(n.data.dialogue)) return; var pp = n.api.root.position, dx = pp.x - pPos.x, dz = pp.z - pPos.z, dist = Math.hypot(dx, dz); if (dist > TALK_NEAR) return; var facing = dist < 0.6 ? 1 : (fx * dx + fz * dz) / dist; if (facing < FACE_DOT) return; var s = facing - dist * 0.15; if (s > npScore) { npScore = s; npCand = n; } });
     if (exCand && (!npCand || exScore > npScore)) nearExit = exCand; else if (npCand) nearNpc = npCand;   // ties favour talking
