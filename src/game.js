@@ -1123,52 +1123,59 @@
     return { room: { version: 2, wallH: WH, noCeiling: true, bounds: { minx: -HX, maxx: HX, minz: -HZ, maxz: HZ }, objects: objs }, exits: exitList };
   }
 
-  // "The Undercroft" — an abandoned underground complex of arched stone halls, built entirely from the
-  // modular-structures kit. Three chambers linked by arch passages; lit only by hanging lamps. Props
-  // are placed in world metres from each room's centre.
+  // "The House" — a single-floor home: one big walled room furnished into open living / dining / bedroom
+  // zones (a short partition screens the bed), plus one closed door to a small bathroom. Built from the
+  // modular kit; props placed in world metres from each room's centre.
   var SAMPLE = (function () {
     var USED = {};
     function pr(src, x, z, rot, o) { o = o || {}; USED[src] = 1; var m = { asset: 'model', src: src, node: '', position: [x, o.y || 0, z], rotationY: rot || 0, scale: o.scale || 1, collision: { enabled: o.solid !== false } }; if (o.light) m.light = o.light; return m; }
     function reg(src) { USED[src] = 1; return src; }   // ensure modRoom's pieces are in the models map
     ['modular/wall_1', 'modular/doorway_1', 'modular/pillar_1', 'modular/floor_ceiling_1'].forEach(reg);
-    function lamp(x, z, cold) { return pr('lighting/ceiling_lamp_mp_1_on', x, z, 0, { y: 2.55, solid: false, light: { color: cold ? 0xbfd0e0 : 0xffd9a8, intensity: cold ? 2.0 : 2.7, dist: 16, decay: 1.2, y: -0.25 } }); }
+    function wseg(x, z, rot) { return pr('modular/wall_1', x, z, rot); }   // an interior partition wall (solid)
+    function ceilL(x, z, intensity) { return pr('lighting/ceiling_lamp_1_on', x, z, 0, { y: 2.84, solid: false, light: { color: 0xffe3b0, intensity: intensity || 2.4, dist: 11, decay: 1.3, y: -0.2 } }); }
     var rooms = {};
 
-    // Atrium (start) 3x3 bays (12x12m); exit E -> Gallery
-    var A = modRoom(3, 3, { start: 180, startAt: [0, 4], exits: [{ side: 'E', at: 1, to: 'hall', arrive: 1 }] });
-    A.room.objects.push(
-      lamp(-3, -1), lamp(3, 2),
-      pr('large-props/metal_barrel_mp_1', 4.6, 4.6, 0), pr('large-props/wooden_crate_1', -4.6, -4.6, 20),
-      pr('large-props/supply_crate_1', 4.4, -4.4, -15), pr('small-props/cross_1', 0, -5.5, 0, { y: 1.3, solid: false }),
-      pr('decals/cobweb_1', -5.4, 5.4, 0, { y: 2.4, solid: false }), pr('decals/cobweb_2', 5.4, -5.4, 0, { y: 2.4, solid: false }));
-    rooms.atrium = { label: 'The Undercroft', room: A.room, exits: A.exits,
-      npcs: [{ code: { gender: 'female', outfit: 'dress', hairStyle: 'long' }, at: [-1.5, -0.5], face: 90, behavior: 'facePlayer', name: 'Survivor',
-        dialogue: { random: [
-          [{ text: 'You found your way down here too.', emote: 'worried' }, { text: 'The stairs collapsed behind me. No way back up.', emote: 'scared' }],
-          [{ text: 'These old arches go on forever. Don\'t wander off the lit path.', emote: 'neutral' }],
-          [{ text: 'The crypt at the far end... something breathes in there. Wrong-cold.', emote: 'scared' }] ] } }] };
-
-    // Gallery 4x2 bays (16x8m); exits E -> Crypt, W -> Atrium
-    var H = modRoom(4, 2, { exits: [{ side: 'E', at: 1, to: 'crypt', arrive: 0 }, { side: 'W', at: 0, to: 'atrium', arrive: 1 }] });
+    // The House — 5x4 bays (20x16m). Player starts at the south, looking in. One door (east) -> Bathroom.
+    var H = modRoom(5, 4, { start: 0, startAt: [0, -6], exits: [{ side: 'E', at: 2, to: 'bath', arrive: 0 }] });
     H.room.objects.push(
-      lamp(-5, 0), lamp(0, 0), lamp(5, 0),
-      pr('large-props/metal_barrel_mp_1', -6.5, 3, 0), pr('large-props/wooden_crate_3', 6.5, -3, 10),
-      pr('furniture/old_mattress_mp_1', 2.5, 3, 90, { solid: false }), pr('small-props/jerrycan_1', -6.5, -3, 20),
-      pr('large-props/supply_crate_1', 6.5, 3, -10), pr('decals/cobweb_4', -7.4, 3.4, 0, { y: 2.4, solid: false }));
-    rooms.hall = { label: 'Gallery', room: H.room, exits: H.exits };
+      // a short partition screening the bedroom nook (SE corner), with an open entry
+      wseg(2, -6, 90), wseg(6, -4, 0),
+      // living area (centre): sofa facing the TV across a rug
+      pr('large-props/carpet_mp_1', 0, 2, 0, { solid: false }),
+      pr('furniture/sofa_3', 0, 5, 180), pr('furniture/armchair_1', -4, 3, 55), pr('furniture/coffee_table_1', 0, 2.3, 0),
+      pr('furniture/tv_table_1', 0, -0.4, 0), pr('electronics/tv_mp_1', 0, -0.4, 0, { y: 0.52, solid: false }),
+      // dining (west)
+      pr('furniture/dinner_table_1', -7, 4.5, 0), pr('furniture/chair_mp_1', -7, 5.8, 180), pr('furniture/chair_mp_1', -7, 3.2, 0),
+      pr('furniture/chair_mp_1', -8.4, 4.5, 90),
+      // kitchen / storage (west) + the featured large prop (vending machine)
+      pr('large-props/vending_machine_1', -9.2, 0, 90), pr('furniture/shelf_mp_2', -9.4, -6, 90),
+      pr('large-props/wooden_crate_1', -8, -7, 15),
+      // bedroom nook (SE, behind the partition)
+      pr('furniture/bed_1', 7, -5, 90), pr('furniture/bedside_table_1', 8.7, -6.6, 0), pr('furniture/wardrobe_mp_1', 4.6, -7.2, 0),
+      // ceiling: flush lamps + a fan, and wall/corner dressing
+      ceilL(-4, 3), ceilL(4, 3), ceilL(6, -5, 2.0), ceilL(-6, -4, 2.0),
+      pr('electronics/ceiling_fan_mp_1', 0, 2, 0, { y: 2.55, solid: false }),
+      pr('small-props/painting_1', 0, 7.8, 180, { y: 1.5, solid: false }), pr('small-props/clock_1', -4, 7.8, 180, { y: 1.9, solid: false }),
+      pr('decals/cobweb_1', -9.4, 7.4, 0, { y: 2.5, solid: false }), pr('decals/cobweb_2', 9.4, 7.4, 0, { y: 2.5, solid: false }));
+    rooms.house = { label: 'The House', room: H.room, exits: H.exits,
+      npcs: [{ code: { gender: 'female', outfit: 'dress', hairStyle: 'long' }, at: [-2, 0], face: 180, behavior: 'flashShy', name: 'Tenant',
+        flashLine: 'Hey — the light! Get it out of my eyes. Kill it and we can talk.',
+        dialogue: { random: [
+          [{ text: 'Oh — it\'s you. Keep that flashlight down, would you?', emote: 'worried' }, { text: 'The power keeps cutting out after dark.', emote: 'neutral' }],
+          [{ text: 'There\'s a bathroom through the east door. Mind the dark.', emote: 'neutral' }],
+          [{ text: 'I keep hearing something behind the walls. Probably nothing.', emote: 'scared' }] ] } }] };
 
-    // Crypt 3x3 bays; exit W -> Gallery; cold and still
-    var C = modRoom(3, 3, { exits: [{ side: 'W', at: 1, to: 'hall', arrive: 0 }] });
-    C.room.objects.push(
-      lamp(0, 0, true), lamp(3.5, 3.5, true),
-      pr('furniture/bed_1', 3.5, -3.5, 0), pr('small-props/cross_1', 0, -5.5, 0, { y: 1.3, solid: false }),
-      pr('small-props/fish_skeleton_mp_1', -3, 3, 20, { solid: false }), pr('large-props/metal_barrel_mp_1', -4.6, -4.6, 0),
-      pr('large-props/wooden_crate_1', -4.6, 4.6, 15), pr('decals/cobweb_5', 5.4, 5.4, 0, { y: 2.4, solid: false }));
-    rooms.crypt = { label: 'Crypt', room: C.room, exits: C.exits };
+    // Bathroom — small 2x2 room behind the closed door; the toilet is the featured large prop.
+    var B = modRoom(2, 2, { exits: [{ side: 'W', at: 1, to: 'house', arrive: 1 }] });
+    B.room.objects.push(
+      ceilL(0, 0, 1.8),
+      pr('large-props/toilet_mp_1', 2, -2, 180), pr('furniture/shelf_mp_2', -3, 2.5, 90),
+      pr('small-props/fish_skeleton_mp_1', 2.5, 2.5, 0, { solid: false }), pr('decals/cobweb_4', -3.4, -3.4, 0, { y: 2.5, solid: false }));
+    rooms.bath = { label: 'Bathroom', room: B.room, exits: B.exits };
 
     var models = {};
     Object.keys(USED).sort().forEach(function (id) { models[id] = { name: id.split('/').pop(), path: 'assets/models/' + id + '.glb' }; });
-    return { start: 'atrium', sky: 'night', flicker: true, player: { gender: 'male', outfit: 'flannel', hairStyle: 'buzz' }, models: models, rooms: rooms };
+    return { start: 'house', sky: 'dusk', flicker: true, player: { gender: 'male', outfit: 'flannel', hairStyle: 'buzz' }, models: models, rooms: rooms };
   })();
 
   resize(); loadWorld(SAMPLE);
