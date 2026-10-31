@@ -3825,6 +3825,411 @@
       "scale": 1
     },
     {
+      "id": "modular/arc_1_wall_1",
+      "name": "Arc 1 Wall 1",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/arc_1_wall_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/arc_1_wall_1_plain",
+      "name": "Arc 1 Wall 1 Plain",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/arc_1_wall_1_plain.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/arc_1_wall_2_1",
+      "name": "Arc 1 Wall 2 1",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/arc_1_wall_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/arc_1_wall_2_2",
+      "name": "Arc 1 Wall 2 2",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/arc_1_wall_2_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/arc_2_wall_1",
+      "name": "Arc 2 Wall 1",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/arc_2_wall_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/arc_2_wall_1_plain",
+      "name": "Arc 2 Wall 1 Plain",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/arc_2_wall_1_plain.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/arc_2_wall_2_1",
+      "name": "Arc 2 Wall 2 1",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/arc_2_wall_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/arc_2_wall_2_2",
+      "name": "Arc 2 Wall 2 2",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/arc_2_wall_2_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/bars_metal_1",
+      "name": "Bars Metal 1",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/bars_metal_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/bars_metal_2",
+      "name": "Bars Metal 2",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/bars_metal_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/beam_1",
+      "name": "Beam 1",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/beam_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/beam_2",
+      "name": "Beam 2",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/beam_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/beam_4",
+      "name": "Beam 4",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/beam_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/beam_5",
+      "name": "Beam 5",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/beam_5.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/floor_ceiling_1",
+      "name": "Floor Ceiling 1",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/floor_ceiling_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/floor_ceiling_2",
+      "name": "Floor Ceiling 2",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/floor_ceiling_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/floor_ceiling_3",
+      "name": "Floor Ceiling 3",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/floor_ceiling_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/half_arc_pillar_1_wall_1_plain",
+      "name": "Half Arc Pillar 1 Wall 1 Plain",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/half_arc_pillar_1_wall_1_plain.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/half_arc_pillar_2_tall_wall_1_plain",
+      "name": "Half Arc Pillar 2 Tall Wall 1 Plain",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/half_arc_pillar_2_tall_wall_1_plain.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/half_arc_pillar_2_wall_1_plain",
+      "name": "Half Arc Pillar 2 Wall 1 Plain",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/half_arc_pillar_2_wall_1_plain.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/pillar_1",
+      "name": "Pillar 1",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/pillar_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/pillar_1_plain_1",
+      "name": "Pillar 1 Plain 1",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/pillar_1_plain_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/pillar_1_plain_2",
+      "name": "Pillar 1 Plain 2",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/pillar_1_plain_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/pillar_2",
+      "name": "Pillar 2",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/pillar_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/pillar_3",
+      "name": "Pillar 3",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/pillar_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/pipe_valve_holder_large_2",
+      "name": "Pipe Valve Holder Large 2",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/pipe_valve_holder_large_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/pipe_valve_holder_large_2_1",
+      "name": "Pipe Valve Holder Large 2 1",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/pipe_valve_holder_large_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/pipes_holder_1",
+      "name": "Pipes Holder 1",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/pipes_holder_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/side_doorway_1",
+      "name": "Side Doorway 1",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/side_doorway_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/side_doorway_2",
+      "name": "Side Doorway 2",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/side_doorway_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/side_doorway_2_1",
+      "name": "Side Doorway 2 1",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/side_doorway_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/side_doorway_3",
+      "name": "Side Doorway 3",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/side_doorway_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/stairs_3",
+      "name": "Stairs 3",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/stairs_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/stairs_4",
+      "name": "Stairs 4",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/stairs_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/stairs_5_concrete",
+      "name": "Stairs 5 Concrete",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/stairs_5_concrete.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/stairs_5_wood",
+      "name": "Stairs 5 Wood",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/stairs_5_wood.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/stairs_mp_1",
+      "name": "Stairs 1",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/stairs_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/toilet_cabin_mp_1",
+      "name": "Toilet Cabin 1",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/toilet_cabin_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/tunnel_1",
+      "name": "Tunnel 1",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/tunnel_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/tunnel_entrance_platform_1",
+      "name": "Tunnel Entrance Platform 1",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/tunnel_entrance_platform_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/tunnel_mp_1_cross_tee",
+      "name": "Tunnel 1 Cross Tee",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/tunnel_mp_1_cross_tee.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/tunnel_mp_1_elbow",
+      "name": "Tunnel 1 Elbow",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/tunnel_mp_1_elbow.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/tunnel_mp_1_straight",
+      "name": "Tunnel 1 Straight",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/tunnel_mp_1_straight.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/tunnel_mp_1_straight_inclined",
+      "name": "Tunnel 1 Straight Inclined",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/tunnel_mp_1_straight_inclined.glb",
+      "scale": 1
+    },
+    {
+      "id": "modular/tunnel_mp_1_tee",
+      "name": "Tunnel 1 Tee",
+      "pack": "psx-horror",
+      "category": "modular",
+      "group": "modular",
+      "path": "models/modular/tunnel_mp_1_tee.glb",
+      "scale": 1
+    },
+    {
       "id": "small-props/ashtray_1",
       "name": "Ashtray 1",
       "pack": "psx-horror",
