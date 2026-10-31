@@ -73,6 +73,14 @@ and a room object places it:
 - **collision.enabled: false** — walk-through (floor clutter, wall/ceiling decor).
 - **light** — optional point light on any model (`{ color, intensity, dist, decay, y }`),
   so a lamp fixture actually illuminates.
+- **colliders** — explicit collider boxes `[{ size:[x,y,z], offset:[x,y,z] }]` instead of the
+  model's bounding box, so e.g. a modular archway can wall off the span yet leave the opening passable.
+
+A room may also set `bounds: {minx,maxx,minz,maxz}` (used for room detection when the floor is made of
+model slabs, not the `floor` asset) and `noCeiling: true` (skip the auto ceiling plane; the room supplies
+its own). The **modular-structures** group (`models/modular/*.glb`) is a 4m-grid architecture kit — arched
+walls, floor/ceiling slabs, pillars, doorways, stairs, tunnels — assembled by the `modRoom` builder in
+`src/game.js` into the default world, "The Undercroft".
 
 The pack has no architecture *models*, so the built-in floor/wall/door geometry is
 **re-skinned** with pack *textures*: a world's `textures` map loads them by path and a

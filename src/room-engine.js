@@ -124,7 +124,13 @@ window.createPSXRoom = (function () {
         if(o.light){ var L=o.light, pl=new THREE.PointLight(L.color!=null?L.color:0xffcf8a, L.intensity!=null?L.intensity:1, L.dist!=null?L.dist:6, L.decay!=null?L.decay:2);
           pl.position.set(o.position[0], (o.position[1]||0)+(L.y!=null?L.y:1.2), o.position[2]); root.add(pl); }
         var en = !(o.collision && o.collision.enabled===false);
-        if(M && M.size && en){ var z=M.size, b=box(Math.max(z.x*sc,0.2), Math.max(z.y*sc,0.2), Math.max(z.z*sc,0.2), 0, z.y*sc/2, 0); colliders.push(worldAABB(b, o.position, rot(o))); }
+        if(en){
+          if(o.colliders && o.colliders.length){                         // explicit colliders (e.g. a modular wall's jambs leave the doorway open)
+            o.colliders.forEach(function(b){ colliders.push(worldAABB({ size:b.size, offset:b.offset||[0,0,0] }, o.position, rot(o))); });
+          } else if(M && M.size){                                        // default: one box from the model's footprint
+            var z=M.size, b=box(Math.max(z.x*sc,0.2), Math.max(z.y*sc,0.2), Math.max(z.z*sc,0.2), 0, z.y*sc/2, 0); colliders.push(worldAABB(b, o.position, rot(o)));
+          }
+        }
         return;
       }
       var def = D[o.asset]; if(!def) return;
@@ -141,10 +147,12 @@ window.createPSXRoom = (function () {
         def.colliders.forEach(function(b){ colliders.push(worldAABB(b, o.position, r)); });
       }
     });
-    // floor bounds (local x/z) so a game can tell which room a point is in
+    // floor bounds (local x/z) so a game can tell which room a point is in.
+    // A room may state bounds explicitly (modular rooms use model floor slabs, not the 'floor' asset).
     var bx0=Infinity,bx1=-Infinity,bz0=Infinity,bz1=-Infinity,hasF=false;
-    (data && data.objects || []).forEach(function(o){ if(o.asset==='floor'){ hasF=true; var x=o.position[0], z=o.position[2]; if(x-0.5<bx0)bx0=x-0.5; if(x+0.5>bx1)bx1=x+0.5; if(z-0.5<bz0)bz0=z-0.5; if(z+0.5>bz1)bz1=z+0.5; } });
-    if(hasF){ var cp=new THREE.Mesh(new THREE.PlaneGeometry(bx1-bx0, bz1-bz0).rotateX(Math.PI/2), MAT.ceil); cp.position.set((bx0+bx1)/2, WH+0.02, (bz0+bz1)/2); ceiling.add(cp); }
+    if(data && data.bounds){ var bd=data.bounds; bx0=bd.minx; bx1=bd.maxx; bz0=bd.minz; bz1=bd.maxz; hasF=true; }
+    else (data && data.objects || []).forEach(function(o){ if(o.asset==='floor'){ hasF=true; var x=o.position[0], z=o.position[2]; if(x-0.5<bx0)bx0=x-0.5; if(x+0.5>bx1)bx1=x+0.5; if(z-0.5<bz0)bz0=z-0.5; if(z+0.5>bz1)bz1=z+0.5; } });
+    if(hasF && !(data && data.noCeiling)){ var cp=new THREE.Mesh(new THREE.PlaneGeometry(bx1-bx0, bz1-bz0).rotateX(Math.PI/2), MAT.ceil); cp.position.set((bx0+bx1)/2, WH+0.02, (bz0+bz1)/2); ceiling.add(cp); }
     return { root:root, markers:markers, ceiling:ceiling, colliders:colliders, spawns:spawns, exits:exits, bounds: hasF?{minx:bx0,maxx:bx1,minz:bz0,maxz:bz1}:null };
   };
   // Single source of truth for the Build palette: whatever assets/materials this engine knows,
