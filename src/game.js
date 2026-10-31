@@ -91,7 +91,7 @@
   // edit (single room)
   var roomObj = null, roomGroup = null;
   var player = null, pPos = new THREE.Vector3(), pYaw = 0, pAnim = 'idle';
-  var CHAR_H = 1.2, PR = 0.22, lowres = false, EXIT_NEAR = 0.85, FACE_DOT = 0.3, HANDOVER = 1.3, TRANS_COOL = 0.4, transCool = 0;
+  var CHAR_H = 1.2, PR = 0.22, lowres = false, EXIT_NEAR = 0.85, FACE_DOT = 0.3, EXIT_FACE = 0.45, HANDOVER = 1.3, TRANS_COOL = 0.4, transCool = 0;
   var TALK_NEAR = 3.0;   // how close you must stand to talk to an NPC (tweak freely)
   var TALK_HINT = TALK_NEAR + 2.4;   // tapping an NPC within this nudges "step closer"; farther than this stays silent
 
@@ -200,7 +200,7 @@
           inst.doorTargets.push([[dA[0] - fA[0] * 0.6, dA[1] - fA[1] * 0.6], [dA[0] + fA[0] * 1.3, dA[1] + fA[1] * 1.3]]);
           if (!placed[m.to]) queue.push({ name: m.to, align: { dA: dA, fAng: exAng, arrive: m.arrive || 0 } });
         } else {
-          teleportExits.push({ x: exWorld[0], z: exWorld[1], to: m.to, arrive: m.arrive || 0 });
+          teleportExits.push({ x: exWorld[0], z: exWorld[1], to: m.to, arrive: m.arrive || 0, dx: fA[0], dz: fA[1] });
           var bx = Math.abs(fA[0]) > 0.5 ? [0.12, 0.5] : [0.5, 0.12];   // barrier across a closed doorway
           pColliders.push({ cx: dA[0], cz: dA[1], hx: bx[0], hz: bx[1], ymin: 0, ymax: 1.5 });
         }
@@ -441,15 +441,17 @@
     // the small distance term + talk lean break near-ties. Add future E-targets
     // (items, levers, …) with another consider(kind, x, z, range, data) call.
     var bestAct = null, bestScore = -1;
-    function consider(kind, x, z, range, data) {
+    function consider(kind, x, z, range, data, dirx, dirz) {
       var dx = x - pPos.x, dz = z - pPos.z, dist = Math.hypot(dx, dz);
       if (dist > range) return;
-      var gaze = dist < 0.001 ? 1 : (fx * dx + fz * dz) / dist;        // how directly you're looking at it
-      if (gaze < FACE_DOT) return;
-      var score = gaze - dist * 0.04 + (kind === 'npc' ? 0.02 : 0);    // gaze decides; near-ties lean to talk
+      var gaze, minFace;
+      if (dirx != null) { gaze = fx * dirx + fz * dirz; minFace = EXIT_FACE; }            // a door: you must face the way it leads
+      else { gaze = dist < 0.001 ? 1 : (fx * dx + fz * dz) / dist; minFace = FACE_DOT; }   // a thing (NPC): look at it
+      if (gaze < minFace) return;
+      var score = gaze - dist * 0.04 + (kind === 'npc' ? 0.02 : 0);    // whichever you face most wins; near-ties lean to talk
       if (score > bestScore) { bestScore = score; bestAct = { kind: kind, data: data }; }
     }
-    if (transCool <= 0) teleportExits.forEach(function (ez) { consider('exit', ez.x, ez.z, EXIT_NEAR, ez); });
+    if (transCool <= 0) teleportExits.forEach(function (ez) { consider('exit', ez.x, ez.z, EXIT_NEAR, ez, ez.dx, ez.dz); });
     npcs.forEach(function (n) { if (hasDialogue(n.data.dialogue)) { var pp = n.api.root.position; consider('npc', pp.x, pp.z, TALK_NEAR, n); } });
     if (bestAct) { if (bestAct.kind === 'exit') nearExit = bestAct.data; else nearNpc = bestAct.data; }
     var el = $('hudExit');
