@@ -465,7 +465,7 @@
   window.addEventListener('keyup', function (e) { keys[e.key.toLowerCase()] = false; });
 
   /* ---------- cameras + pointer ---------- */
-  var camYaw = 0, camPitch = 0.62, camDist = 4.0, fpv = false, fpPitch = 0, EYE = CHAR_H * 0.9, TP_LOOK = 1.3;
+  var camYaw = 0, camPitch = 0.62, camDist = 4.0, fpv = true, fpPitch = 0, EYE = CHAR_H * 0.9, TP_LOOK = 1.3;
   var editCam = { yaw: 0.8, pitch: 0.78, dist: 13, target: new THREE.Vector3(0, 0.4, 0) };
   var dom = renderer.domElement, drag = null, placeNpcArmed = false;
   dom.addEventListener('contextmenu', function (e) { e.preventDefault(); });
@@ -837,6 +837,7 @@
   window.addEventListener('resize', resize);
   $('btnLowres').onclick = function () { lowres = !lowres; $('btnLowres').classList.toggle('on', lowres); resize(); };
   $('btnView').onclick = function () { fpv = !fpv; $('btnView').textContent = fpv ? '3rd person' : '1st person'; $('btnView').classList.toggle('on', fpv); if (player) player.root.visible = !fpv; setCeilings(fpv); };
+  $('btnView').textContent = fpv ? '3rd person' : '1st person'; $('btnView').classList.toggle('on', fpv);   // sync the toggle to the default view
   $('btnFlash').onclick = function () { if (mode === 'play') toggleFlash(); };
   $('hudExit').onclick = function () { if (mode === 'play') interact(); };
 
