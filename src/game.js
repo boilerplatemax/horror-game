@@ -1010,6 +1010,7 @@
   $('epPlayer').onchange = function () { draft.player = this.value; };
   $('epRoomSel').onchange = function () { editActive = this.value; resetHistory(); selObj = null; showEditRoom(); renderPanel(); };
   $('epPlaceNpc').onclick = function () { placeNpcArmed = !placeNpcArmed; this.classList.toggle('on', placeNpcArmed); $('hudMsg').textContent = placeNpcArmed ? 'Click the floor to drop an NPC' : ''; };
+  if ($('epCharLab')) $('epCharLab').onclick = function () { try { window.open('character-lab.html', '_blank', 'noopener'); } catch (e) { $('hudMsg').textContent = 'Open character-lab.html next to the game.'; } };
   $('epDelRoom').onclick = function () { var n = Object.keys(draft.rooms); if (n.length <= 1) { $('hudMsg').textContent = 'Keep at least one room.'; return; } delete draft.rooms[editActive]; if (draft.start === editActive) draft.start = Object.keys(draft.rooms)[0]; editActive = Object.keys(draft.rooms)[0]; showEditRoom(); renderPanel(); };
   $('epExport').onclick = function () { $('epOut').value = JSON.stringify(draft, null, 2); };
   $('epCopy').onclick = function () { if (!$('epOut').value) $('epOut').value = JSON.stringify(draft, null, 2); try { navigator.clipboard && navigator.clipboard.writeText($('epOut').value); } catch (e) {} $('hudMsg').textContent = 'World JSON copied.'; };

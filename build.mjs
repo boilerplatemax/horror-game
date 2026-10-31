@@ -30,6 +30,7 @@ writeFileSync(r('docs/index.html'), html);
 cpSync(r('vendor'), r('docs/vendor'), { recursive: true });
 if (existsSync(r('assets'))) cpSync(r('assets'), r('docs/assets'), { recursive: true });
 if (existsSync(r('worlds'))) cpSync(r('worlds'), r('docs/worlds'), { recursive: true });
+if (existsSync(r('character-lab.html'))) writeFileSync(r('docs/character-lab.html'), read('character-lab.html'));   // standalone character creator, served beside the game
 
 // Also emit a single self-contained file at the repo root (libraries inlined),
 // so it runs from any one-file link (GitHub Pages, raw.githack.com, jsDelivr)

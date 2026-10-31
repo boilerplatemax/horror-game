@@ -169,6 +169,8 @@
       <div class="ep-sec">
         <h3>NPCs in this room</h3>
         <button id="epPlaceNpc">+ Place NPC &nbsp;(then click the floor)</button>
+        <div class="ep-row"><button id="epCharLab" style="flex:1">🎭 Open Character Lab</button></div>
+        <p class="mini">Design a look in the Lab, hit <b>Copy NPC code</b>, and paste it into an NPC's <b>Character</b> field below (e.g. <code>{"gender":"female","outfit":"dress","hairStyle":"long"}</code>).</p>
         <div id="epNpcList" style="display:flex;flex-direction:column;gap:8px"></div>
       </div>
       <div class="ep-sec">
@@ -7320,6 +7322,7 @@ window.createPSXRoom = (function () {
   $('epPlayer').onchange = function () { draft.player = this.value; };
   $('epRoomSel').onchange = function () { editActive = this.value; resetHistory(); selObj = null; showEditRoom(); renderPanel(); };
   $('epPlaceNpc').onclick = function () { placeNpcArmed = !placeNpcArmed; this.classList.toggle('on', placeNpcArmed); $('hudMsg').textContent = placeNpcArmed ? 'Click the floor to drop an NPC' : ''; };
+  if ($('epCharLab')) $('epCharLab').onclick = function () { try { window.open('character-lab.html', '_blank', 'noopener'); } catch (e) { $('hudMsg').textContent = 'Open character-lab.html next to the game.'; } };
   $('epDelRoom').onclick = function () { var n = Object.keys(draft.rooms); if (n.length <= 1) { $('hudMsg').textContent = 'Keep at least one room.'; return; } delete draft.rooms[editActive]; if (draft.start === editActive) draft.start = Object.keys(draft.rooms)[0]; editActive = Object.keys(draft.rooms)[0]; showEditRoom(); renderPanel(); };
   $('epExport').onclick = function () { $('epOut').value = JSON.stringify(draft, null, 2); };
   $('epCopy').onclick = function () { if (!$('epOut').value) $('epOut').value = JSON.stringify(draft, null, 2); try { navigator.clipboard && navigator.clipboard.writeText($('epOut').value); } catch (e) {} $('hudMsg').textContent = 'World JSON copied.'; };
