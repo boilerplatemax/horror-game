@@ -951,24 +951,24 @@
     renderer.setRenderTarget(rt); renderer.render(scene, camera); renderer.setRenderTarget(null); grade.uniforms.uTime.value = performance.now() * 0.001; renderer.render(postScene, postCam); })();
 
   /* ---------- world (rotation in degrees, format v2) ---------- */
-  // Build an arched hall from the modular kit on a 4m grid: floor + ceiling slabs, a perimeter of
-  // arches + pillars, colliders that wall off non-exit arches and leave exit openings passable, and
-  // spawn/exit markers at each exit. cfg.exits: [{side,at,to,arrive}]; cfg.start (yaw) adds a centre
-  // spawn (index 0) for the world's start room. Returns { room, exits } with exits in marker order.
+  // Build a room from the modular kit on a 4m grid: floor + ceiling slabs, a perimeter of solid walls
+  // (one 4m piece per bay edge) + pillars, with doorways/stairs standing in for walls at the exits.
+  // cfg.exits: [{side,at,type?,to,arrive}] (type 'door' default, or 'stairs'); cfg.start (yaw) adds a
+  // centre spawn (index 0) for the world's start room. Returns { room, exits } in marker order.
   function modRoom(W, D, cfg) {
     cfg = cfg || {}; var ex = cfg.exits || [], BAY = 4, WH = 3, HX = W * 2, HZ = D * 2, objs = [], exitList = [];
-    var WALL = cfg.wall || 'modular/arc_2_wall_2_2', PILL = cfg.pillar || 'modular/pillar_1', SLAB = cfg.slab || 'modular/floor_ceiling_1';
+    var WALL = cfg.wall || 'modular/wall_1', DOOR = cfg.doorway || 'modular/doorway_1', STAIR = cfg.stair || 'modular/stairs_mp_1', PILL = 'modular/pillar_1', SLAB = cfg.slab || 'modular/floor_ceiling_1';
+    var FACE = { N: 180, S: 0, E: 270, W: 90 };   // rotation that turns a 4m wall/doorway's finished face into the room
     function m(src, x, y, z, rot, extra) { var o = { asset: 'model', src: src, node: '', position: [x, y, z], rotationY: rot || 0, scale: 1 }; if (extra) for (var k in extra) o[k] = extra[k]; return o; }
-    var FULL = [{ size: [BAY, WH, 0.6], offset: [0, WH / 2, 0] }];                                                           // walls off a bay edge
-    var JAMB = [{ size: [1.1, WH, 0.6], offset: [-1.45, WH / 2, 0] }, { size: [1.1, WH, 0.6], offset: [1.45, WH / 2, 0] }];   // ~1.8m passable opening
     function findEx(side, at) { for (var i = 0; i < ex.length; i++) if (ex[i].side === side && ex[i].at === at) return ex[i]; return null; }
     for (var i = 0; i < W; i++) for (var j = 0; j < D; j++) { var cx = i * BAY + 2 - HX, cz = j * BAY + 2 - HZ; objs.push(m(SLAB, cx, 0, cz, 0, { collision: { enabled: false } })); objs.push(m(SLAB, cx, WH, cz, 0, { collision: { enabled: false } })); }
     if (cfg.start != null) objs.push({ asset: 'spawn', position: [cfg.startAt ? cfg.startAt[0] : 0, 0, cfg.startAt ? cfg.startAt[1] : 0], rotationY: cfg.start });
-    function edge(side, at, cx, cz, rot) {
-      var e = findEx(side, at);
-      objs.push(m(WALL, cx, 0, cz, rot, { colliders: e ? JAMB : FULL }));
+    function edge(side, at, cx, cz) {
+      var e = findEx(side, at), face = FACE[side];
+      if (e && e.type === 'stairs') objs.push(m(WALL, cx, 0, cz, face), m(STAIR, cx, 0, cz, face, { collision: { enabled: false } }));
+      else objs.push(m(e ? DOOR : WALL, cx, 0, cz, face));
       if (e) {
-        var inx = cx, inz = cz, d = 0.8, sRot, eRot;
+        var inx = cx, inz = cz, d = 0.85, sRot, eRot;
         if (side === 'N') { inz -= d; sRot = 180; eRot = 0; } else if (side === 'S') { inz += d; sRot = 0; eRot = 180; }
         else if (side === 'E') { inx -= d; sRot = 270; eRot = 90; } else { inx += d; sRot = 90; eRot = 270; }
         objs.push({ asset: 'spawn', position: [inx, 0, inz], rotationY: sRot });
@@ -976,8 +976,8 @@
         exitList.push({ to: e.to, arrive: e.arrive || 0 });
       }
     }
-    for (var i2 = 0; i2 < W; i2++) { edge('N', i2, i2 * BAY + 2 - HX, HZ, 0); edge('S', i2, i2 * BAY + 2 - HX, -HZ, 0); }
-    for (var j2 = 0; j2 < D; j2++) { edge('E', j2, HX, j2 * BAY + 2 - HZ, 90); edge('W', j2, -HX, j2 * BAY + 2 - HZ, 90); }
+    for (var i2 = 0; i2 < W; i2++) { edge('N', i2, i2 * BAY + 2 - HX, HZ); edge('S', i2, i2 * BAY + 2 - HX, -HZ); }
+    for (var j2 = 0; j2 < D; j2++) { edge('E', j2, HX, j2 * BAY + 2 - HZ); edge('W', j2, -HX, j2 * BAY + 2 - HZ); }
     for (var pi = 0; pi <= W; pi++) for (var pj = 0; pj <= D; pj++) if (pi === 0 || pi === W || pj === 0 || pj === D) objs.push(m(PILL, pi * BAY - HX, 0, pj * BAY - HZ, 0, { collision: { enabled: false } }));
     return { room: { version: 2, wallH: WH, noCeiling: true, bounds: { minx: -HX, maxx: HX, minz: -HZ, maxz: HZ }, objects: objs }, exits: exitList };
   }
@@ -989,7 +989,7 @@
     var USED = {};
     function pr(src, x, z, rot, o) { o = o || {}; USED[src] = 1; var m = { asset: 'model', src: src, node: '', position: [x, o.y || 0, z], rotationY: rot || 0, scale: o.scale || 1, collision: { enabled: o.solid !== false } }; if (o.light) m.light = o.light; return m; }
     function reg(src) { USED[src] = 1; return src; }   // ensure modRoom's pieces are in the models map
-    ['modular/arc_2_wall_2_2', 'modular/pillar_1', 'modular/floor_ceiling_1'].forEach(reg);
+    ['modular/wall_1', 'modular/doorway_1', 'modular/stairs_mp_1', 'modular/pillar_1', 'modular/floor_ceiling_1'].forEach(reg);
     function lamp(x, z, cold) { return pr('lighting/ceiling_lamp_mp_1_on', x, z, 0, { y: 2.55, solid: false, light: { color: cold ? 0xbfd0e0 : 0xffd9a8, intensity: cold ? 2.0 : 2.7, dist: 16, decay: 1.2, y: -0.25 } }); }
     var rooms = {};
 
@@ -1008,7 +1008,7 @@
           [{ text: 'The crypt at the far end... something breathes in there. Wrong-cold.', emote: 'scared' }] ] } }] };
 
     // Gallery 4x2 bays (16x8m); exits E -> Crypt, W -> Atrium
-    var H = modRoom(4, 2, { exits: [{ side: 'E', at: 1, to: 'crypt', arrive: 0 }, { side: 'W', at: 0, to: 'atrium', arrive: 1 }] });
+    var H = modRoom(4, 2, { exits: [{ side: 'E', at: 1, type: 'stairs', to: 'crypt', arrive: 0 }, { side: 'W', at: 0, to: 'atrium', arrive: 1 }] });
     H.room.objects.push(
       lamp(-5, 0), lamp(0, 0), lamp(5, 0),
       pr('large-props/metal_barrel_mp_1', -6.5, 3, 0), pr('large-props/wooden_crate_3', 6.5, -3, 10),
