@@ -1103,7 +1103,7 @@
     var USED = {};
     function pr(src, x, z, rot, o) { o = o || {}; USED[src] = 1; var m = { asset: 'model', src: src, node: '', position: [x, o.y || 0, z], rotationY: rot || 0, scale: o.scale || 1, collision: { enabled: o.solid !== false } }; if (o.light) m.light = o.light; return m; }
     function reg(src) { USED[src] = 1; return src; }   // ensure modRoom's pieces are in the models map
-    ['modular/wall_1', 'modular/doorway_1', 'modular/stairs_mp_1', 'modular/pillar_1', 'modular/floor_ceiling_1'].forEach(reg);
+    ['modular/wall_1', 'modular/doorway_1', 'modular/pillar_1', 'modular/floor_ceiling_1'].forEach(reg);
     function lamp(x, z, cold) { return pr('lighting/ceiling_lamp_mp_1_on', x, z, 0, { y: 2.55, solid: false, light: { color: cold ? 0xbfd0e0 : 0xffd9a8, intensity: cold ? 2.0 : 2.7, dist: 16, decay: 1.2, y: -0.25 } }); }
     var rooms = {};
 
@@ -1122,7 +1122,7 @@
           [{ text: 'The crypt at the far end... something breathes in there. Wrong-cold.', emote: 'scared' }] ] } }] };
 
     // Gallery 4x2 bays (16x8m); exits E -> Crypt, W -> Atrium
-    var H = modRoom(4, 2, { exits: [{ side: 'E', at: 1, type: 'stairs', to: 'crypt', arrive: 0 }, { side: 'W', at: 0, to: 'atrium', arrive: 1 }] });
+    var H = modRoom(4, 2, { exits: [{ side: 'E', at: 1, to: 'crypt', arrive: 0 }, { side: 'W', at: 0, to: 'atrium', arrive: 1 }] });
     H.room.objects.push(
       lamp(-5, 0), lamp(0, 0), lamp(5, 0),
       pr('large-props/metal_barrel_mp_1', -6.5, 3, 0), pr('large-props/wooden_crate_3', 6.5, -3, 10),
