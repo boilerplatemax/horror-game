@@ -131,6 +131,15 @@
     <!-- BUILD -->
     <div id="buildSecs">
       <div class="ep-sec">
+        <div class="ep-row"><button id="epUndo" disabled>↶ Undo</button><button id="epRedo" disabled>↷ Redo</button>
+          <label style="min-width:auto">Sky</label><select id="epSkyB">
+            <option value="day">☀ Day</option><option value="dawn">🌅 Dawn</option><option value="dusk">🌆 Dusk</option>
+            <option value="night">🌙 Night</option><option value="overcast">☁ Overcast</option><option value="blackout">⬛ Blackout</option></select></div>
+        <div class="ep-row" id="epSelRow" style="display:none;background:#2a2620;border-radius:6px;padding:6px">
+          <label style="color:var(--accent)">Selected</label><span class="mini" id="epSelInfo" style="flex:1"></span>
+          <button id="epSelRot">⟳</button><button id="epSelDel" class="del">Delete</button></div>
+      </div>
+      <div class="ep-sec">
         <h3>Pieces</h3>
         <div id="epPieceLib"></div>
         <div class="ep-row" style="margin-top:2px"><button id="epImportBtn" style="flex:1">➕ Import .glb / .gltf model</button></div>
@@ -142,7 +151,7 @@
         <input type="file" id="epTexFile" accept="image/png,image/jpeg,image/webp" style="display:none">
         <div class="ep-row"><button id="epRotPiece">Rotate ⟳ <b id="epRotLbl">0°</b></button><button id="epEraser">Eraser</button></div>
         <div class="ep-row"><label>Model size</label><button id="epScaleDn">−</button><b id="epScaleLbl" style="min-width:42px;text-align:center">1.0×</b><button id="epScaleUp">+</button></div>
-        <p class="mini" id="buildHint">Pick a piece, then click the floor grid to place it. Walls &amp; doors snap to grid lines; floors, furniture, models &amp; markers snap to tiles. <kbd>R</kbd> rotates. Eraser removes a clicked piece.</p>
+        <p class="mini" id="buildHint">Pick a piece, then <b>click</b> the floor to place — or <b>hold &amp; drag</b> to paint a row (same rotation). A translucent preview shows where it lands (red = occupied). With <b>no piece picked</b>, click a placed object to <b>select</b> it (then ⟳ / Delete). <kbd>R</kbd> rotates · <kbd>Ctrl</kbd>+<kbd>Z</kbd> undo · <kbd>Esc</kbd> cancels · right-drag orbits.</p>
       </div>
     </div>
 

@@ -131,6 +131,15 @@
     <!-- BUILD -->
     <div id="buildSecs">
       <div class="ep-sec">
+        <div class="ep-row"><button id="epUndo" disabled>↶ Undo</button><button id="epRedo" disabled>↷ Redo</button>
+          <label style="min-width:auto">Sky</label><select id="epSkyB">
+            <option value="day">☀ Day</option><option value="dawn">🌅 Dawn</option><option value="dusk">🌆 Dusk</option>
+            <option value="night">🌙 Night</option><option value="overcast">☁ Overcast</option><option value="blackout">⬛ Blackout</option></select></div>
+        <div class="ep-row" id="epSelRow" style="display:none;background:#2a2620;border-radius:6px;padding:6px">
+          <label style="color:var(--accent)">Selected</label><span class="mini" id="epSelInfo" style="flex:1"></span>
+          <button id="epSelRot">⟳</button><button id="epSelDel" class="del">Delete</button></div>
+      </div>
+      <div class="ep-sec">
         <h3>Pieces</h3>
         <div id="epPieceLib"></div>
         <div class="ep-row" style="margin-top:2px"><button id="epImportBtn" style="flex:1">➕ Import .glb / .gltf model</button></div>
@@ -142,7 +151,7 @@
         <input type="file" id="epTexFile" accept="image/png,image/jpeg,image/webp" style="display:none">
         <div class="ep-row"><button id="epRotPiece">Rotate ⟳ <b id="epRotLbl">0°</b></button><button id="epEraser">Eraser</button></div>
         <div class="ep-row"><label>Model size</label><button id="epScaleDn">−</button><b id="epScaleLbl" style="min-width:42px;text-align:center">1.0×</b><button id="epScaleUp">+</button></div>
-        <p class="mini" id="buildHint">Pick a piece, then click the floor grid to place it. Walls &amp; doors snap to grid lines; floors, furniture, models &amp; markers snap to tiles. <kbd>R</kbd> rotates. Eraser removes a clicked piece.</p>
+        <p class="mini" id="buildHint">Pick a piece, then <b>click</b> the floor to place — or <b>hold &amp; drag</b> to paint a row (same rotation). A translucent preview shows where it lands (red = occupied). With <b>no piece picked</b>, click a placed object to <b>select</b> it (then ⟳ / Delete). <kbd>R</kbd> rotates · <kbd>Ctrl</kbd>+<kbd>Z</kbd> undo · <kbd>Esc</kbd> cancels · right-drag orbits.</p>
       </div>
     </div>
 
@@ -6791,8 +6800,11 @@ window.createPSXRoom = (function () {
     if (mode === 'play' && dlg.open) { dlgKey(k, e); return; }   // dialogue is keyboard-driven; don't fall through to move/interact
     if (k === 'e' && mode === 'play') interact();
     if (k === 'f' && mode === 'play') toggleFlash();
-    if (k === 'r' && mode === 'edit' && editSub === 'build') { placeRotDeg = (placeRotDeg + 90) % 360; renderBuild(); }
-    if (k === 'escape' && mode === 'edit') { armedPiece = null; eraserOn = false; if (editSub === 'build') renderBuild(); $('hudMsg').textContent = ''; }
+    if (mode === 'edit' && (e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; }
+    if (mode === 'edit' && (e.ctrlKey || e.metaKey) && k === 'y') { e.preventDefault(); redo(); return; }
+    if (k === 'r' && mode === 'edit' && editSub === 'build') { if (armedPiece) { placeRotDeg = (placeRotDeg + 90) % 360; renderBuild(); } else if (selObj) rotateSel(); }
+    if ((k === 'delete' || k === 'backspace') && mode === 'edit' && editSub === 'build' && selObj) { e.preventDefault(); deleteSel(); }
+    if (k === 'escape' && mode === 'edit') { armedPiece = null; eraserOn = false; selObj = null; refreshSel(); if (ghostGrp) ghostGrp.visible = false; if (editSub === 'build') renderBuild(); $('hudMsg').textContent = ''; }
     if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].indexOf(k) >= 0) e.preventDefault();
   });
   window.addEventListener('keyup', function (e) { keys[e.key.toLowerCase()] = false; });
@@ -6819,10 +6831,14 @@ window.createPSXRoom = (function () {
       lockMove = 0; drag = { btn: e.button, locked: true }; return;           // locked: a still click = interact
     }
     try { dom.setPointerCapture(e.pointerId); } catch (x) {}
+    // edit + a piece armed + left button = paint (place along the drag); right-drag always orbits
+    if (editSub === 'build' && armedPiece && !eraserOn && e.button === 0) { paintKeys = {}; paintSnap = JSON.stringify(activeObjs()); paintPushed = false; drag = { paint: true }; paintAt(e); return; }
     drag = { x: e.clientX, y: e.clientY, moved: false, btn: e.button };
   });
   dom.addEventListener('pointermove', function (e) {                           // drag-look fallback: edit orbit, or play when not locked
-    if (!drag || drag.locked) return;
+    if (!drag) { if (mode === 'edit') updateGhost(e); return; }                // hovering: show the placement ghost
+    if (drag.locked) return;
+    if (drag.paint) { paintAt(e); return; }                                    // painting a row of pieces
     var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
     if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true; drag.x = e.clientX; drag.y = e.clientY;
     if (mode === 'play') { camYaw -= dx * 0.006; if (fpv) fpPitch = cl(fpPitch - dy * 0.006, -0.95, 0.95); else camPitch = cl(camPitch - dy * 0.006, 0.1, 1.2); }
@@ -6830,6 +6846,7 @@ window.createPSXRoom = (function () {
   });
   dom.addEventListener('pointerup', function (e) {
     if (drag && drag.locked) { if (e.button === 0 && lockMove < 8) interact(); drag = null; return; }   // click while locked = interact
+    if (drag && drag.paint) { drag = null; return; }                                                   // finished painting
     if (drag && !drag.moved && e.button === 0) onClick(e); drag = null;
   });
   dom.addEventListener('wheel', function (e) { e.preventDefault(); var f = 1 + Math.sign(e.deltaY) * 0.12; if (mode === 'play') camDist = Math.max(1.6, Math.min(9, camDist * f)); else editCam.dist = Math.max(4, Math.min(30, editCam.dist * f)); }, { passive: false });
@@ -6841,8 +6858,8 @@ window.createPSXRoom = (function () {
     if (mode === 'edit') {
       if (editSub === 'build') {
         if (eraserOn) { eraseAt(e); return; }
-        var pb = groundPoint(e); if (!pb) return;
-        if (armedPiece) { placePiece(pb); return; }
+        if (armedPiece) { var pb = groundPoint(e); if (pb) placePiece(pb); return; }   // a click that didn't drag still places one
+        selectObj(raycastPiece(e));   // nothing armed: click to select a placed piece (null = deselect)
         return;
       }
       var p = groundPoint(e); if (!p) return;
@@ -6876,18 +6893,22 @@ window.createPSXRoom = (function () {
     return oc.charAt(0) + '|' + o.asset + '|' + Math.round(p[0] - 0.5) + '|' + Math.round(p[2] - 0.5);
   }
   function activeObjs() { var rm = draft.rooms[editActive]; rm.room = rm.room || { version: 2, objects: [] }; if (rm.room.version == null) rm.room.version = 2; rm.room.objects = rm.room.objects || []; return rm.room.objects; }
-  function placePiece(p) {
-    if (!armedPiece) return;
-    var isModel = armedPiece.indexOf('model:') === 0, asset = isModel ? 'model' : armedPiece;
-    var oc = occupyOf(asset), pos, rot;
-    if (oc === 'edge') { var s = snapEdge(p); pos = s.pos; rot = s.rot; } else { pos = snapCell(p); rot = placeRotDeg; }
-    var obj;
-    if (isModel) { var rest = armedPiece.slice(6), ci = rest.indexOf('::'), src = ci >= 0 ? rest.slice(0, ci) : rest, node = ci >= 0 ? rest.slice(ci + 2) : ''; obj = { asset: 'model', src: src, node: node, position: pos, rotationY: rot, scale: placeScale }; }
-    else obj = { asset: asset, position: pos, rotationY: rot, material: pieceMat[asset] || catDefMat[asset] };
-    var objs = activeObjs(), key = slotKey(obj), hit = -1;
+  // the object a given armed piece would place (at origin; caller sets position/rotation)
+  function pieceObj(armed, pos, rot) {
+    if (armed.indexOf('model:') === 0) { var rest = armed.slice(6), ci = rest.indexOf('::'), src = ci >= 0 ? rest.slice(0, ci) : rest, node = ci >= 0 ? rest.slice(ci + 2) : ''; return { asset: 'model', src: src, node: node, position: pos, rotationY: rot, scale: placeScale }; }
+    return { asset: armed, position: pos, rotationY: rot, material: pieceMat[armed] || catDefMat[armed] };
+  }
+  function snapFor(armed, p) { var asset = armed.indexOf('model:') === 0 ? 'model' : armed; if (occupyOf(asset) === 'edge') { var s = snapEdge(p); return { pos: s.pos, rot: s.rot }; } return { pos: snapCell(p), rot: placeRotDeg }; }
+  // add the object into the room, swapping a floor/wall already in that slot but never stacking duplicate furniture
+  function placeObjData(obj) {
+    var objs = activeObjs(), oc = occupyOf(obj.asset === 'model' ? 'model' : obj.asset), key = slotKey(obj), hit = -1;
     for (var i = 0; i < objs.length; i++) { if (slotKey(objs[i]) === key) { hit = i; break; } }
-    if (hit >= 0) { if (oc === 'edge' || oc === 'floor') objs.splice(hit, 1); else return; }  // swap walls/floors; don't stack dup furniture
-    objs.push(obj); showEditRoom(); renderPanel();
+    if (hit >= 0) { if (oc === 'edge' || oc === 'floor') { if (JSON.stringify(objs[hit]) === JSON.stringify(obj)) return false; objs.splice(hit, 1); } else return false; }
+    objs.push(obj); return true;
+  }
+  function placePiece(p) {
+    if (!armedPiece) return; var snap = snapFor(armedPiece, p), obj = pieceObj(armedPiece, snap.pos, snap.rot);
+    pushHistory(); if (placeObjData(obj)) { showEditRoom(); renderPanel(); } else { undoStack.pop(); updateHistUI(); }
   }
   function raycastPiece(e) {
     if (!roomGroup) return null; var r = dom.getBoundingClientRect();
@@ -6896,14 +6917,75 @@ window.createPSXRoom = (function () {
     for (var i = 0; i < hits.length; i++) { var o = hits[i].object; while (o) { if (o.userData && o.userData.srcObj) return o.userData.srcObj; o = o.parent; } }
     return null;
   }
-  function eraseAt(e) { var o = raycastPiece(e); if (!o) return; var objs = activeObjs(), i = objs.indexOf(o); if (i >= 0) { objs.splice(i, 1); showEditRoom(); renderPanel(); } }
+  function eraseAt(e) { var o = raycastPiece(e); if (!o) return; var objs = activeObjs(), i = objs.indexOf(o); if (i >= 0) { pushHistory(); objs.splice(i, 1); if (selObj === o) selObj = null; showEditRoom(); renderPanel(); } }
+
+  /* ---------- editor: history · selection · ghost · paint ---------- */
+  var undoStack = [], redoStack = [], selObj = null, selBox = null, ghostGrp = null, ghostFor = null, ghMat = null, ghBadMat = null, paintKeys = null, paintSnap = null, paintPushed = false;
+  function resetHistory() { undoStack = []; redoStack = []; updateHistUI(); }
+  function pushHistory() { try { undoStack.push(JSON.stringify(activeObjs())); } catch (e) { } if (undoStack.length > 120) undoStack.shift(); redoStack.length = 0; updateHistUI(); }
+  function restoreObjs(json) { var rm = draft.rooms[editActive]; rm.room = rm.room || { version: 2, objects: [] }; rm.room.objects = JSON.parse(json); selObj = null; showEditRoom(); renderPanel(); }
+  function undo() { if (!undoStack.length) return; redoStack.push(JSON.stringify(activeObjs())); restoreObjs(undoStack.pop()); updateHistUI(); }
+  function redo() { if (!redoStack.length) return; undoStack.push(JSON.stringify(activeObjs())); restoreObjs(redoStack.pop()); updateHistUI(); }
+  function updateHistUI() { if ($('epUndo')) $('epUndo').disabled = !undoStack.length; if ($('epRedo')) $('epRedo').disabled = !redoStack.length; }
+
+  function groupForObj(o) {
+    var found = null; if (!roomGroup) return null;
+    roomGroup.traverse(function (n) { if (found || !n.isMesh || !n.userData || n.userData.srcObj !== o) return; var g = n; while (g.parent && g.parent !== roomGroup && (!roomObj || g.parent !== roomObj.markers)) g = g.parent; found = g; });
+    return found;
+  }
+  function clearSelBox() { if (selBox) { scene.remove(selBox); selBox = null; } }
+  function refreshSel() { clearSelBox(); if (selObj) { var g = groupForObj(selObj); if (g) { selBox = new THREE.BoxHelper(g, 0xf1cf6a); scene.add(selBox); } else selObj = null; } updateSelUI(); }
+  function selectObj(o) { selObj = o || null; refreshSel(); $('hudMsg').textContent = selObj ? '' : 'Nothing there — click a placed piece to select it.'; }
+  function updateSelUI() {
+    var row = $('epSelRow'); if (!row) return;
+    if (!selObj) { row.style.display = 'none'; return; }
+    row.style.display = '';
+    var label = selObj.asset === 'model' ? (selObj.src || 'model').split('/').pop() : (PLABEL[selObj.asset] || selObj.asset);
+    $('epSelInfo').textContent = label + '  [' + (+selObj.position[0]).toFixed(1) + ', ' + (+selObj.position[2]).toFixed(1) + ']  ' + Math.round(selObj.rotationY || 0) + '°';
+  }
+  function deleteSel() { if (!selObj) return; pushHistory(); var objs = activeObjs(), i = objs.indexOf(selObj); if (i >= 0) objs.splice(i, 1); selObj = null; showEditRoom(); renderPanel(); }
+  function rotateSel() { if (!selObj) return; pushHistory(); selObj.rotationY = (((selObj.rotationY || 0) + 90) % 360); showEditRoom(); renderPanel(); }
+
+  function ghMats() { if (ghMat) return; ghMat = new THREE.MeshStandardMaterial({ color: 0xf1cf6a, transparent: true, opacity: 0.45, flatShading: true, depthWrite: false }); ghBadMat = new THREE.MeshStandardMaterial({ color: 0xe0675c, transparent: true, opacity: 0.45, flatShading: true, depthWrite: false }); }
+  function clearGhost() { if (ghostGrp) { scene.remove(ghostGrp); ghostGrp = null; } ghostFor = null; }
+  function buildGhost(armed) {
+    ghMats(); clearGhost();
+    try { var r = window.createPSXRoom(THREE, { version: 2, wallH: activeWH(), noCeiling: true, objects: [pieceObj(armed, [0, 0, 0], 0)] }); ghostGrp = r.root; } catch (e) { return; }
+    if (roomObj && roomObj.markers) ghostGrp.traverse(function (n) { if (n === r.markers) n.visible = false; });
+    ghostGrp.traverse(function (m) { if (m.isMesh) { m.material = ghMat; m.renderOrder = 999; } });
+    ghostGrp.visible = false; scene.add(ghostGrp); ghostFor = armed;
+  }
+  function updateGhost(e) { return updateGhostAt(groundPoint(e)); }
+  function updateGhostAt(p) {
+    if (mode !== 'edit' || editSub !== 'build' || !armedPiece || eraserOn) { if (ghostGrp) ghostGrp.visible = false; return false; }
+    if (ghostFor !== armedPiece) buildGhost(armedPiece);
+    if (!ghostGrp) return false;
+    if (!p) { ghostGrp.visible = false; return false; }
+    var snap = snapFor(armedPiece, p), obj = pieceObj(armedPiece, snap.pos, snap.rot);
+    ghostGrp.position.set(snap.pos[0], snap.pos[1], snap.pos[2]); ghostGrp.rotation.y = snap.rot * Math.PI / 180;
+    var oc = occupyOf(obj.asset === 'model' ? 'model' : obj.asset), key = slotKey(obj), objs = activeObjs(), dup = false;
+    for (var i = 0; i < objs.length; i++) { if (slotKey(objs[i]) === key) { dup = true; break; } }
+    var bad = dup && !(oc === 'edge' || oc === 'floor');   // floors/walls swap cleanly; furniture/models would stack
+    ghostGrp.traverse(function (m) { if (m.isMesh) m.material = bad ? ghBadMat : ghMat; });
+    ghostGrp.visible = true; return true;
+  }
+  function paintAt(e) {
+    if (!armedPiece) return; var p = groundPoint(e); if (!p) return;
+    var snap = snapFor(armedPiece, p), obj = pieceObj(armedPiece, snap.pos, snap.rot), key = slotKey(obj);
+    if (paintKeys[key]) return; paintKeys[key] = 1;
+    if (placeObjData(obj)) {
+      if (!paintPushed) { undoStack.push(paintSnap); if (undoStack.length > 120) undoStack.shift(); redoStack.length = 0; paintPushed = true; updateHistUI(); }
+      showEditRoom(); renderPanel();
+    }
+  }
   function setSub(s) {
     editSub = s;
     $('epTabBuild').classList.toggle('on', s === 'build'); $('epTabCompose').classList.toggle('on', s === 'compose');
     $('buildSecs').style.display = s === 'build' ? '' : 'none'; $('composeSecs').style.display = s === 'compose' ? '' : 'none';
     armedPiece = null; eraserOn = false; placeNpcArmed = false; if ($('epPlaceNpc')) $('epPlaceNpc').classList.remove('on');
+    clearGhost(); if (s !== 'build') { selObj = null; refreshSel(); }
     editGrid.visible = (mode === 'edit' && s === 'build'); $('hudMsg').textContent = '';
-    if (s === 'build') renderBuild();
+    if (s === 'build') { renderBuild(); updateHistUI(); updateSelUI(); }
   }
   function renderBuild() {
     var lib = $('epPieceLib'); lib.innerHTML = '';
@@ -6982,16 +7064,21 @@ window.createPSXRoom = (function () {
     if ($('epWHLbl')) $('epWHLbl').textContent = activeWH().toFixed(1);
     buildRoom(rm.room);
     (rm.npcs || []).forEach(function (nd) { npcs.push(spawnNpc(nd)); });
+    refreshSel();   // the room group was rebuilt — re-attach the selection outline
   }
   function enterEdit() {
     draft = world ? JSON.parse(JSON.stringify(world)) : JSON.parse(JSON.stringify(SAMPLE));
     if (!draft.rooms) draft.rooms = {};
     editActive = (draft.start && draft.rooms[draft.start]) ? draft.start : Object.keys(draft.rooms)[0] || null;
     try { document.exitPointerLock(); } catch (x) {}   // mouselook is play-only; free the cursor for the editor
+    resetHistory(); selObj = null; clearGhost();
     mode = 'edit'; applyMode(); applyTimeOfDay(draft.sky || 'dusk'); showEditRoom(); renderPanel(); setSub(editSub || 'build');
   }
+  var editFill = null;
   function applyMode() {
     var editing = mode === 'edit';
+    if (!editFill) { editFill = new THREE.HemisphereLight(0xc9d2e6, 0x4a4656, 0.0); scene.add(editFill); }
+    editFill.intensity = editing ? 0.85 : 0.0;   // keep the editor well-lit even when the world's sky is night/blackout
     $('editPanel').classList.toggle('open', editing);
     $('btnMode').textContent = editing ? '▶ Play' : 'Edit';
     $('btnMode').classList.toggle('on', editing);
@@ -7008,7 +7095,7 @@ window.createPSXRoom = (function () {
     var names = Object.keys(draft.rooms);
     $('epStart').innerHTML = names.map(function (n) { return opt(n, draft.rooms[n].label || n, draft.start); }).join('');
     $('epPlayer').value = typeof draft.player === 'string' ? draft.player : (draft.player ? JSON.stringify(draft.player) : '');
-    $('epSky').value = draft.sky || 'dusk'; $('epFlicker').checked = !!draft.flicker;
+    $('epSky').value = draft.sky || 'dusk'; if ($('epSkyB')) $('epSkyB').value = draft.sky || 'dusk'; $('epFlicker').checked = !!draft.flicker;
     $('epRoomSel').innerHTML = names.map(function (n) { return opt(n, draft.rooms[n].label || n, editActive); }).join('');
     $('hudRoom').textContent = editActive ? (draft.rooms[editActive].label || editActive) : '—';
     var rm = draft.rooms[editActive] || { npcs: [], exits: [] }; rm.npcs = rm.npcs || [];
@@ -7133,7 +7220,12 @@ window.createPSXRoom = (function () {
   $('epTabBuild').onclick = function () { setSub('build'); };
   $('epTabCompose').onclick = function () { setSub('compose'); };
   $('epRotPiece').onclick = function () { placeRotDeg = (placeRotDeg + 90) % 360; renderBuild(); };
-  $('epEraser').onclick = function () { eraserOn = !eraserOn; if (eraserOn) armedPiece = null; renderBuild(); $('hudMsg').textContent = eraserOn ? 'Click a piece to remove it.' : ''; };
+  $('epEraser').onclick = function () { eraserOn = !eraserOn; if (eraserOn) { armedPiece = null; selObj = null; refreshSel(); } renderBuild(); $('hudMsg').textContent = eraserOn ? 'Click a piece to remove it.' : ''; };
+  if ($('epUndo')) $('epUndo').onclick = undo;
+  if ($('epRedo')) $('epRedo').onclick = redo;
+  if ($('epSelRot')) $('epSelRot').onclick = rotateSel;
+  if ($('epSelDel')) $('epSelDel').onclick = deleteSel;
+  if ($('epSkyB')) $('epSkyB').onchange = function () { draft.sky = this.value; applyTimeOfDay(this.value); if ($('epSky')) $('epSky').value = this.value; };
   $('epScaleDn').onclick = function () { placeScale = Math.max(0.3, Math.round((placeScale - 0.2) * 10) / 10); renderBuild(); };
   $('epScaleUp').onclick = function () { placeScale = Math.min(4, Math.round((placeScale + 0.2) * 10) / 10); renderBuild(); };
   $('epImportBtn').onclick = function () { $('epImportFile').click(); };
@@ -7163,10 +7255,10 @@ window.createPSXRoom = (function () {
     $('hudMsg').textContent = 'Blank world. Lay a floor, or import models and place them. Your imported models are kept.';
   };
   $('epStart').onchange = function () { draft.start = this.value; };
-  $('epSky').onchange = function () { draft.sky = this.value; applyTimeOfDay(this.value); };
+  $('epSky').onchange = function () { draft.sky = this.value; applyTimeOfDay(this.value); if ($('epSkyB')) $('epSkyB').value = this.value; };
   $('epFlicker').onchange = function () { draft.flicker = this.checked; flickerOn = this.checked; };
   $('epPlayer').onchange = function () { draft.player = this.value; };
-  $('epRoomSel').onchange = function () { editActive = this.value; showEditRoom(); renderPanel(); };
+  $('epRoomSel').onchange = function () { editActive = this.value; resetHistory(); selObj = null; showEditRoom(); renderPanel(); };
   $('epPlaceNpc').onclick = function () { placeNpcArmed = !placeNpcArmed; this.classList.toggle('on', placeNpcArmed); $('hudMsg').textContent = placeNpcArmed ? 'Click the floor to drop an NPC' : ''; };
   $('epDelRoom').onclick = function () { var n = Object.keys(draft.rooms); if (n.length <= 1) { $('hudMsg').textContent = 'Keep at least one room.'; return; } delete draft.rooms[editActive]; if (draft.start === editActive) draft.start = Object.keys(draft.rooms)[0]; editActive = Object.keys(draft.rooms)[0]; showEditRoom(); renderPanel(); };
   $('epExport').onclick = function () { $('epOut').value = JSON.stringify(draft, null, 2); };
@@ -7367,6 +7459,9 @@ window.createPSXRoom = (function () {
       rot: function (d) { placeRotDeg = (((d % 360) + 360) % 360); renderBuild(); },
       mat: function (m) { if (armedPiece) { pieceMat[armedPiece] = m; renderBuild(); } },
       place: function (x, z) { placePiece({ x: x, z: z }); return activeObjs().length; },
+      ghostAt: function (x, z) { var on = updateGhostAt({ x: x, z: z }); return { on: on, visible: !!(ghostGrp && ghostGrp.visible) }; },
+      select: function (x, z) { selectObj(raycastPiece({ clientX: 0, clientY: 0 })); return !!selObj; }, selected: function () { return selObj ? selObj.asset : null; },
+      undo: undo, redo: redo, histLen: function () { return undoStack.length; },
       objCount: function () { return activeObjs().length; },
       lastObj: function () { var o = activeObjs(); return o[o.length - 1]; },
       eraseNear: function (x, z) { var objs = activeObjs(), bi = -1, bd = 1e9; for (var i = 0; i < objs.length; i++) { var p = objs[i].position, d = Math.hypot(p[0] - x, p[2] - z); if (d < bd) { bd = d; bi = i; } } if (bi >= 0 && bd < 0.9) { objs.splice(bi, 1); showEditRoom(); renderPanel(); return true; } return false; },
