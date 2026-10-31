@@ -436,13 +436,22 @@
     if (transCool > 0) transCool -= dt;
     updatePlayerRoom();
     var faceYaw = fpv ? camYaw : pYaw, fx = Math.sin(faceYaw), fz = Math.cos(faceYaw);
-    // Score every candidate by how directly you're facing it; the thing you're looking at most is the action offered.
-    // A door and a character can both be close, so facing decides: look at the door → exit, look at the person → talk.
-    var exCand = null, exScore = -1;
-    if (transCool <= 0) teleportExits.forEach(function (ez) { var dx = ez.x - pPos.x, dz = ez.z - pPos.z, dist = Math.hypot(dx, dz); if (dist > EXIT_NEAR) return; var facing = dist < 0.15 ? 1 : (fx * dx + fz * dz) / dist; if (facing < FACE_DOT) return; var s = facing - dist * 0.06; if (s > exScore) { exScore = s; exCand = ez; } });
-    var npCand = null, npScore = -1;
-    npcs.forEach(function (n) { if (!hasDialogue(n.data.dialogue)) return; var pp = n.api.root.position, dx = pp.x - pPos.x, dz = pp.z - pPos.z, dist = Math.hypot(dx, dz); if (dist > TALK_NEAR) return; var facing = dist < 0.15 ? 1 : (fx * dx + fz * dz) / dist; if (facing < FACE_DOT) return; var s = facing - dist * 0.06; if (s > npScore) { npScore = s; npCand = n; } });
-    if (exCand && (!npCand || exScore > npScore)) nearExit = exCand; else if (npCand) nearNpc = npCand;   // ties favour talking
+    // Gaze picker: the E action is whatever you're looking at most directly.
+    // Range only decides *candidacy*; FACE_DOT is how roughly you must face it;
+    // the small distance term + talk lean break near-ties. Add future E-targets
+    // (items, levers, …) with another consider(kind, x, z, range, data) call.
+    var bestAct = null, bestScore = -1;
+    function consider(kind, x, z, range, data) {
+      var dx = x - pPos.x, dz = z - pPos.z, dist = Math.hypot(dx, dz);
+      if (dist > range) return;
+      var gaze = dist < 0.001 ? 1 : (fx * dx + fz * dz) / dist;        // how directly you're looking at it
+      if (gaze < FACE_DOT) return;
+      var score = gaze - dist * 0.04 + (kind === 'npc' ? 0.02 : 0);    // gaze decides; near-ties lean to talk
+      if (score > bestScore) { bestScore = score; bestAct = { kind: kind, data: data }; }
+    }
+    if (transCool <= 0) teleportExits.forEach(function (ez) { consider('exit', ez.x, ez.z, EXIT_NEAR, ez); });
+    npcs.forEach(function (n) { if (hasDialogue(n.data.dialogue)) { var pp = n.api.root.position; consider('npc', pp.x, pp.z, TALK_NEAR, n); } });
+    if (bestAct) { if (bestAct.kind === 'exit') nearExit = bestAct.data; else nearNpc = bestAct.data; }
     var el = $('hudExit');
     if (dlg.open) { el.style.display = 'none'; return; }
     if (nearExit) { el.style.display = 'block'; el.textContent = 'Press E to enter ' + labelOf(nearExit.to); }
