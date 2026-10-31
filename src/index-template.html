@@ -60,6 +60,7 @@
   #epPieceLib .pcBtn{font-size:10px;padding:5px 3px;line-height:1.2;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:60px;justify-content:center}
   #epPieceLib .pcBtn .pcthumb{width:42px;height:42px;object-fit:contain;background:#17151f;border-radius:4px}
   #epPieceLib .pcBtn .pclab{font-size:9px;text-align:center;overflow:hidden;text-overflow:ellipsis;max-width:100%;white-space:nowrap}
+  #epPieceLib .pcHdr{grid-column:1/-1;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin:6px 0 1px;opacity:.85}
   #epPieceLib .modelBtn{background:#2a2438;border-color:#54496e}
   #epPieceLib .modelBtn.on{background:var(--accent);color:#1b1910;border-color:var(--accent)}
   #epPieceMat{display:flex;flex-wrap:wrap;gap:4px}
@@ -134,9 +135,12 @@
     <div id="buildSecs">
       <div class="ep-sec">
         <div class="ep-row"><button id="epUndo" disabled>↶ Undo</button><button id="epRedo" disabled>↷ Redo</button>
-          <label style="min-width:auto">Sky</label><select id="epSkyB">
+          <label style="min-width:auto">Grid</label><select id="epGrid">
+            <option value="4">4m (pack)</option><option value="2">2m</option><option value="1">1m</option></select></div>
+        <div class="ep-row"><label style="min-width:auto">Light</label><select id="epSkyB">
             <option value="day">☀ Day</option><option value="dawn">🌅 Dawn</option><option value="dusk">🌆 Dusk</option>
-            <option value="night">🌙 Night</option><option value="overcast">☁ Overcast</option><option value="blackout">⬛ Blackout</option></select></div>
+            <option value="night">🌙 Night</option><option value="overcast">☁ Overcast</option><option value="blackout">⬛ Blackout</option></select>
+          <span class="mini">this room</span></div>
         <div class="ep-row" id="epSelRow" style="display:none;background:#2a2620;border-radius:6px;padding:6px">
           <label style="color:var(--accent)">Selected</label><span class="mini" id="epSelInfo" style="flex:1"></span>
           <button id="epSelRot">⟳</button><button id="epSelDel" class="del">Delete</button></div>

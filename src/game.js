@@ -107,10 +107,22 @@
   var PIECES = [], MATS = CAT.materials.slice(), SWCOL = CAT.swatch || {}, catDefMat = {}, occMap = {};
   CAT.assets.forEach(function (a) { PIECES.push(a.name); catDefMat[a.name] = a.defMat; occMap[a.name] = a.occupy; });
   function occupyOf(a) { return occMap[a] || 'furniture'; }
-  var PLABEL = { floor: 'Floor', wall: 'Wall', door: 'Door', spawn: 'Spawn ▸', exit: 'Exit ▸' };   // only the room skeleton is built-in; everything else is a pack model
+  var gridN = 4;   // editor grid cell size in metres — defaults to the modular pack's 4m module so slabs/walls tile
+  // classify a pack model so it snaps/dedupes like the right kind of piece
+  function modelKind(src) { src = src || ''; if (/floor_ceiling/i.test(src)) return 'floor'; if (/wall|doorway|window|bars_metal/i.test(src)) return 'edge'; return 'furniture'; }
+  function kindOf(asset, src) { return asset === 'model' ? modelKind(src) : occupyOf(asset); }
+  function srcOf(armed) { return armed.indexOf('model:') === 0 ? armed.slice(6).split('::')[0] : null; }
+  var PLABEL = { spawn: 'Spawn ▸', exit: 'Exit ▸' };   // the only built-ins are the markers; floors/walls/doors/props are all pack models
   // build-mode state
   var editSub = 'build', armedPiece = null, eraserOn = false, placeRotDeg = 0, placeScale = 1, pieceMat = {};
-  var editGrid = new THREE.GridHelper(48, 48, 0x394063, 0x23273c); editGrid.position.y = 0.002; editGrid.visible = false; scene.add(editGrid);
+  var editGrid = null;
+  function rebuildGrid() {   // grid lines at every gridN metres, so cells match the piece you're placing
+    var vis = editGrid ? editGrid.visible : false;
+    if (editGrid) { scene.remove(editGrid); if (editGrid.geometry) editGrid.geometry.dispose(); }
+    editGrid = new THREE.GridHelper(48, Math.max(1, Math.round(48 / gridN)), 0x4a5578, 0x272c42);
+    editGrid.position.y = 0.002; editGrid.visible = vis; scene.add(editGrid);
+  }
+  rebuildGrid();
 
   function parseSpec(spec) {
     if (spec && typeof spec === 'object') return spec;
@@ -227,6 +239,8 @@
     if (sp) { pPos.set(sp.position[0], 0, sp.position[2]); pYaw = sp.rotationY || 0; var rr = resolve(pPos.x, pPos.z, playerColliders(), PR); pPos.x = rr[0]; pPos.z = rr[1]; }
     else { pPos.set(0, 0, 0); pYaw = 0; }
     transCool = TRANS_COOL; camYaw = pYaw; if (player) player.root.position.copy(pPos); closeDlg();
+    var rmd = world.rooms[name]; applyTimeOfDay((rmd && rmd.sky) || world.sky || 'dusk');   // each room can set its own light
+    if (rmd && rmd.flicker != null) { flickerOn = !!rmd.flicker; collectFlicker(); }
   }
   // which loaded room is the player standing in (updates the HUD label without any rebuild)
   function updatePlayerRoom() {
@@ -593,22 +607,25 @@
   }
 
   /* ---------- build mode (fold-in of the Room Builder, over the shared catalog) ---------- */
-  function snapCell(p) { return [Math.round(p.x - 0.5) + 0.5, 0, Math.round(p.z - 0.5) + 0.5]; }
+  function cellCenter(v) { return Math.round(v / gridN) * gridN; }                      // floor/prop centre — a multiple of gridN, so 4m slabs tile
+  function edgeLine(v) { return (Math.round(v / gridN - 0.5) + 0.5) * gridN; }           // a cell boundary — where a wall sits between two cells
+  function snapCell(p) { return [cellCenter(p.x), 0, cellCenter(p.z)]; }
   function snapEdge(p) {
-    var vi = Math.round(p.x), dv = Math.abs(p.x - vi), hj = Math.round(p.z), dh = Math.abs(p.z - hj);
-    if (dv <= dh) return { pos: [vi, 0, Math.round(p.z - 0.5) + 0.5], rot: 90 };   // wall on a vertical grid line
-    return { pos: [Math.round(p.x - 0.5) + 0.5, 0, hj], rot: 0 };                   // wall on a horizontal grid line
+    var ex = edgeLine(p.x), dv = Math.abs(p.x - ex), ez = edgeLine(p.z), dh = Math.abs(p.z - ez);
+    if (dv <= dh) return { pos: [ex, 0, cellCenter(p.z)], rot: 90 };   // wall on a vertical boundary, centred on its cell
+    return { pos: [cellCenter(p.x), 0, ez], rot: 0 };                  // wall on a horizontal boundary
   }
   function slotKey(o) {
-    var oc = occupyOf(o.asset), p = o.position, deg = Math.round((((o.rotationY || 0) % 360) + 360) % 360);
-    if (oc === 'edge') { return (deg === 90 || deg === 270) ? 'Ev|' + Math.round(p[0]) + '|' + Math.round(p[2] - 0.5) : 'Eh|' + Math.round(p[0] - 0.5) + '|' + Math.round(p[2]); }
-    if (oc === 'floor') return 'F|' + Math.round(p[0] - 0.5) + '|' + Math.round(p[2] - 0.5);
-    if (o.asset === 'model' && isCeilingProp(o.src)) return 'MC|' + Math.round(p[0] - 0.5) + '|' + Math.round(p[2] - 0.5);   // ceiling layer — independent of floor furniture
-    return oc.charAt(0) + '|' + o.asset + '|' + Math.round(p[0] - 0.5) + '|' + Math.round(p[2] - 0.5);
+    var oc = kindOf(o.asset, o.src), p = o.position, g = gridN, deg = Math.round((((o.rotationY || 0) % 360) + 360) % 360);
+    var cx = Math.round(p[0] / g), cz = Math.round(p[2] / g);   // cell index (centre at a multiple of gridN)
+    if (oc === 'edge') { return (deg === 90 || deg === 270) ? 'Ev|' + Math.round(p[0] / g - 0.5) + '|' + cz : 'Eh|' + cx + '|' + Math.round(p[2] / g - 0.5); }
+    if (oc === 'floor') return 'F|' + cx + '|' + cz;
+    if (o.asset === 'model' && isCeilingProp(o.src)) return 'MC|' + cx + '|' + cz;   // ceiling layer — independent of floor furniture
+    return 'P|' + (o.src || o.asset) + '|' + cx + '|' + cz;   // props/furniture: keyed by piece, so different items can share a cell
   }
   function activeObjs() { var rm = draft.rooms[editActive]; rm.room = rm.room || { version: 2, objects: [] }; if (rm.room.version == null) rm.room.version = 2; rm.room.objects = rm.room.objects || []; return rm.room.objects; }
   // the object a given armed piece would place (at origin; caller sets position/rotation)
-  function isCeilingProp(src) { return /ceiling|chandelier|hanging/i.test(src || ''); }   // mounts flush to the ceiling, not the floor
+  function isCeilingProp(src) { src = src || ''; return !/floor_ceiling/i.test(src) && /ceiling|chandelier|hanging/i.test(src); }   // ceiling lamps/fans — but a floor_ceiling slab is a floor, not a ceiling prop
   function pieceObj(armed, pos, rot) {
     if (armed.indexOf('model:') === 0) {
       var rest = armed.slice(6), ci = rest.indexOf('::'), src = ci >= 0 ? rest.slice(0, ci) : rest, node = ci >= 0 ? rest.slice(ci + 2) : '', y = pos[1];
@@ -617,10 +634,10 @@
     }
     return { asset: armed, position: pos, rotationY: rot, material: pieceMat[armed] || catDefMat[armed] };
   }
-  function snapFor(armed, p) { var asset = armed.indexOf('model:') === 0 ? 'model' : armed; if (occupyOf(asset) === 'edge') { var s = snapEdge(p); return { pos: s.pos, rot: s.rot }; } return { pos: snapCell(p), rot: placeRotDeg }; }
+  function snapFor(armed, p) { var isM = armed.indexOf('model:') === 0; if (kindOf(isM ? 'model' : armed, srcOf(armed)) === 'edge') { var s = snapEdge(p); return { pos: s.pos, rot: s.rot }; } return { pos: snapCell(p), rot: placeRotDeg }; }
   // add the object into the room, swapping a floor/wall already in that slot but never stacking duplicate furniture
   function placeObjData(obj) {
-    var objs = activeObjs(), oc = occupyOf(obj.asset === 'model' ? 'model' : obj.asset), key = slotKey(obj), hit = -1;
+    var objs = activeObjs(), oc = kindOf(obj.asset, obj.src), key = slotKey(obj), hit = -1;
     for (var i = 0; i < objs.length; i++) { if (slotKey(objs[i]) === key) { hit = i; break; } }
     if (hit >= 0) { if (oc === 'edge' || oc === 'floor') { if (JSON.stringify(objs[hit]) === JSON.stringify(obj)) return false; objs.splice(hit, 1); } else return false; }
     objs.push(obj); return true;
@@ -682,7 +699,7 @@
     if (!p) { ghostGrp.visible = false; return false; }
     var snap = snapFor(armedPiece, p), obj = pieceObj(armedPiece, snap.pos, snap.rot);
     ghostGrp.position.set(snap.pos[0], snap.pos[1], snap.pos[2]); ghostGrp.rotation.y = snap.rot * Math.PI / 180;
-    var oc = occupyOf(obj.asset === 'model' ? 'model' : obj.asset), key = slotKey(obj), objs = activeObjs(), dup = false;
+    var oc = kindOf(obj.asset, obj.src), key = slotKey(obj), objs = activeObjs(), dup = false;
     for (var i = 0; i < objs.length; i++) { if (slotKey(objs[i]) === key) { dup = true; break; } }
     var bad = dup && !(oc === 'edge' || oc === 'floor');   // floors/walls swap cleanly; furniture/models would stack
     ghostGrp.traverse(function (m) { if (m.isMesh) m.material = bad ? ghBadMat : ghMat; });
@@ -737,24 +754,30 @@
     editGrid.visible = (mode === 'edit' && s === 'build'); $('hudMsg').textContent = '';
     if (s === 'build') { renderBuild(); updateHistUI(); updateSelUI(); }
   }
+  var CAT_ORDER = ['modular', 'furniture', 'lighting', 'electronics', 'large-props', 'small-props', 'items-weapons', 'decals', 'imported'];
+  var CAT_LABEL = { modular: 'Structure', furniture: 'Furniture', lighting: 'Lighting', electronics: 'Electronics', 'large-props': 'Large props', 'small-props': 'Small props', 'items-weapons': 'Items', decals: 'Decals', imported: 'Imported' };
   function renderBuild() {
     var lib = $('epPieceLib'); lib.innerHTML = '';
-    PIECES.forEach(function (name) {
-      var b = document.createElement('button'); b.className = 'pcBtn' + (name === armedPiece && !eraserOn ? ' on' : '');
-      pieceBtnContent(b, name, PLABEL[name] || name);
-      b.onclick = function () { eraserOn = false; selObj = null; refreshSel(); armedPiece = (armedPiece === name ? null : name); renderBuild(); $('hudMsg').textContent = armedPiece ? 'Click the floor grid to place ' + (PLABEL[armedPiece] || armedPiece) : ''; };
+    function header(txt) { var h = document.createElement('div'); h.className = 'pcHdr'; h.textContent = txt; lib.appendChild(h); }
+    function btn(key, label, title, extra) {
+      var b = document.createElement('button'); b.className = 'pcBtn' + (extra || '') + (key === armedPiece && !eraserOn ? ' on' : '');
+      pieceBtnContent(b, key, label); if (title) b.title = title;
+      b.onclick = function () { eraserOn = false; selObj = null; refreshSel(); armedPiece = (armedPiece === key ? null : key); renderBuild(); $('hudMsg').textContent = armedPiece ? 'Click to place ' + label : ''; };
       lib.appendChild(b);
-    });
-    if (draft && draft.models) Object.keys(draft.models).forEach(function (src) {
-      var nodes = window.createPSXRoom.sourceNodes(src) || [{ node: '' }], multi = nodes.length > 1, srcName = (draft.models[src].name || src);
-      nodes.forEach(function (nd) {
-        var tag = 'model:' + src + '::' + (nd.node || ''), nm = multi ? (nd.node || 'part') : srcName;
-        var b = document.createElement('button'); b.className = 'pcBtn modelBtn' + (tag === armedPiece && !eraserOn ? ' on' : '');
-        pieceBtnContent(b, tag, nm); b.title = srcName + (multi ? ' · ' + nm : '');
-        b.onclick = function () { eraserOn = false; selObj = null; refreshSel(); armedPiece = (armedPiece === tag ? null : tag); renderBuild(); $('hudMsg').textContent = armedPiece ? 'Click the floor to place ' + nm : ''; };
-        lib.appendChild(b);
+    }
+    // group pack models by top-level folder, in a sensible order (structure first)
+    var groups = {};
+    if (draft && draft.models) Object.keys(draft.models).forEach(function (src) { var c = src.indexOf('/') >= 0 ? src.split('/')[0] : 'imported'; (groups[c] = groups[c] || []).push(src); });
+    var cats = CAT_ORDER.filter(function (c) { return groups[c]; }).concat(Object.keys(groups).filter(function (c) { return CAT_ORDER.indexOf(c) < 0; }).sort());
+    cats.forEach(function (cat) {
+      header(CAT_LABEL[cat] || cat);
+      groups[cat].sort().forEach(function (src) {
+        var nodes = window.createPSXRoom.sourceNodes(src) || [{ node: '' }], multi = nodes.length > 1, srcName = (draft.models[src].name || src.split('/').pop());
+        nodes.forEach(function (nd) { var tag = 'model:' + src + '::' + (nd.node || ''), nm = multi ? (nd.node || 'part') : srcName; btn(tag, nm, srcName + (multi ? ' · ' + nm : ''), ' modelBtn'); });
       });
     });
+    header('Markers');
+    PIECES.forEach(function (name) { btn(name, PLABEL[name] || name, null, ''); });
     var mEl = $('epPieceMat'); mEl.innerHTML = '';
     var cur = armedPiece ? (pieceMat[armedPiece] || catDefMat[armedPiece]) : null;
     MATS.forEach(function (mk) {
@@ -822,7 +845,7 @@
     editActive = (draft.start && draft.rooms[draft.start]) ? draft.start : Object.keys(draft.rooms)[0] || null;
     try { document.exitPointerLock(); } catch (x) {}   // mouselook is play-only; free the cursor for the editor
     resetHistory(); selObj = null; clearGhost();
-    mode = 'edit'; applyMode(); applyTimeOfDay(draft.sky || 'dusk'); showEditRoom(); renderPanel(); setSub(editSub || 'build');
+    mode = 'edit'; applyMode(); applyTimeOfDay(editRoomSky()); showEditRoom(); renderPanel(); setSub(editSub || 'build');
   }
   var editFill = null;
   function applyMode() {
@@ -845,7 +868,9 @@
     var names = Object.keys(draft.rooms);
     $('epStart').innerHTML = names.map(function (n) { return opt(n, draft.rooms[n].label || n, draft.start); }).join('');
     $('epPlayer').value = typeof draft.player === 'string' ? draft.player : (draft.player ? JSON.stringify(draft.player) : '');
-    $('epSky').value = draft.sky || 'dusk'; if ($('epSkyB')) $('epSkyB').value = draft.sky || 'dusk'; $('epFlicker').checked = !!draft.flicker;
+    $('epSky').value = draft.sky || 'dusk'; $('epFlicker').checked = !!draft.flicker;
+    var rmSky = (draft.rooms[editActive] && draft.rooms[editActive].sky) || draft.sky || 'dusk';
+    if ($('epSkyB')) $('epSkyB').value = rmSky; if ($('epGrid')) $('epGrid').value = String(gridN);
     $('epRoomSel').innerHTML = names.map(function (n) { return opt(n, draft.rooms[n].label || n, editActive); }).join('');
     $('hudRoom').textContent = editActive ? (draft.rooms[editActive].label || editActive) : '—';
     var rm = draft.rooms[editActive] || { npcs: [], exits: [] }; rm.npcs = rm.npcs || [];
@@ -975,7 +1000,9 @@
   if ($('epRedo')) $('epRedo').onclick = redo;
   if ($('epSelRot')) $('epSelRot').onclick = rotateSel;
   if ($('epSelDel')) $('epSelDel').onclick = deleteSel;
-  if ($('epSkyB')) $('epSkyB').onchange = function () { draft.sky = this.value; applyTimeOfDay(this.value); if ($('epSky')) $('epSky').value = this.value; };
+  // Build-tab Light = this room's override; blank/removed falls back to the world sky (set in Compose)
+  if ($('epSkyB')) $('epSkyB').onchange = function () { var rm = draft.rooms[editActive]; if (rm) rm.sky = this.value; applyTimeOfDay(this.value); };
+  if ($('epGrid')) $('epGrid').onchange = function () { gridN = +this.value || 4; rebuildGrid(); clearGhost(); $('hudMsg').textContent = 'Grid: ' + gridN + 'm'; };
   $('epScaleDn').onclick = function () { placeScale = Math.max(0.3, Math.round((placeScale - 0.2) * 10) / 10); renderBuild(); };
   $('epScaleUp').onclick = function () { placeScale = Math.min(4, Math.round((placeScale + 0.2) * 10) / 10); renderBuild(); };
   $('epImportBtn').onclick = function () { $('epImportFile').click(); };
@@ -1002,13 +1029,14 @@
     var keepModels = (draft && draft.models) || {}, keepTex = (draft && draft.textures) || {};
     draft = { start: 'room', player: keepPlayer, models: keepModels, textures: keepTex, rooms: { room: { label: 'Room', room: { version: 2, grid: { size: 12, cell: 1 }, objects: [] }, npcs: [], exits: [] } } };
     editActive = 'room'; showEditRoom(); renderPanel(); setSub('build');
-    $('hudMsg').textContent = 'Blank world. Lay a floor, or import models and place them. Your imported models are kept.';
+    $('hudMsg').textContent = 'Blank world. Lay floor_ceiling + wall pieces from Structure (4m grid), or import models. Your models are kept.';
   };
   $('epStart').onchange = function () { draft.start = this.value; };
   $('epSky').onchange = function () { draft.sky = this.value; applyTimeOfDay(this.value); if ($('epSkyB')) $('epSkyB').value = this.value; };
   $('epFlicker').onchange = function () { draft.flicker = this.checked; flickerOn = this.checked; };
   $('epPlayer').onchange = function () { draft.player = this.value; };
-  $('epRoomSel').onchange = function () { editActive = this.value; resetHistory(); selObj = null; showEditRoom(); renderPanel(); };
+  function editRoomSky() { return (draft.rooms[editActive] && draft.rooms[editActive].sky) || draft.sky || 'dusk'; }
+  $('epRoomSel').onchange = function () { editActive = this.value; resetHistory(); selObj = null; applyTimeOfDay(editRoomSky()); showEditRoom(); renderPanel(); };
   $('epPlaceNpc').onclick = function () { placeNpcArmed = !placeNpcArmed; this.classList.toggle('on', placeNpcArmed); $('hudMsg').textContent = placeNpcArmed ? 'Click the floor to drop an NPC' : ''; };
   if ($('epCharLab')) $('epCharLab').onclick = function () { try { window.open('character-lab.html', '_blank', 'noopener'); } catch (e) { $('hudMsg').textContent = 'Open character-lab.html next to the game.'; } };
   $('epDelRoom').onclick = function () { var n = Object.keys(draft.rooms); if (n.length <= 1) { $('hudMsg').textContent = 'Keep at least one room.'; return; } delete draft.rooms[editActive]; if (draft.start === editActive) draft.start = Object.keys(draft.rooms)[0]; editActive = Object.keys(draft.rooms)[0]; showEditRoom(); renderPanel(); };

@@ -76,19 +76,15 @@ window.createPSXRoom = (function () {
       var ring=new THREE.Mesh(new THREE.CylinderGeometry(0.36,0.36,0.03,20),new THREE.MeshStandardMaterial({color:color,emissive:color,emissiveIntensity:0.35,transparent:true,opacity:0.6,flatShading:true})); ring.userData.paint=false; ring.position.y=0.02; g.add(ring);
       var ar=new THREE.Mesh(new THREE.ConeGeometry(0.12,0.26,4),new THREE.MeshStandardMaterial({color:color,emissive:color,emissiveIntensity:0.4,flatShading:true})); ar.userData.paint=false; ar.rotation.x=Math.PI/2; ar.position.set(0,0.14,0.22); g.add(ar);
     }
-    // Only the room skeleton remains built-in — floors, walls, doors and the spawn/exit markers.
-    // All decorative pieces now come from the asset pack (placed as models); the structure is
-    // re-skinned with pack textures via each piece's `material` (tex:<id>).
+    // Floors, walls and doors now come entirely from the modular asset pack (placed as models).
+    // Only the spawn/exit markers stay built-in, since they are editor/engine primitives.
     return {
-      floor:{occupy:'floor',colliders:[],build:function(g){ add(g,B(1.0,0.1,1.0),'tile').position.y=-0.05; }},
-      wall:{occupy:'edge',colliders:FULLWALL,build:function(g){ add(g,B(1.04,WH,WALL_T),'plaster').position.y=WH/2; }},
-      door:{occupy:'edge',colliders:JAMBS,build:function(g){ jl(g); var lh=OPEN_H-0.12; add(g,B(0.66,lh,0.05),'wood').position.set(0,lh/2,0.02); add(g,B(0.05,0.1,0.05),'metal',false,MAT.metal).position.set(0.24,0.9,0.06); }},
       spawn:{occupy:'marker',marker:'spawn',colliders:[],build:function(g){ marker(g,0x5fd38b); }},
       exit:{occupy:'marker',marker:'exit',colliders:[],build:function(g){ marker(g,0xe0675c); }}
     };
   }
 
-  var DEFMAT={ floor:'tile', wall:'plaster', door:'wood', spawn:'green', exit:'fabricred' };
+  var DEFMAT={ spawn:'green', exit:'fabricred' };
   var USERMAT = {};   // imported-texture materials, keyed 'tex:<id>'
   function applyMat(group,key){ var mm=(key && key.indexOf('tex:')===0 ? USERMAT[key] : MAT[key]) || MAT.plaster; group.traverse(function(o){ if(o.isMesh&&o.userData.paint) o.material=mm; }); }
 
@@ -151,7 +147,12 @@ window.createPSXRoom = (function () {
     // A room may state bounds explicitly (modular rooms use model floor slabs, not the 'floor' asset).
     var bx0=Infinity,bx1=-Infinity,bz0=Infinity,bz1=-Infinity,hasF=false;
     if(data && data.bounds){ var bd=data.bounds; bx0=bd.minx; bx1=bd.maxx; bz0=bd.minz; bz1=bd.maxz; hasF=true; }
-    else (data && data.objects || []).forEach(function(o){ if(o.asset==='floor'){ hasF=true; var x=o.position[0], z=o.position[2]; if(x-0.5<bx0)bx0=x-0.5; if(x+0.5>bx1)bx1=x+0.5; if(z-0.5<bz0)bz0=z-0.5; if(z+0.5>bz1)bz1=z+0.5; } });
+    else (data && data.objects || []).forEach(function(o){
+      var hw = 0;
+      if(o.asset==='floor') hw = 0.5;   // legacy built-in floor tile
+      else if(o.asset==='model' && /floor_ceiling/i.test(o.src||'') && Math.abs((o.position&&o.position[1])||0) < 0.3){ var mk=MODELS[o.src+'::'+(o.node||'')]; hw = mk ? Math.max(mk.size.x, mk.size.z)/2 : 2; }   // a pack floor slab near the floor
+      if(hw>0){ hasF=true; var x=o.position[0], z=o.position[2]; if(x-hw<bx0)bx0=x-hw; if(x+hw>bx1)bx1=x+hw; if(z-hw<bz0)bz0=z-hw; if(z+hw>bz1)bz1=z+hw; }
+    });
     if(hasF && !(data && data.noCeiling)){ var cp=new THREE.Mesh(new THREE.PlaneGeometry(bx1-bx0, bz1-bz0).rotateX(Math.PI/2), MAT.ceil); cp.position.set((bx0+bx1)/2, WH+0.02, (bz0+bz1)/2); ceiling.add(cp); }
     return { root:root, markers:markers, ceiling:ceiling, colliders:colliders, spawns:spawns, exits:exits, bounds: hasF?{minx:bx0,maxx:bx1,minz:bz0,maxz:bz1}:null };
   };
