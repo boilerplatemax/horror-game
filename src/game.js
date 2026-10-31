@@ -236,6 +236,7 @@
     world = w; mode = 'play'; applyMode(); applyTimeOfDay(w.sky || 'dusk'); flickerOn = !!w.flicker; buildActors();
     if (player) scene.remove(player.root); player = charFrom(world.player); player.root.visible = !fpv; scene.add(player.root);
     enterRoom(world.start, 0);
+    lookHint();
   }
 
   /* ---------- edit: single room ---------- */
@@ -376,6 +377,7 @@
   var dlg = { open: false, who: '', npc: null, faceBase: null, graph: null, node: null, seq: null, idx: 0 };
   function startDialogue(n) {
     if (!hasDialogue(n.data.dialogue)) return;
+    try { document.exitPointerLock(); } catch (x) {}   // free the cursor so dialogue choices are clickable
     dlg.graph = compileDialogue(n.data.dialogue, n); if (!dlg.graph) return;
     dlg.open = true; dlg.npc = n; dlg.who = n.data.name || 'NPC';
     var st = n.api.settings || {}; dlg.faceBase = {}; EXPR_KEYS.forEach(function (k) { dlg.faceBase[k] = st[k]; });
@@ -478,16 +480,39 @@
   /* ---------- cameras + pointer ---------- */
   var camYaw = 0, camPitch = 0.62, camDist = 4.0, fpv = true, fpPitch = 0, EYE = CHAR_H * 0.9, TP_LOOK = 1.3;
   var editCam = { yaw: 0.8, pitch: 0.78, dist: 13, target: new THREE.Vector3(0, 0.4, 0) };
-  var dom = renderer.domElement, drag = null, placeNpcArmed = false;
+  var dom = renderer.domElement, drag = null, placeNpcArmed = false, locked = false, lockMove = 0;
+  var cl = function (v, a, b) { return v < a ? a : v > b ? b : v; };
+  function lookHint() { if (mode === 'play' && !dlg.open) $('hudMsg').textContent = locked ? '' : 'Click to look · WASD to move · Esc frees the cursor'; }
+  document.addEventListener('pointerlockchange', function () { locked = (document.pointerLockElement === dom); lookHint(); });
   dom.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-  dom.addEventListener('pointerdown', function (e) { try { dom.setPointerCapture(e.pointerId); } catch (x) {} drag = { x: e.clientX, y: e.clientY, moved: false, btn: e.button }; });
-  dom.addEventListener('pointermove', function (e) {
-    if (!drag) return; var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
-    if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true; drag.x = e.clientX; drag.y = e.clientY;
-    if (mode === 'play') { camYaw -= dx * 0.006; if (fpv) fpPitch = Math.max(-0.95, Math.min(0.95, fpPitch - dy * 0.006)); else camPitch = Math.max(0.1, Math.min(1.2, camPitch - dy * 0.006)); }
-    else { editCam.yaw -= dx * 0.006; editCam.pitch = Math.max(0.2, Math.min(1.35, editCam.pitch - dy * 0.006)); }
+  // Mouselook: click once to grab the pointer, then moving the mouse turns the camera (no button held).
+  document.addEventListener('mousemove', function (e) {
+    if (!locked || mode !== 'play') return;
+    camYaw -= e.movementX * 0.0026;
+    if (fpv) fpPitch = cl(fpPitch - e.movementY * 0.0026, -0.95, 0.95); else camPitch = cl(camPitch - e.movementY * 0.0026, 0.1, 1.2);
+    lockMove += Math.abs(e.movementX) + Math.abs(e.movementY);
   });
-  dom.addEventListener('pointerup', function (e) { if (drag && !drag.moved && e.button === 0) onClick(e); drag = null; });
+  dom.addEventListener('pointerdown', function (e) {
+    if (mode === 'play') {
+      if (dlg.open) return;                                                   // dialogue open: pointerup advances it
+      if (!locked) { try { dom.requestPointerLock(); } catch (x) {} return; }  // click once to grab mouselook
+      lockMove = 0; drag = { btn: e.button, locked: true }; return;           // locked: a still click = interact
+    }
+    try { dom.setPointerCapture(e.pointerId); } catch (x) {}
+    drag = { x: e.clientX, y: e.clientY, moved: false, btn: e.button };
+  });
+  dom.addEventListener('pointermove', function (e) {                           // drag-look fallback: edit orbit, or play when not locked
+    if (!drag || drag.locked) return;
+    var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true; drag.x = e.clientX; drag.y = e.clientY;
+    if (mode === 'play') { camYaw -= dx * 0.006; if (fpv) fpPitch = cl(fpPitch - dy * 0.006, -0.95, 0.95); else camPitch = cl(camPitch - dy * 0.006, 0.1, 1.2); }
+    else { editCam.yaw -= dx * 0.006; editCam.pitch = cl(editCam.pitch - dy * 0.006, 0.2, 1.35); }
+  });
+  dom.addEventListener('pointerup', function (e) {
+    if (drag && drag.locked) { if (e.button === 0 && lockMove < 8) interact(); drag = null; return; }   // click while locked = interact
+    if (mode === 'play' && !locked && dlg.open && e.button === 0) { onClick(e); return; }               // advance dialogue (cursor free)
+    if (drag && !drag.moved && e.button === 0) onClick(e); drag = null;
+  });
   dom.addEventListener('wheel', function (e) { e.preventDefault(); var f = 1 + Math.sign(e.deltaY) * 0.12; if (mode === 'play') camDist = Math.max(1.6, Math.min(9, camDist * f)); else editCam.dist = Math.max(4, Math.min(30, editCam.dist * f)); }, { passive: false });
   var ray = new THREE.Raycaster(), nd2 = new THREE.Vector2();
   function groundPoint(e) { var r = dom.getBoundingClientRect(); nd2.x = ((e.clientX - r.left) / r.width) * 2 - 1; nd2.y = -((e.clientY - r.top) / r.height) * 2 + 1; ray.setFromCamera(nd2, camera); var h = ray.intersectObject(ground, false); return h.length ? h[0].point : null; }
@@ -643,6 +668,7 @@
     draft = world ? JSON.parse(JSON.stringify(world)) : JSON.parse(JSON.stringify(SAMPLE));
     if (!draft.rooms) draft.rooms = {};
     editActive = (draft.start && draft.rooms[draft.start]) ? draft.start : Object.keys(draft.rooms)[0] || null;
+    try { document.exitPointerLock(); } catch (x) {}   // mouselook is play-only; free the cursor for the editor
     mode = 'edit'; applyMode(); applyTimeOfDay(draft.sky || 'dusk'); showEditRoom(); renderPanel(); setSub(editSub || 'build');
   }
   function applyMode() {
