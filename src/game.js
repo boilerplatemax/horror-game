@@ -670,6 +670,37 @@
       showEditRoom(); renderPanel();
     }
   }
+
+  /* ---------- palette thumbnails (one tiny 3D render per piece, cached) ---------- */
+  var thRenderer = null, thScene = null, thCam = null, thumbCache = {};
+  function initThumb() {
+    if (thRenderer) return;
+    thRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+    thRenderer.setSize(72, 72, false);
+    thScene = new THREE.Scene();
+    thScene.add(new THREE.HemisphereLight(0xeef2ff, 0x3a3a46, 1.15));
+    var dl = new THREE.DirectionalLight(0xffffff, 0.75); dl.position.set(4, 6, 5); thScene.add(dl);
+    thCam = new THREE.PerspectiveCamera(32, 1, 0.01, 200);
+  }
+  function thumbFor(armed) {
+    if (thumbCache[armed] !== undefined) return thumbCache[armed];
+    initThumb(); var url = null, grp = null;
+    try {
+      var r = window.createPSXRoom(THREE, { version: 2, wallH: 2.3, noCeiling: true, objects: [pieceObj(armed, [0, 0, 0], 0)] });
+      grp = r.root; thScene.add(grp);
+      var box = new THREE.Box3().setFromObject(grp), sz = new THREE.Vector3(), ctr = new THREE.Vector3(); box.getSize(sz); box.getCenter(ctr);
+      var d = (Math.max(sz.x, sz.y, sz.z) || 1) * 1.5;
+      thCam.position.set(ctr.x + d * 0.9, ctr.y + d * 0.9, ctr.z + d * 0.9); thCam.lookAt(ctr);
+      thRenderer.render(thScene, thCam); url = thRenderer.domElement.toDataURL('image/png');
+    } catch (e) { url = null; }
+    if (grp) thScene.remove(grp);
+    thumbCache[armed] = url; return url;
+  }
+  function pieceBtnContent(b, key, label) {
+    var url = thumbFor(key); b.innerHTML = '';
+    if (url) { var im = document.createElement('img'); im.src = url; im.className = 'pcthumb'; b.appendChild(im); }
+    var ls = document.createElement('span'); ls.className = 'pclab'; ls.textContent = label; b.appendChild(ls);
+  }
   function setSub(s) {
     editSub = s;
     $('epTabBuild').classList.toggle('on', s === 'build'); $('epTabCompose').classList.toggle('on', s === 'compose');
@@ -683,8 +714,8 @@
     var lib = $('epPieceLib'); lib.innerHTML = '';
     PIECES.forEach(function (name) {
       var b = document.createElement('button'); b.className = 'pcBtn' + (name === armedPiece && !eraserOn ? ' on' : '');
-      b.textContent = PLABEL[name] || name;
-      b.onclick = function () { eraserOn = false; armedPiece = (armedPiece === name ? null : name); renderBuild(); $('hudMsg').textContent = armedPiece ? 'Click the floor grid to place ' + (PLABEL[armedPiece] || armedPiece) : ''; };
+      pieceBtnContent(b, name, PLABEL[name] || name);
+      b.onclick = function () { eraserOn = false; selObj = null; refreshSel(); armedPiece = (armedPiece === name ? null : name); renderBuild(); $('hudMsg').textContent = armedPiece ? 'Click the floor grid to place ' + (PLABEL[armedPiece] || armedPiece) : ''; };
       lib.appendChild(b);
     });
     if (draft && draft.models) Object.keys(draft.models).forEach(function (src) {
@@ -692,8 +723,8 @@
       nodes.forEach(function (nd) {
         var tag = 'model:' + src + '::' + (nd.node || ''), nm = multi ? (nd.node || 'part') : srcName;
         var b = document.createElement('button'); b.className = 'pcBtn modelBtn' + (tag === armedPiece && !eraserOn ? ' on' : '');
-        b.textContent = '▸ ' + nm; b.title = srcName + (multi ? ' · ' + nm : '');
-        b.onclick = function () { eraserOn = false; armedPiece = (armedPiece === tag ? null : tag); renderBuild(); $('hudMsg').textContent = armedPiece ? 'Click the floor to place ' + nm : ''; };
+        pieceBtnContent(b, tag, nm); b.title = srcName + (multi ? ' · ' + nm : '');
+        b.onclick = function () { eraserOn = false; selObj = null; refreshSel(); armedPiece = (armedPiece === tag ? null : tag); renderBuild(); $('hudMsg').textContent = armedPiece ? 'Click the floor to place ' + nm : ''; };
         lib.appendChild(b);
       });
     });
