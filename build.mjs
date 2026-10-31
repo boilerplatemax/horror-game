@@ -14,6 +14,7 @@ let html = read('src/index-template.html');
 html = html.replace(/<script src="https:\/\/cdnjs[^"]*three\.min\.js"><\/script>/, '<script src="vendor/three.min.js"></script>');
 html = html.replace('<script>/*__GLTF_LOADER__*/</script>', '<script src="vendor/GLTFLoader.js"></script>');
 html = html.replace('<script>/*__OBJ_LOADER__*/</script>', '<script src="vendor/OBJLoader.js"></script>');
+html = html.replace('<script>/*__TRANSFORM_CONTROLS__*/</script>', '<script src="vendor/TransformControls.js"></script>');
 
 // Engines: inlined into the page (replace with a function so $ in the code isn't treated specially).
 html = html.replace('/*__CHAR_ENGINE__*/', () => read('src/char-engine.js'));
@@ -40,7 +41,7 @@ const inline = (h, src) => {
   return h.replace(`<script src="${src}"></script>`, `<script>\n${js}\n</script>`);
 };
 let standalone = html;
-for (const v of ['vendor/three.min.js', 'vendor/GLTFLoader.js', 'vendor/OBJLoader.js']) standalone = inline(standalone, v);
+for (const v of ['vendor/three.min.js', 'vendor/GLTFLoader.js', 'vendor/OBJLoader.js', 'vendor/TransformControls.js']) standalone = inline(standalone, v);
 writeFileSync(r('play.html'), standalone);
 
 console.log(`Built docs/index.html (${Math.round(html.length / 1024)} KB) + vendor/assets/worlds, and play.html (${Math.round(standalone.length / 1024)} KB, self-contained).`);

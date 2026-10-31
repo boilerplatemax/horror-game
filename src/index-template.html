@@ -141,9 +141,11 @@
             <option value="day">☀ Day</option><option value="dawn">🌅 Dawn</option><option value="dusk">🌆 Dusk</option>
             <option value="night">🌙 Night</option><option value="overcast">☁ Overcast</option><option value="blackout">⬛ Blackout</option></select>
           <span class="mini">this room</span></div>
-        <div class="ep-row" id="epSelRow" style="display:none;background:#2a2620;border-radius:6px;padding:6px">
-          <label style="color:var(--accent)">Selected</label><span class="mini" id="epSelInfo" style="flex:1"></span>
-          <button id="epSelRot">⟳</button><button id="epSelDel" class="del">Delete</button></div>
+        <div id="epSelRow" style="display:none;background:#2a2620;border-radius:6px;padding:6px">
+          <div class="ep-row"><label style="color:var(--accent)">Selected</label><span class="mini" id="epSelInfo" style="flex:1"></span></div>
+          <div class="ep-row"><button id="epSelMove" class="on">↔ Move</button><button id="epSelRotG">⟳ Rotate</button><button id="epSelScaleG">⤢ Scale</button></div>
+          <div class="ep-row"><button id="epSelRot">Rotate 90°</button><button id="epSelDel" class="del">Delete</button>
+            <span class="mini">drag the handles in the view</span></div></div>
       </div>
       <div class="ep-sec">
         <h3>Pieces</h3>
@@ -224,6 +226,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>/*__GLTF_LOADER__*/</script>
 <script>/*__OBJ_LOADER__*/</script>
+<script>/*__TRANSFORM_CONTROLS__*/</script>
 <script>/*__CHAR_ENGINE__*/</script>
 <script>/*__ROOM_ENGINE__*/</script>
 <script>/*__GAME__*/</script>

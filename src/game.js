@@ -536,7 +536,8 @@
     if (k === 'f' && mode === 'play') toggleFlash();
     if (mode === 'edit' && (e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; }
     if (mode === 'edit' && (e.ctrlKey || e.metaKey) && k === 'y') { e.preventDefault(); redo(); return; }
-    if (k === 'r' && mode === 'edit' && editSub === 'build') { if (armedPiece) { placeRotDeg = (placeRotDeg + 90) % 360; renderBuild(); } else if (selObj) rotateSel(); }
+    if (k === 'r' && mode === 'edit' && editSub === 'build') { if (armedPiece) { placeRotDeg = (placeRotDeg + 90) % 360; renderBuild(); } else if (selObj) setGizmoMode('rotate'); }
+    if (mode === 'edit' && editSub === 'build' && selObj && !armedPiece) { if (k === 'g') setGizmoMode('translate'); if (k === 't') setGizmoMode('scale'); }
     if ((k === 'delete' || k === 'backspace') && mode === 'edit' && editSub === 'build' && selObj) { e.preventDefault(); deleteSel(); }
     if (k === 'escape' && mode === 'edit') { armedPiece = null; eraserOn = false; selObj = null; refreshSel(); if (ghostGrp) ghostGrp.visible = false; if (editSub === 'build') renderBuild(); $('hudMsg').textContent = ''; }
     if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].indexOf(k) >= 0) e.preventDefault();
@@ -564,12 +565,14 @@
       if (!locked) { try { dom.requestPointerLock(); } catch (x) {} return; }  // click once to grab mouselook
       lockMove = 0; drag = { btn: e.button, locked: true }; return;           // locked: a still click = interact
     }
+    if (gizmo && gizmo.axis) return;   // clicking a gizmo handle: let the transform gizmo drive the drag
     try { dom.setPointerCapture(e.pointerId); } catch (x) {}
     // edit + a piece armed + left button = paint (place along the drag); right-drag always orbits
     if (editSub === 'build' && armedPiece && !eraserOn && e.button === 0) { paintKeys = {}; paintSnap = JSON.stringify(activeObjs()); paintPushed = false; drag = { paint: true }; paintAt(e); return; }
     drag = { x: e.clientX, y: e.clientY, moved: false, btn: e.button };
   });
   dom.addEventListener('pointermove', function (e) {                           // drag-look fallback: edit orbit, or play when not locked
+    if (gizmoDragging) return;                                                 // the gizmo is moving the selected piece
     if (!drag) { if (mode === 'edit') updateGhost(e); return; }                // hovering: show the placement ghost
     if (drag.locked) return;
     if (drag.paint) { paintAt(e); return; }                                    // painting a row of pieces
@@ -579,6 +582,7 @@
     else { editCam.yaw -= dx * 0.006; editCam.pitch = cl(editCam.pitch - dy * 0.006, 0.2, 1.35); }
   });
   dom.addEventListener('pointerup', function (e) {
+    if (gizmoDragging) { drag = null; return; }   // the gizmo handles its own drag end (commits via dragging-changed)
     if (drag && drag.locked) { if (e.button === 0 && lockMove < 8) interact(); drag = null; return; }   // click while locked = interact
     if (drag && drag.paint) { drag = null; return; }                                                   // finished painting
     if (drag && !drag.moved && e.button === 0) onClick(e); drag = null;
@@ -676,8 +680,30 @@
     roomGroup.traverse(function (n) { if (found || !n.isMesh || !n.userData || n.userData.srcObj !== o) return; var g = n; while (g.parent && g.parent !== roomGroup && (!roomObj || g.parent !== roomObj.markers)) g = g.parent; found = g; });
     return found;
   }
-  function clearSelBox() { if (selBox) { scene.remove(selBox); selBox = null; } }
-  function refreshSel() { clearSelBox(); if (selObj) { var g = groupForObj(selObj); if (g) { selBox = new THREE.BoxHelper(g, 0xf1cf6a); scene.add(selBox); } else selObj = null; } updateSelUI(); }
+  /* ---------- transform gizmo (precise move/rotate/scale of the selected piece) ---------- */
+  var gizmo = null, gizmoDragging = false, gizmoMode = 'translate';
+  function initGizmo() {
+    if (gizmo || !THREE.TransformControls) return;
+    gizmo = new THREE.TransformControls(camera, renderer.domElement);
+    gizmo.setSize(0.9); gizmo.setRotationSnap(Math.PI / 12); gizmo.setTranslationSnap(null); gizmo.setMode(gizmoMode);
+    gizmo.addEventListener('dragging-changed', function (e) { gizmoDragging = e.value; if (!e.value) commitGizmo(); });
+    scene.add(gizmo);
+  }
+  function setGizmoMode(m) { gizmoMode = m; if (gizmo) gizmo.setMode(m); if ($('epSelMove')) { $('epSelMove').classList.toggle('on', m === 'translate'); $('epSelRotG').classList.toggle('on', m === 'rotate'); $('epSelScaleG').classList.toggle('on', m === 'scale'); } }
+  function commitGizmo() {
+    if (!selObj || !gizmo || !gizmo.object) return; var g = gizmo.object;
+    pushHistory();
+    selObj.position = [+g.position.x.toFixed(3), +g.position.y.toFixed(3), +g.position.z.toFixed(3)];
+    selObj.rotationY = (((+(g.rotation.y * 180 / Math.PI).toFixed(1)) % 360) + 360) % 360;
+    if (selObj.asset === 'model') selObj.scale = +g.scale.x.toFixed(3);
+    showEditRoom(); renderPanel();
+  }
+  function clearSelBox() { if (selBox) { scene.remove(selBox); selBox = null; } if (gizmo) gizmo.detach(); }
+  function refreshSel() {
+    clearSelBox();
+    if (selObj) { var g = groupForObj(selObj); if (g) { selBox = new THREE.BoxHelper(g, 0xf1cf6a); scene.add(selBox); initGizmo(); if (gizmo) { gizmo.attach(g); gizmo.setMode(gizmoMode); } } else selObj = null; }
+    updateSelUI();
+  }
   function selectObj(o) { selObj = o || null; refreshSel(); $('hudMsg').textContent = selObj ? '' : 'Nothing there — click a placed piece to select it.'; }
   function updateSelUI() {
     var row = $('epSelRow'); if (!row) return;
@@ -859,6 +885,7 @@
     var editing = mode === 'edit';
     if (!editFill) { editFill = new THREE.HemisphereLight(0xc9d2e6, 0x4a4656, 0.0); scene.add(editFill); }
     editFill.intensity = editing ? 0.85 : 0.0;   // keep the editor well-lit even when the world's sky is night/blackout
+    if (gizmo && !editing) { gizmo.detach(); gizmoDragging = false; }
     $('editPanel').classList.toggle('open', editing);
     $('btnMode').textContent = editing ? '▶ Play' : 'Edit';
     $('btnMode').classList.toggle('on', editing);
@@ -1008,6 +1035,9 @@
   if ($('epRedo')) $('epRedo').onclick = redo;
   if ($('epSelRot')) $('epSelRot').onclick = rotateSel;
   if ($('epSelDel')) $('epSelDel').onclick = deleteSel;
+  if ($('epSelMove')) $('epSelMove').onclick = function () { setGizmoMode('translate'); };
+  if ($('epSelRotG')) $('epSelRotG').onclick = function () { setGizmoMode('rotate'); };
+  if ($('epSelScaleG')) $('epSelScaleG').onclick = function () { setGizmoMode('scale'); };
   // Build-tab Light = this room's override; blank/removed falls back to the world sky (set in Compose)
   if ($('epSkyB')) $('epSkyB').onchange = function () { var rm = draft.rooms[editActive]; if (rm) rm.sky = this.value; applyTimeOfDay(this.value); };
   if ($('epGrid')) $('epGrid').onchange = function () { gridN = +this.value || 4; rebuildGrid(); clearGhost(); $('hudMsg').textContent = 'Grid: ' + gridN + 'm'; };
@@ -1254,6 +1284,8 @@
       mat: function (m) { if (armedPiece) { pieceMat[armedPiece] = m; renderBuild(); } },
       place: function (x, z) { placePiece({ x: x, z: z }); return activeObjs().length; },
       ghostAt: function (x, z) { var on = updateGhostAt({ x: x, z: z }); return { on: on, visible: !!(ghostGrp && ghostGrp.visible) }; },
+      gizmoOn: function () { return !!(gizmo && gizmo.object); }, gizmoMode: function () { return gizmoMode; },
+      gizmoNudge: function (dx, dy, dz) { if (!gizmo || !gizmo.object) return null; gizmo.object.position.x += dx; gizmo.object.position.y += (dy || 0); gizmo.object.position.z += dz; commitGizmo(); return selObj ? selObj.position : null; },
       select: function (x, z) { selectObj(raycastPiece({ clientX: 0, clientY: 0 })); return !!selObj; }, selected: function () { return selObj ? selObj.asset : null; },
       undo: undo, redo: redo, histLen: function () { return undoStack.length; },
       objCount: function () { return activeObjs().length; },
