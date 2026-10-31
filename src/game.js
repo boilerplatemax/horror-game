@@ -379,8 +379,8 @@
     if (!hasDialogue(n.data.dialogue)) return;
     dlg.graph = compileDialogue(n.data.dialogue, n); if (!dlg.graph) return;
     dlg.open = true; dlg.npc = n; dlg.who = n.data.name || 'NPC'; dlg.sel = 0;
-    // turn to face the NPC (first-person view is driven by camYaw; keep the body in sync)
-    if (n.api && n.api.root) { var pp = n.api.root.position, a = Math.atan2(pp.x - pPos.x, pp.z - pPos.z); camYaw = a; pYaw = a; fpPitch = 0; }
+    // turn to face the NPC — a smooth pan, not a jump cut (stepPlay eases camYaw/fpPitch toward the target)
+    if (n.api && n.api.root) { var pp = n.api.root.position; dlg.faceYaw = Math.atan2(pp.x - pPos.x, pp.z - pPos.z); dlg.facePitch = 0; dlg.faceLerp = true; pYaw = dlg.faceYaw; }
     var st = (n.api && n.api.settings) || {}; dlg.faceBase = {}; EXPR_KEYS.forEach(function (k) { dlg.faceBase[k] = st[k]; });
     enterNode(dlg.graph.start);
   }
@@ -421,7 +421,7 @@
       if (k === 'enter' || k === ' ' || k === 'e') { choose(dlg.sel || 0); e.preventDefault(); return; }
     } else if (k === 'enter' || k === ' ' || k === 'e') { advanceDialogue(); e.preventDefault(); return; }
   }
-  function closeDlg() { if (dlg.npc && dlg.faceBase) applyEmote(dlg.npc, 'neutral'); dlg.open = false; dlg.npc = null; dlg.faceBase = null; dlg.graph = null; dlg.node = null; dlg.seq = null; $('dialogue').style.display = 'none'; $('dialogue').classList.remove('choosing'); if (joyEl) joyEl.style.visibility = ''; }
+  function closeDlg() { dlg.faceLerp = false; if (dlg.npc && dlg.faceBase) applyEmote(dlg.npc, 'neutral'); dlg.open = false; dlg.npc = null; dlg.faceBase = null; dlg.graph = null; dlg.node = null; dlg.seq = null; $('dialogue').style.display = 'none'; $('dialogue').classList.remove('choosing'); if (joyEl) joyEl.style.visibility = ''; }
   function advanceDialogue() {
     if (dlg.node && dlg.idx >= dlg.seq.length - 1 && dlg.node.choices && dlg.node.choices.length) return; // waiting on a choice
     dlg.idx++;
@@ -930,6 +930,11 @@
     playerBlob.position.set(pPos.x, 0.03, pPos.z); playerBlob.visible = !fpv;
     var cy = player.root.rotation.y, d = ((pYaw - cy + Math.PI) % (Math.PI * 2)) - Math.PI; player.root.rotation.y = cy + d * Math.min(1, dt * 12);
     player.update(dt);
+    if (dlg.faceLerp) {   // ease the view onto the NPC when a conversation starts
+      var dyaw = Math.atan2(Math.sin(dlg.faceYaw - camYaw), Math.cos(dlg.faceYaw - camYaw)), k = Math.min(1, dt * 9);
+      camYaw += dyaw * k; fpPitch += (dlg.facePitch - fpPitch) * k;
+      if (Math.abs(dyaw) < 0.012) { camYaw = dlg.faceYaw; fpPitch = dlg.facePitch; dlg.faceLerp = false; }
+    }
     if (fpv) { var cpF = Math.cos(fpPitch); camera.position.set(pPos.x, EYE, pPos.z); camera.lookAt(pPos.x + Math.sin(camYaw) * cpF, EYE + Math.sin(fpPitch), pPos.z + Math.cos(camYaw) * cpF); }
     else { var sp = Math.sin(camPitch); camera.position.set(pPos.x + camDist * sp * Math.sin(camYaw + Math.PI), TP_LOOK + camDist * Math.cos(camPitch), pPos.z + camDist * sp * Math.cos(camYaw + Math.PI)); camera.lookAt(pPos.x, TP_LOOK, pPos.z); }
     updateInteract(dt);
