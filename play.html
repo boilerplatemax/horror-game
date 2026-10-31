@@ -38,7 +38,7 @@
   #dialogue .adv{color:var(--muted);font-size:11px;margin-top:8px;text-align:right}
   #dlgChoices{display:none;flex-direction:column;gap:6px;margin-top:9px;pointer-events:auto}
   #dlgChoices .dchoice{pointer-events:auto;text-align:left;background:var(--panel2);border:1px solid var(--line);color:var(--ink);font-family:var(--font);font-size:13px;padding:7px 10px;border-radius:6px;cursor:pointer}
-  #dlgChoices .dchoice:hover{border-color:var(--accent);color:var(--accent)}
+  #dlgChoices .dchoice:hover,#dlgChoices .dchoice.sel{border-color:var(--accent);color:var(--accent);background:var(--panel)}
 
   /* edit panel */
   .editpanel{position:absolute;top:0;right:0;width:300px;height:100%;background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;z-index:7;display:none;flex-direction:column}
@@ -104,7 +104,7 @@
   <div class="hud" id="hudExit"></div>
   <div class="hud" id="hudMsg"></div>
   <div id="joy"><div id="joyKnob"></div></div>
-  <div class="hud" id="dialogue"><div id="portrait"></div><div class="dlgtext"><div class="who" id="dlgWho"></div><div class="line" id="dlgLine"></div><div id="dlgChoices"></div><div class="adv" id="dlgAdv">E ▸</div></div></div>
+  <div class="hud" id="dialogue"><div id="portrait"></div><div class="dlgtext"><div class="who" id="dlgWho"></div><div class="line" id="dlgLine"></div><div id="dlgChoices"></div><div class="adv" id="dlgAdv">E / click ▸</div></div></div>
 
   <div class="bar">
     <button id="btnMode">Edit</button>
@@ -6155,40 +6155,19 @@ window.createPSXRoom = (function () {
       var ring=new THREE.Mesh(new THREE.CylinderGeometry(0.36,0.36,0.03,20),new THREE.MeshStandardMaterial({color:color,emissive:color,emissiveIntensity:0.35,transparent:true,opacity:0.6,flatShading:true})); ring.userData.paint=false; ring.position.y=0.02; g.add(ring);
       var ar=new THREE.Mesh(new THREE.ConeGeometry(0.12,0.26,4),new THREE.MeshStandardMaterial({color:color,emissive:color,emissiveIntensity:0.4,flatShading:true})); ar.userData.paint=false; ar.rotation.x=Math.PI/2; ar.position.set(0,0.14,0.22); g.add(ar);
     }
+    // Only the room skeleton remains built-in — floors, walls, doors and the spawn/exit markers.
+    // All decorative pieces now come from the asset pack (placed as models); the structure is
+    // re-skinned with pack textures via each piece's `material` (tex:<id>).
     return {
       floor:{occupy:'floor',colliders:[],build:function(g){ add(g,B(1.0,0.1,1.0),'tile').position.y=-0.05; }},
       wall:{occupy:'edge',colliders:FULLWALL,build:function(g){ add(g,B(1.04,WH,WALL_T),'plaster').position.y=WH/2; }},
-      glasswall:{occupy:'edge',colliders:FULLWALL,build:function(g){
-        add(g,B(1.04,0.2,WALL_T),'plaster').position.y=0.1; add(g,B(1.04,0.12,WALL_T),'plaster').position.y=WH-0.06;
-        add(g,B(0.08,WH,WALL_T),'plaster').position.set(-0.46,WH/2,0); add(g,B(0.08,WH,WALL_T),'plaster').position.set(0.46,WH/2,0);
-        add(g,B(0.9,WH-0.3,0.05),'glass').position.y=WH/2+0.02; }},
       door:{occupy:'edge',colliders:JAMBS,build:function(g){ jl(g); var lh=OPEN_H-0.12; add(g,B(0.66,lh,0.05),'wood').position.set(0,lh/2,0.02); add(g,B(0.05,0.1,0.05),'metal',false,MAT.metal).position.set(0.24,0.9,0.06); }},
-      dooropen:{occupy:'edge',colliders:JAMBS,build:function(g){ jl(g); var lh=OPEN_H-0.14, h=new THREE.Group(); h.position.set(-0.34,lh/2,0); h.rotation.y=-1.25; g.add(h); var leaf=new THREE.Mesh(B(0.64,lh,0.05),MAT.wood); leaf.userData.paint=true; leaf.position.set(0.32,0,0); h.add(leaf); }},
-      doubledoor:{occupy:'edge',colliders:JAMBS,build:function(g){ jl(g); var lh=OPEN_H-0.14; add(g,B(0.34,lh,0.05),'wood').position.set(-0.18,lh/2,0.02); add(g,B(0.34,lh,0.05),'wood').position.set(0.18,lh/2,0.02); }},
-      archway:{occupy:'edge',colliders:JAMBS,build:function(g){ jl(g); }},
-      window:{occupy:'edge',colliders:FULLWALL,build:function(g){ add(g,B(1.04,0.55,WALL_T),'plaster').position.set(0,0.275,0); add(g,B(1.04,WH-1.15,WALL_T),'plaster').position.set(0,(1.15+WH)/2,0); add(g,B(0.2,0.6,WALL_T),'plaster').position.set(-0.4,0.85,0); add(g,B(0.2,0.6,WALL_T),'plaster').position.set(0.4,0.85,0); add(g,B(0.6,0.6,0.03),'glass').position.set(0,0.85,0); }},
-      shutterwindow:{occupy:'edge',colliders:FULLWALL,build:function(g){ add(g,B(1.04,0.55,WALL_T),'plaster').position.set(0,0.275,0); add(g,B(1.04,WH-1.15,WALL_T),'plaster').position.set(0,(1.15+WH)/2,0); add(g,B(0.6,0.6,0.03),'glass').position.set(0,0.85,0);
-        [[-0.3,-0.2],[0.3,0.2]].forEach(function(s){ var sh=new THREE.Group(); sh.position.set(s[0],0.85,0.04); sh.rotation.y=s[1]; g.add(sh); for(var k=0;k<3;k++){ var sl=new THREE.Mesh(B(0.26,0.16,0.03),MAT.wood); sl.userData.paint=true; sl.position.set(0,-0.2+k*0.2,0); sl.rotation.x=0.4; sh.add(sl);} }); }},
       spawn:{occupy:'marker',marker:'spawn',colliders:[],build:function(g){ marker(g,0x5fd38b); }},
-      exit:{occupy:'marker',marker:'exit',colliders:[],build:function(g){ marker(g,0xe0675c); }},
-      table:{occupy:'furniture',colliders:[box(0.86,0.78,0.86,0,0.39,0)],build:function(g){ add(g,B(0.8,0.08,0.8),'wood').position.y=0.74; [[-0.34,-0.34],[0.34,-0.34],[-0.34,0.34],[0.34,0.34]].forEach(function(p){ add(g,B(0.08,0.72,0.08),'wood').position.set(p[0],0.36,p[1]); }); }},
-      chair:{occupy:'furniture',colliders:[box(0.5,0.92,0.5,0,0.46,0)],build:function(g){ add(g,B(0.45,0.08,0.45),'wood').position.y=0.45; add(g,B(0.45,0.5,0.08),'wood').position.set(0,0.7,-0.185); [[-0.18,-0.18],[0.18,-0.18],[-0.18,0.18],[0.18,0.18]].forEach(function(p){ add(g,B(0.06,0.45,0.06),'wood').position.set(p[0],0.225,p[1]); }); }},
-      bed:{occupy:'furniture',colliders:[box(0.92,0.6,0.92,0,0.3,0)],build:function(g){ add(g,B(0.9,0.25,0.9),'wood').position.y=0.125; add(g,B(0.86,0.6,0.1),'darkwood',false).position.set(0,0.3,-0.45); add(g,B(0.82,0.16,0.82),'fabricblue').position.y=0.33; add(g,B(0.8,0.1,0.5),'fabricred',false).position.set(0,0.4,0.18); add(g,B(0.34,0.12,0.26),'plaster',false).position.set(0,0.44,-0.3); }},
-      cabinet:{occupy:'furniture',colliders:[box(0.82,1.0,0.52,0,0.5,0)],build:function(g){ add(g,B(0.8,0.94,0.5),'darkwood').position.y=0.52; add(g,B(0.86,0.06,0.54),'darkwood',false).position.y=1.0; [[-0.32,-0.19],[0.32,-0.19],[-0.32,0.19],[0.32,0.19]].forEach(function(p){ add(g,B(0.07,0.1,0.07),'darkwood',false).position.set(p[0],0.05,p[1]); }); add(g,B(0.36,0.86,0.04),'wood').position.set(-0.19,0.52,0.26); add(g,B(0.36,0.86,0.04),'wood').position.set(0.19,0.52,0.26); add(g,new THREE.SphereGeometry(0.04,6,5),'metal',false).position.set(-0.03,0.52,0.3); add(g,new THREE.SphereGeometry(0.04,6,5),'metal',false).position.set(0.03,0.52,0.3); }},
-      bookshelf:{occupy:'furniture',colliders:[box(0.92,1.62,0.37,0,0.81,0)],build:function(g){ add(g,B(0.9,1.6,0.35),'darkwood').position.y=0.8; var bc=[0xb4463c,0x5f8b57,0x3f5e86,0xd9d2c2,0xcf9a3a]; for(var s=0;s<3;s++){ var y=0.35+s*0.5; add(g,B(0.84,0.04,0.3),'darkwood').position.set(0,y-0.02,0); for(var b=0;b<5;b++){ var bm=new THREE.MeshStandardMaterial({color:bc[(s*5+b)%5],flatShading:true,roughness:1}); var bk=new THREE.Mesh(B(0.1,0.34,0.22),bm); bk.userData.paint=false; bk.position.set(-0.34+b*0.16,y+0.17,0.02); g.add(bk);} } }},
-      lamp:{occupy:'prop',colliders:[],build:function(g){ add(g,new THREE.CylinderGeometry(0.14,0.16,0.05,8),'metal',false,MAT.metal).position.y=0.025; add(g,new THREE.CylinderGeometry(0.03,0.03,1.2,6),'metal',false,MAT.metal).position.y=0.6; var sh=new THREE.Mesh(new THREE.ConeGeometry(0.26,0.32,8),new THREE.MeshStandardMaterial({color:0xe8c86a,emissive:0xc89a3a,emissiveIntensity:0.9,flatShading:true,roughness:1})); sh.userData.paint=true; sh.position.y=1.32; g.add(sh); var pl=new THREE.PointLight(0xffcf8a,0.95,5.5,2); pl.position.set(0,1.25,0); g.add(pl); }},
-      plant:{occupy:'furniture',colliders:[box(0.5,0.95,0.5,0,0.48,0)],build:function(g){ add(g,new THREE.CylinderGeometry(0.17,0.12,0.26,8),'darkwood',false).position.y=0.13; add(g,new THREE.CylinderGeometry(0.185,0.185,0.05,8),'darkwood',false).position.y=0.27; [[0,0.52,0,0.3,0.55],[0.13,0.64,0.04,0.2,0.4],[-0.1,0.66,-0.07,0.18,0.38],[0.02,0.8,0,0.12,0.3]].forEach(function(f){ add(g,new THREE.ConeGeometry(f[3],f[4],6),'green',true).position.set(f[0],f[1],f[2]); }); }},
-      rug:{occupy:'prop',colliders:[],build:function(g){ add(g,B(0.96,0.015,0.72),'darkwood',false).position.y=0.008; add(g,B(0.86,0.02,0.62),'fabricred',true).position.y=0.016; add(g,B(0.6,0.025,0.38),'fabricblue',false).position.y=0.02; }},
-      crate:{occupy:'furniture',colliders:[box(0.7,0.7,0.7,0,0.35,0)],build:function(g){ add(g,B(0.6,0.6,0.6),'wood',true).position.y=0.33; var e=0.07; [[-0.31,-0.31],[0.31,-0.31],[-0.31,0.31],[0.31,0.31]].forEach(function(p){ add(g,B(e,0.68,e),'darkwood',false).position.set(p[0],0.35,p[1]); }); [0.04,0.66].forEach(function(y){ add(g,B(0.68,e,e),'darkwood',false).position.set(0,y,0.31); add(g,B(0.68,e,e),'darkwood',false).position.set(0,y,-0.31); add(g,B(e,e,0.68),'darkwood',false).position.set(0.31,y,0); add(g,B(e,e,0.68),'darkwood',false).position.set(-0.31,y,0); }); }},
-      barrel:{occupy:'furniture',colliders:[box(0.62,0.82,0.62,0,0.41,0)],build:function(g){ add(g,new THREE.CylinderGeometry(0.27,0.23,0.8,12),'wood',true).position.y=0.4; add(g,new THREE.CylinderGeometry(0.29,0.29,0.05,12),'metal',false).position.y=0.18; add(g,new THREE.CylinderGeometry(0.29,0.29,0.05,12),'metal',false).position.y=0.62; add(g,new THREE.CylinderGeometry(0.24,0.24,0.02,12),'darkwood',false).position.y=0.805; }},
-      brazier:{occupy:'furniture',colliders:[box(0.5,0.9,0.5,0,0.45,0)],build:function(g){ [[0,0.2],[0.18,-0.1],[-0.18,-0.1]].forEach(function(p){ add(g,B(0.05,0.56,0.05),'metal',false).position.set(p[0],0.28,p[1]); }); add(g,new THREE.CylinderGeometry(0.26,0.14,0.18,10),'metal',false).position.y=0.6; var f1=new THREE.Mesh(new THREE.ConeGeometry(0.16,0.34,8),new THREE.MeshStandardMaterial({color:0xffb24a,emissive:0xff7a1a,emissiveIntensity:1.1,flatShading:true,roughness:1})); f1.userData.paint=false; f1.position.y=0.82; g.add(f1); var f2=new THREE.Mesh(new THREE.ConeGeometry(0.09,0.22,6),new THREE.MeshStandardMaterial({color:0xffe08a,emissive:0xffd060,emissiveIntensity:1.2,flatShading:true,roughness:1})); f2.userData.paint=false; f2.position.y=0.9; g.add(f2); var pl=new THREE.PointLight(0xff8a3a,1.25,6,2); pl.position.set(0,0.9,0); g.add(pl); }}
+      exit:{occupy:'marker',marker:'exit',colliders:[],build:function(g){ marker(g,0xe0675c); }}
     };
   }
 
-  var DEFMAT={ floor:'tile',wall:'plaster',glasswall:'glass',door:'wood',dooropen:'wood',doubledoor:'wood',
-    archway:'plaster',window:'plaster',shutterwindow:'plaster',spawn:'green',exit:'fabricred',
-    table:'wood',chair:'wood',bed:'wood',cabinet:'darkwood',bookshelf:'darkwood',lamp:'plaster',
-    plant:'green',rug:'fabricred',crate:'wood',barrel:'wood',brazier:'metal' };
+  var DEFMAT={ floor:'tile', wall:'plaster', door:'wood', spawn:'green', exit:'fabricred' };
   var USERMAT = {};   // imported-texture materials, keyed 'tex:<id>'
   function applyMat(group,key){ var mm=(key && key.indexOf('tex:')===0 ? USERMAT[key] : MAT[key]) || MAT.plaster; group.traverse(function(o){ if(o.isMesh&&o.userData.paint) o.material=mm; }); }
 
@@ -6412,7 +6391,7 @@ window.createPSXRoom = (function () {
   var PIECES = [], MATS = CAT.materials.slice(), SWCOL = CAT.swatch || {}, catDefMat = {}, occMap = {};
   CAT.assets.forEach(function (a) { PIECES.push(a.name); catDefMat[a.name] = a.defMat; occMap[a.name] = a.occupy; });
   function occupyOf(a) { return occMap[a] || 'furniture'; }
-  var PLABEL = { floor: 'Floor', wall: 'Wall', glasswall: 'Glass wall', door: 'Door', dooropen: 'Open door', doubledoor: 'Double door', archway: 'Archway', window: 'Window', shutterwindow: 'Shutters', spawn: 'Spawn ▸', exit: 'Exit ▸', table: 'Table', chair: 'Chair', bed: 'Bed', cabinet: 'Cabinet', bookshelf: 'Bookshelf', lamp: 'Lamp', plant: 'Plant', rug: 'Rug', crate: 'Crate', barrel: 'Barrel', brazier: 'Brazier' };
+  var PLABEL = { floor: 'Floor', wall: 'Wall', door: 'Door', spawn: 'Spawn ▸', exit: 'Exit ▸' };   // only the room skeleton is built-in; everything else is a pack model
   // build-mode state
   var editSub = 'build', armedPiece = null, eraserOn = false, placeRotDeg = 0, placeScale = 1, pieceMat = {};
   var editGrid = new THREE.GridHelper(48, 48, 0x394063, 0x23273c); editGrid.position.y = 0.002; editGrid.visible = false; scene.add(editGrid);
@@ -6686,16 +6665,17 @@ window.createPSXRoom = (function () {
     if (typeof d === 'object' && !Array.isArray(d) && d.nodes) return { start: d.start || Object.keys(d.nodes)[0], nodes: d.nodes };
     return { start: '_', nodes: { _: d } };
   }
-  var dlg = { open: false, who: '', npc: null, faceBase: null, graph: null, node: null, seq: null, idx: 0 };
+  var dlg = { open: false, who: '', npc: null, faceBase: null, graph: null, node: null, seq: null, idx: 0, sel: 0, choiceEls: null };
   function startDialogue(n) {
     if (!hasDialogue(n.data.dialogue)) return;
-    try { document.exitPointerLock(); } catch (x) {}   // free the cursor so dialogue choices are clickable
     dlg.graph = compileDialogue(n.data.dialogue, n); if (!dlg.graph) return;
-    dlg.open = true; dlg.npc = n; dlg.who = n.data.name || 'NPC';
-    var st = n.api.settings || {}; dlg.faceBase = {}; EXPR_KEYS.forEach(function (k) { dlg.faceBase[k] = st[k]; });
+    dlg.open = true; dlg.npc = n; dlg.who = n.data.name || 'NPC'; dlg.sel = 0;
+    // turn to face the NPC (first-person view is driven by camYaw; keep the body in sync)
+    if (n.api && n.api.root) { var pp = n.api.root.position, a = Math.atan2(pp.x - pPos.x, pp.z - pPos.z); camYaw = a; pYaw = a; fpPitch = 0; }
+    var st = (n.api && n.api.settings) || {}; dlg.faceBase = {}; EXPR_KEYS.forEach(function (k) { dlg.faceBase[k] = st[k]; });
     enterNode(dlg.graph.start);
   }
-  function enterNode(id) { var nd = normNode(dlg.graph.nodes[id]); dlg.node = nd; dlg.seq = nd.say.length ? nd.say : [{ text: '' }]; dlg.idx = 0; showDlg(); }
+  function enterNode(id) { var nd = normNode(dlg.graph.nodes[id]); dlg.node = nd; dlg.seq = nd.say.length ? nd.say : [{ text: '' }]; dlg.idx = 0; dlg.sel = 0; showDlg(); }
   function showDlg() {
     var line = dlg.seq[dlg.idx];
     $('dialogue').style.display = 'flex'; $('dlgWho').textContent = dlg.who; $('dlgLine').textContent = lineText(line);
@@ -6706,13 +6686,32 @@ window.createPSXRoom = (function () {
   }
   function renderChoices(choices) {
     var box = $('dlgChoices'), adv = $('dlgAdv');
-    box.innerHTML = '';
+    box.innerHTML = ''; dlg.choiceEls = null;
     if (choices) {
       adv.style.display = 'none'; box.style.display = 'flex'; $('dialogue').classList.add('choosing');
-      choices.forEach(function (c, i) { var b = document.createElement('button'); b.className = 'dchoice'; b.textContent = c.text || ('Option ' + (i + 1)); b.onclick = function (ev) { ev.stopPropagation(); choose(i); }; box.appendChild(b); });
+      if (dlg.sel == null || dlg.sel >= choices.length) dlg.sel = 0;
+      dlg.choiceEls = choices.map(function (c, i) {
+        var b = document.createElement('button'); b.className = 'dchoice' + (i === dlg.sel ? ' sel' : '');
+        b.textContent = (i + 1) + '.  ' + (c.text || ('Option ' + (i + 1)));
+        b.onmouseenter = function () { dlg.sel = i; highlightChoices(); };
+        b.onclick = function (ev) { ev.stopPropagation(); choose(i); }; box.appendChild(b); return b;
+      });
     } else { adv.style.display = 'block'; box.style.display = 'none'; $('dialogue').classList.remove('choosing'); }
   }
+  function highlightChoices() { if (dlg.choiceEls) dlg.choiceEls.forEach(function (b, i) { b.classList.toggle('sel', i === dlg.sel); }); }
   function choose(i) { var ch = dlg.node.choices; if (!ch || !ch[i]) return closeDlg(); var to = ch[i].to; if (to && dlg.graph.nodes[to]) enterNode(to); else closeDlg(); }
+  // dialogue runs entirely from the keyboard (or a click) so the pointer stays locked — no click needed after talking
+  function dlgChoosing() { return !!(dlg.node && dlg.idx >= dlg.seq.length - 1 && dlg.node.choices && dlg.node.choices.length); }
+  function dlgConfirm() { if (dlgChoosing()) choose(dlg.sel || 0); else advanceDialogue(); }
+  function dlgKey(k, e) {
+    if (dlgChoosing()) {
+      var n = dlg.node.choices.length;
+      if (k === 'arrowup' || k === 'arrowleft' || k === 'w') { dlg.sel = (dlg.sel - 1 + n) % n; highlightChoices(); e.preventDefault(); return; }
+      if (k === 'arrowdown' || k === 'arrowright' || k === 's') { dlg.sel = (dlg.sel + 1) % n; highlightChoices(); e.preventDefault(); return; }
+      if (k.length === 1 && k >= '1' && k <= '9') { var idx = +k - 1; if (idx < n) choose(idx); e.preventDefault(); return; }
+      if (k === 'enter' || k === ' ' || k === 'e') { choose(dlg.sel || 0); e.preventDefault(); return; }
+    } else if (k === 'enter' || k === ' ' || k === 'e') { advanceDialogue(); e.preventDefault(); return; }
+  }
   function closeDlg() { if (dlg.npc && dlg.faceBase) applyEmote(dlg.npc, 'neutral'); dlg.open = false; dlg.npc = null; dlg.faceBase = null; dlg.graph = null; dlg.node = null; dlg.seq = null; $('dialogue').style.display = 'none'; $('dialogue').classList.remove('choosing'); if (joyEl) joyEl.style.visibility = ''; }
   function advanceDialogue() {
     if (dlg.node && dlg.idx >= dlg.seq.length - 1 && dlg.node.choices && dlg.node.choices.length) return; // waiting on a choice
@@ -6781,6 +6780,7 @@ window.createPSXRoom = (function () {
   window.addEventListener('keydown', function (e) {
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     var k = e.key.toLowerCase(); keys[k] = true;
+    if (mode === 'play' && dlg.open) { dlgKey(k, e); return; }   // dialogue is keyboard-driven; don't fall through to move/interact
     if (k === 'e' && mode === 'play') interact();
     if (k === 'f' && mode === 'play') toggleFlash();
     if (k === 'r' && mode === 'edit' && editSub === 'build') { placeRotDeg = (placeRotDeg + 90) % 360; renderBuild(); }
@@ -6799,14 +6799,14 @@ window.createPSXRoom = (function () {
   dom.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   // Mouselook: click once to grab the pointer, then moving the mouse turns the camera (no button held).
   document.addEventListener('mousemove', function (e) {
-    if (!locked || mode !== 'play') return;
+    if (!locked || mode !== 'play' || dlg.open) return;    // freeze the view while talking
     camYaw -= e.movementX * 0.0026;
     if (fpv) fpPitch = cl(fpPitch - e.movementY * 0.0026, -0.95, 0.95); else camPitch = cl(camPitch - e.movementY * 0.0026, 0.1, 1.2);
     lockMove += Math.abs(e.movementX) + Math.abs(e.movementY);
   });
   dom.addEventListener('pointerdown', function (e) {
     if (mode === 'play') {
-      if (dlg.open) return;                                                   // dialogue open: pointerup advances it
+      if (dlg.open) { dlgConfirm(); return; }                                 // dialogue: a click advances / confirms the choice
       if (!locked) { try { dom.requestPointerLock(); } catch (x) {} return; }  // click once to grab mouselook
       lockMove = 0; drag = { btn: e.button, locked: true }; return;           // locked: a still click = interact
     }
@@ -6822,7 +6822,6 @@ window.createPSXRoom = (function () {
   });
   dom.addEventListener('pointerup', function (e) {
     if (drag && drag.locked) { if (e.button === 0 && lockMove < 8) interact(); drag = null; return; }   // click while locked = interact
-    if (mode === 'play' && !locked && dlg.open && e.button === 0) { onClick(e); return; }               // advance dialogue (cursor free)
     if (drag && !drag.moved && e.button === 0) onClick(e); drag = null;
   });
   dom.addEventListener('wheel', function (e) { e.preventDefault(); var f = 1 + Math.sign(e.deltaY) * 0.12; if (mode === 'play') camDist = Math.max(1.6, Math.min(9, camDist * f)); else editCam.dist = Math.max(4, Math.min(30, editCam.dist * f)); }, { passive: false });

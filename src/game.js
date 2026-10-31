@@ -100,7 +100,7 @@
   var PIECES = [], MATS = CAT.materials.slice(), SWCOL = CAT.swatch || {}, catDefMat = {}, occMap = {};
   CAT.assets.forEach(function (a) { PIECES.push(a.name); catDefMat[a.name] = a.defMat; occMap[a.name] = a.occupy; });
   function occupyOf(a) { return occMap[a] || 'furniture'; }
-  var PLABEL = { floor: 'Floor', wall: 'Wall', glasswall: 'Glass wall', door: 'Door', dooropen: 'Open door', doubledoor: 'Double door', archway: 'Archway', window: 'Window', shutterwindow: 'Shutters', spawn: 'Spawn ▸', exit: 'Exit ▸', table: 'Table', chair: 'Chair', bed: 'Bed', cabinet: 'Cabinet', bookshelf: 'Bookshelf', lamp: 'Lamp', plant: 'Plant', rug: 'Rug', crate: 'Crate', barrel: 'Barrel', brazier: 'Brazier' };
+  var PLABEL = { floor: 'Floor', wall: 'Wall', door: 'Door', spawn: 'Spawn ▸', exit: 'Exit ▸' };   // only the room skeleton is built-in; everything else is a pack model
   // build-mode state
   var editSub = 'build', armedPiece = null, eraserOn = false, placeRotDeg = 0, placeScale = 1, pieceMat = {};
   var editGrid = new THREE.GridHelper(48, 48, 0x394063, 0x23273c); editGrid.position.y = 0.002; editGrid.visible = false; scene.add(editGrid);
@@ -374,16 +374,17 @@
     if (typeof d === 'object' && !Array.isArray(d) && d.nodes) return { start: d.start || Object.keys(d.nodes)[0], nodes: d.nodes };
     return { start: '_', nodes: { _: d } };
   }
-  var dlg = { open: false, who: '', npc: null, faceBase: null, graph: null, node: null, seq: null, idx: 0 };
+  var dlg = { open: false, who: '', npc: null, faceBase: null, graph: null, node: null, seq: null, idx: 0, sel: 0, choiceEls: null };
   function startDialogue(n) {
     if (!hasDialogue(n.data.dialogue)) return;
-    try { document.exitPointerLock(); } catch (x) {}   // free the cursor so dialogue choices are clickable
     dlg.graph = compileDialogue(n.data.dialogue, n); if (!dlg.graph) return;
-    dlg.open = true; dlg.npc = n; dlg.who = n.data.name || 'NPC';
-    var st = n.api.settings || {}; dlg.faceBase = {}; EXPR_KEYS.forEach(function (k) { dlg.faceBase[k] = st[k]; });
+    dlg.open = true; dlg.npc = n; dlg.who = n.data.name || 'NPC'; dlg.sel = 0;
+    // turn to face the NPC (first-person view is driven by camYaw; keep the body in sync)
+    if (n.api && n.api.root) { var pp = n.api.root.position, a = Math.atan2(pp.x - pPos.x, pp.z - pPos.z); camYaw = a; pYaw = a; fpPitch = 0; }
+    var st = (n.api && n.api.settings) || {}; dlg.faceBase = {}; EXPR_KEYS.forEach(function (k) { dlg.faceBase[k] = st[k]; });
     enterNode(dlg.graph.start);
   }
-  function enterNode(id) { var nd = normNode(dlg.graph.nodes[id]); dlg.node = nd; dlg.seq = nd.say.length ? nd.say : [{ text: '' }]; dlg.idx = 0; showDlg(); }
+  function enterNode(id) { var nd = normNode(dlg.graph.nodes[id]); dlg.node = nd; dlg.seq = nd.say.length ? nd.say : [{ text: '' }]; dlg.idx = 0; dlg.sel = 0; showDlg(); }
   function showDlg() {
     var line = dlg.seq[dlg.idx];
     $('dialogue').style.display = 'flex'; $('dlgWho').textContent = dlg.who; $('dlgLine').textContent = lineText(line);
@@ -394,13 +395,32 @@
   }
   function renderChoices(choices) {
     var box = $('dlgChoices'), adv = $('dlgAdv');
-    box.innerHTML = '';
+    box.innerHTML = ''; dlg.choiceEls = null;
     if (choices) {
       adv.style.display = 'none'; box.style.display = 'flex'; $('dialogue').classList.add('choosing');
-      choices.forEach(function (c, i) { var b = document.createElement('button'); b.className = 'dchoice'; b.textContent = c.text || ('Option ' + (i + 1)); b.onclick = function (ev) { ev.stopPropagation(); choose(i); }; box.appendChild(b); });
+      if (dlg.sel == null || dlg.sel >= choices.length) dlg.sel = 0;
+      dlg.choiceEls = choices.map(function (c, i) {
+        var b = document.createElement('button'); b.className = 'dchoice' + (i === dlg.sel ? ' sel' : '');
+        b.textContent = (i + 1) + '.  ' + (c.text || ('Option ' + (i + 1)));
+        b.onmouseenter = function () { dlg.sel = i; highlightChoices(); };
+        b.onclick = function (ev) { ev.stopPropagation(); choose(i); }; box.appendChild(b); return b;
+      });
     } else { adv.style.display = 'block'; box.style.display = 'none'; $('dialogue').classList.remove('choosing'); }
   }
+  function highlightChoices() { if (dlg.choiceEls) dlg.choiceEls.forEach(function (b, i) { b.classList.toggle('sel', i === dlg.sel); }); }
   function choose(i) { var ch = dlg.node.choices; if (!ch || !ch[i]) return closeDlg(); var to = ch[i].to; if (to && dlg.graph.nodes[to]) enterNode(to); else closeDlg(); }
+  // dialogue runs entirely from the keyboard (or a click) so the pointer stays locked — no click needed after talking
+  function dlgChoosing() { return !!(dlg.node && dlg.idx >= dlg.seq.length - 1 && dlg.node.choices && dlg.node.choices.length); }
+  function dlgConfirm() { if (dlgChoosing()) choose(dlg.sel || 0); else advanceDialogue(); }
+  function dlgKey(k, e) {
+    if (dlgChoosing()) {
+      var n = dlg.node.choices.length;
+      if (k === 'arrowup' || k === 'arrowleft' || k === 'w') { dlg.sel = (dlg.sel - 1 + n) % n; highlightChoices(); e.preventDefault(); return; }
+      if (k === 'arrowdown' || k === 'arrowright' || k === 's') { dlg.sel = (dlg.sel + 1) % n; highlightChoices(); e.preventDefault(); return; }
+      if (k.length === 1 && k >= '1' && k <= '9') { var idx = +k - 1; if (idx < n) choose(idx); e.preventDefault(); return; }
+      if (k === 'enter' || k === ' ' || k === 'e') { choose(dlg.sel || 0); e.preventDefault(); return; }
+    } else if (k === 'enter' || k === ' ' || k === 'e') { advanceDialogue(); e.preventDefault(); return; }
+  }
   function closeDlg() { if (dlg.npc && dlg.faceBase) applyEmote(dlg.npc, 'neutral'); dlg.open = false; dlg.npc = null; dlg.faceBase = null; dlg.graph = null; dlg.node = null; dlg.seq = null; $('dialogue').style.display = 'none'; $('dialogue').classList.remove('choosing'); if (joyEl) joyEl.style.visibility = ''; }
   function advanceDialogue() {
     if (dlg.node && dlg.idx >= dlg.seq.length - 1 && dlg.node.choices && dlg.node.choices.length) return; // waiting on a choice
@@ -469,6 +489,7 @@
   window.addEventListener('keydown', function (e) {
     if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     var k = e.key.toLowerCase(); keys[k] = true;
+    if (mode === 'play' && dlg.open) { dlgKey(k, e); return; }   // dialogue is keyboard-driven; don't fall through to move/interact
     if (k === 'e' && mode === 'play') interact();
     if (k === 'f' && mode === 'play') toggleFlash();
     if (k === 'r' && mode === 'edit' && editSub === 'build') { placeRotDeg = (placeRotDeg + 90) % 360; renderBuild(); }
@@ -487,14 +508,14 @@
   dom.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   // Mouselook: click once to grab the pointer, then moving the mouse turns the camera (no button held).
   document.addEventListener('mousemove', function (e) {
-    if (!locked || mode !== 'play') return;
+    if (!locked || mode !== 'play' || dlg.open) return;    // freeze the view while talking
     camYaw -= e.movementX * 0.0026;
     if (fpv) fpPitch = cl(fpPitch - e.movementY * 0.0026, -0.95, 0.95); else camPitch = cl(camPitch - e.movementY * 0.0026, 0.1, 1.2);
     lockMove += Math.abs(e.movementX) + Math.abs(e.movementY);
   });
   dom.addEventListener('pointerdown', function (e) {
     if (mode === 'play') {
-      if (dlg.open) return;                                                   // dialogue open: pointerup advances it
+      if (dlg.open) { dlgConfirm(); return; }                                 // dialogue: a click advances / confirms the choice
       if (!locked) { try { dom.requestPointerLock(); } catch (x) {} return; }  // click once to grab mouselook
       lockMove = 0; drag = { btn: e.button, locked: true }; return;           // locked: a still click = interact
     }
@@ -510,7 +531,6 @@
   });
   dom.addEventListener('pointerup', function (e) {
     if (drag && drag.locked) { if (e.button === 0 && lockMove < 8) interact(); drag = null; return; }   // click while locked = interact
-    if (mode === 'play' && !locked && dlg.open && e.button === 0) { onClick(e); return; }               // advance dialogue (cursor free)
     if (drag && !drag.moved && e.button === 0) onClick(e); drag = null;
   });
   dom.addEventListener('wheel', function (e) { e.preventDefault(); var f = 1 + Math.sign(e.deltaY) * 0.12; if (mode === 'play') camDist = Math.max(1.6, Math.min(9, camDist * f)); else editCam.dist = Math.max(4, Math.min(30, editCam.dist * f)); }, { passive: false });
