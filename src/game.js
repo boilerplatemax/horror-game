@@ -81,6 +81,13 @@
     flashBase = t.flash; if (flashOn) flash.intensity = flashBase;
   }
   function toggleFlash() { flashOn = !flashOn; flash.intensity = flashOn ? flashBase : 0; if ($('btnFlash')) $('btnFlash').classList.toggle('on', flashOn); }
+  // is the flashlight beam currently on this NPC? (on, in range, within the player's forward cone)
+  function flashLit(n) {
+    if (!flashOn || !n || !n.api || !n.api.root) return false;
+    var p = n.api.root.position, dx = p.x - pPos.x, dz = p.z - pPos.z, dist = Math.hypot(dx, dz) || 1e-4;
+    if (dist > 12) return false;
+    return (dx * Math.sin(camYaw) + dz * Math.cos(camYaw)) / dist > 0.8;   // ~35° cone along the view
+  }
   var ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ visible: false }));
   scene.add(ground);
 
@@ -309,6 +316,12 @@
         else { var mv = Math.hypot(p.x - st.lx, p.z - st.lz); st.lx = p.x; st.lz = p.z; st.rstuck = mv < (n.data.speed || 1.1) * dt * 0.4 ? (st.rstuck || 0) + dt : 0; if (st.rstuck > 1.2) { st.phase = 'wander'; st.t = 1 + Math.random(); st.tgt = null; } }
       }
     },
+    // shies from the flashlight: looks away/shields while the beam is on it, faces you otherwise
+    flashShy: function (n, dt, ctx) {
+      var p = n.api.root.position, dx = ctx.px - p.x, dz = ctx.pz - p.z, dist = Math.hypot(dx, dz) || 1e-4;
+      if (flashLit(n)) { faceTo(n, Math.atan2(-dx, -dz), dt); npcAnim(n, 'idle'); }   // turn away from the glare
+      else { faceTo(n, Math.atan2(dx, dz), dt); npcAnim(n, 'idle'); }
+    },
     // horror: freezes and stares while you look at it, creeps toward you the moment you look away
     stalker: function (n, dt, ctx) {
       var p = n.api.root.position, dx = ctx.px - p.x, dz = ctx.pz - p.z, dist = Math.hypot(dx, dz) || 1e-4;
@@ -375,8 +388,16 @@
     return { start: '_', nodes: { _: d } };
   }
   var dlg = { open: false, who: '', npc: null, faceBase: null, graph: null, node: null, seq: null, idx: 0, sel: 0, choiceEls: null };
+  function startSimpleLine(n, text, emote) {   // a one-off spoken line (no choices) — used for the flashlight rebuff
+    dlg.graph = { start: 's', nodes: { s: { say: [{ text: text, emote: emote || 'worried' }] } } };
+    dlg.open = true; dlg.npc = n; dlg.who = n.data.name || 'NPC'; dlg.sel = 0;
+    if (n.api && n.api.root) { var pp = n.api.root.position; dlg.faceYaw = Math.atan2(pp.x - pPos.x, pp.z - pPos.z); dlg.facePitch = 0; dlg.faceLerp = true; pYaw = dlg.faceYaw; }
+    var st = (n.api && n.api.settings) || {}; dlg.faceBase = {}; EXPR_KEYS.forEach(function (k) { dlg.faceBase[k] = st[k]; });
+    enterNode('s');
+  }
   function startDialogue(n) {
     if (!hasDialogue(n.data.dialogue)) return;
+    if (flashLit(n)) { startSimpleLine(n, n.data.flashLine || 'Agh — get that light out of my face. Turn it off and I\'ll talk.', 'scared'); return; }
     dlg.graph = compileDialogue(n.data.dialogue, n); if (!dlg.graph) return;
     dlg.open = true; dlg.npc = n; dlg.who = n.data.name || 'NPC'; dlg.sel = 0;
     // turn to face the NPC — a smooth pan, not a jump cut (stepPlay eases camYaw/fpPitch toward the target)
@@ -582,12 +603,18 @@
     var oc = occupyOf(o.asset), p = o.position, deg = Math.round((((o.rotationY || 0) % 360) + 360) % 360);
     if (oc === 'edge') { return (deg === 90 || deg === 270) ? 'Ev|' + Math.round(p[0]) + '|' + Math.round(p[2] - 0.5) : 'Eh|' + Math.round(p[0] - 0.5) + '|' + Math.round(p[2]); }
     if (oc === 'floor') return 'F|' + Math.round(p[0] - 0.5) + '|' + Math.round(p[2] - 0.5);
+    if (o.asset === 'model' && isCeilingProp(o.src)) return 'MC|' + Math.round(p[0] - 0.5) + '|' + Math.round(p[2] - 0.5);   // ceiling layer — independent of floor furniture
     return oc.charAt(0) + '|' + o.asset + '|' + Math.round(p[0] - 0.5) + '|' + Math.round(p[2] - 0.5);
   }
   function activeObjs() { var rm = draft.rooms[editActive]; rm.room = rm.room || { version: 2, objects: [] }; if (rm.room.version == null) rm.room.version = 2; rm.room.objects = rm.room.objects || []; return rm.room.objects; }
   // the object a given armed piece would place (at origin; caller sets position/rotation)
+  function isCeilingProp(src) { return /ceiling|chandelier|hanging/i.test(src || ''); }   // mounts flush to the ceiling, not the floor
   function pieceObj(armed, pos, rot) {
-    if (armed.indexOf('model:') === 0) { var rest = armed.slice(6), ci = rest.indexOf('::'), src = ci >= 0 ? rest.slice(0, ci) : rest, node = ci >= 0 ? rest.slice(ci + 2) : ''; return { asset: 'model', src: src, node: node, position: pos, rotationY: rot, scale: placeScale }; }
+    if (armed.indexOf('model:') === 0) {
+      var rest = armed.slice(6), ci = rest.indexOf('::'), src = ci >= 0 ? rest.slice(0, ci) : rest, node = ci >= 0 ? rest.slice(ci + 2) : '', y = pos[1];
+      if (isCeilingProp(src)) { var sz = window.createPSXRoom.modelSize(src + '::' + node), h = sz ? sz.y * placeScale : 0.3; y = Math.max(0, activeWH() - h); }   // hang from the ceiling
+      return { asset: 'model', src: src, node: node, position: [pos[0], y, pos[2]], rotationY: rot, scale: placeScale };
+    }
     return { asset: armed, position: pos, rotationY: rot, material: pieceMat[armed] || catDefMat[armed] };
   }
   function snapFor(armed, p) { var asset = armed.indexOf('model:') === 0 ? 'model' : armed; if (occupyOf(asset) === 'edge') { var s = snapEdge(p); return { pos: s.pos, rot: s.rot }; } return { pos: snapCell(p), rot: placeRotDeg }; }
@@ -823,7 +850,7 @@
     $('hudRoom').textContent = editActive ? (draft.rooms[editActive].label || editActive) : '—';
     var rm = draft.rooms[editActive] || { npcs: [], exits: [] }; rm.npcs = rm.npcs || [];
     var list = $('epNpcList'); list.innerHTML = '';
-    var ANIMS = ['idle', 'walk', 'run', 'sneak'], BEHS = ['idle', 'wander', 'patrol', 'facePlayer', 'roam', 'stalker'];
+    var ANIMS = ['idle', 'walk', 'run', 'sneak'], BEHS = ['idle', 'wander', 'patrol', 'facePlayer', 'roam', 'stalker', 'flashShy'];
     rm.npcs.forEach(function (npc, i) {
       var card = document.createElement('div'); card.className = 'npc-card';
       card.innerHTML =
