@@ -71,7 +71,13 @@ and a room object places it:
   base-anchored (base dropped to y=0, centred on x/z). GLTF base-colour maps are forced to
   the engine's linear space and matte PBR so metallic packs don't render black.
 - **collision.enabled: false** — walk-through (floor clutter, wall/ceiling decor).
-- **light** — optional point light on any model, so a lamp fixture actually illuminates.
+- **light** — optional point light on any model (`{ color, intensity, dist, decay, y }`),
+  so a lamp fixture actually illuminates.
+
+The pack has no architecture *models*, so the built-in floor/wall/door geometry is
+**re-skinned** with pack *textures*: a world's `textures` map loads them by path and a
+piece's `material` is set to `tex:<id>`. Texture records take an optional
+`repeat: [u, v]` so a map tiles across a tall wall instead of stretching one copy.
 
 ## Adding a pack
 

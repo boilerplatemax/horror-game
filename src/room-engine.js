@@ -142,7 +142,7 @@ window.createPSXRoom = (function () {
         g.traverse(function(m){ if(m.isMesh) m.userData.srcObj = o; });
         root.add(g);
         // any placed model may carry a light, so a lamp/ceiling-fixture model can actually illuminate the room
-        if(o.light){ var L=o.light, pl=new THREE.PointLight(L.color!=null?L.color:0xffcf8a, L.intensity!=null?L.intensity:1, L.dist!=null?L.dist:6, 2);
+        if(o.light){ var L=o.light, pl=new THREE.PointLight(L.color!=null?L.color:0xffcf8a, L.intensity!=null?L.intensity:1, L.dist!=null?L.dist:6, L.decay!=null?L.decay:2);
           pl.position.set(o.position[0], (o.position[1]||0)+(L.y!=null?L.y:1.2), o.position[2]); root.add(pl); }
         var en = !(o.collision && o.collision.enabled===false);
         if(M && M.size && en){ var z=M.size, b=box(Math.max(z.x*sc,0.2), Math.max(z.y*sc,0.2), Math.max(z.z*sc,0.2), 0, z.y*sc/2, 0); colliders.push(worldAABB(b, o.position, rot(o))); }
@@ -215,8 +215,10 @@ window.createPSXRoom = (function () {
     if(!ids.length){ if(done) done(); return; }
     var pend = ids.length; function fin(){ if(--pend<=0 && done) done(); }
     ids.forEach(function(id){
-      var rec = textures[id], uri = (rec && (rec.img || rec.path)) || rec, img = new Image();
-      img.onload = function(){ try{ var t=new THREE.Texture(img); t.magFilter=t.minFilter=THREE.NearestFilter; t.generateMipmaps=false; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.needsUpdate=true;
+      var rec = textures[id], uri = (rec && (rec.img || rec.path)) || rec, rep = rec && rec.repeat, img = new Image();
+      img.onload = function(){ try{ var t=new THREE.Texture(img); t.magFilter=t.minFilter=THREE.NearestFilter; t.generateMipmaps=false; t.wrapS=t.wrapT=THREE.RepeatWrapping;
+        if(rep) t.repeat.set(rep[0], rep[1]);    // tile the image across a face (e.g. tall walls) instead of stretching one copy
+        t.needsUpdate=true;
         USERMAT['tex:'+id]=new THREE.MeshStandardMaterial({ map:t, flatShading:true, roughness:1, metalness:0 }); }catch(e){ USERMAT['tex:'+id]=MAT.plaster; } fin(); };
       img.onerror = function(){ console.warn('[room-engine] texture failed '+id); USERMAT['tex:'+id]=MAT.plaster; fin(); };
       img.src = String(uri);

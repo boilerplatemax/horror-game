@@ -962,11 +962,22 @@
     // a pack model placed in a room: i/j are tile coords (fractional ok), o.y lifts it off the floor,
     // o.light attaches a point light (so a lamp model actually illuminates), o.solid:false = walk-through
     function mo(id, i, j, rot, o) { o = o || {}; USED[id] = 1; var m = { asset: 'model', src: id, node: '', position: [i - 4.5, o.y || 0, j - 4.5], rotationY: rot || 0, scale: o.scale || 1, collision: { enabled: o.solid !== false } }; if (o.light) m.light = o.light; return m; }
-    var CEIL = { color: 0xffd9a8, intensity: 1.15, dist: 7.5, y: 2.3 };   // warm pool under a ceiling lamp
-    var DESK = { color: 0xffcf8a, intensity: 0.7, dist: 4.0, y: 0.55 };   // a small table/bedside lamp
+    // gentle decay (<2) spreads a ceiling lamp across the whole room; the pack's textures are dark, so lamps run bright
+    var CEIL = { color: 0xffd9a8, intensity: 2.2, dist: 11, decay: 1.25, y: 2.3 };   // warm pool under a ceiling lamp
+    var DESK = { color: 0xffcf8a, intensity: 1.1, dist: 4.5, decay: 1.4, y: 0.55 };  // a small table/bedside lamp
+    // Pack textures re-skin the built-in floor/wall/door geometry (the pack has no architecture models).
+    // Walls are 1.04 wide x 2.7 tall, so wall maps tile ~2.6x vertically to stay square; floors/doors = one copy.
+    var T = 'assets/textures/psx-horror/';
+    var TEX = {
+      wall_a: { path: T + 'wall_6.png', repeat: [1, 2.6] }, wall_b: { path: T + 'concrete_2.png', repeat: [1, 2.6] },
+      floor_tile: { path: T + 'tiles_floor_1.png', repeat: [1, 1] }, floor_concrete: { path: T + 'concrete_1.png', repeat: [1, 1] },
+      floor_wood: { path: T + 'wood_3.png', repeat: [1, 1] }, floor_wood2: { path: T + 'wood_4.png', repeat: [1, 1] },
+      floor_metal: { path: T + 'floor_3_metal.png', repeat: [1, 1] }, door_w: { path: T + 'wood_5.png', repeat: [1, 1] }
+    };
+    var DOORW = 'tex:door_w';
     var rooms = {};
 
-    var lob = genRoom(6, 5, { floorMat: 'tile', wallMat: 'plaster', wallH: 2.7, doors: [{ side: 'E', at: 2, type: 'door' }] });
+    var lob = genRoom(6, 5, { floorMat: 'tex:floor_tile', wallMat: 'tex:wall_a', wallH: 2.7, doors: [{ side: 'E', at: 2, type: 'door', mat: DOORW }] });
     lob.objects.push(
       mo('furniture/dinner_table_1', 1.4, 3.7, 0), mo('furniture/chair_mp_1', 1.4, 4.3, 180),
       mo('large-props/vending_machine_1', 0.7, 2.3, 90), mo('furniture/sofa_1', 3.4, 0.8, 0),
@@ -982,8 +993,8 @@
           [{ text: 'Don\'t linger in the storage room. It\'s cold in there. Wrong-cold.', emote: 'scared' }] ] } }] };
 
     // corridor hub: door order W,N,S,E fixes spawn indices 0..3 that the other rooms arrive at
-    var cor = genRoom(7, 3, { floorMat: 'stone', wallMat: 'plaster', wallH: 2.7, doors: [
-      { side: 'W', at: 1, type: 'door' }, { side: 'N', at: 2, type: 'door' }, { side: 'S', at: 4, type: 'door' }, { side: 'E', at: 1, type: 'door' }] });
+    var cor = genRoom(7, 3, { floorMat: 'tex:floor_concrete', wallMat: 'tex:wall_b', wallH: 2.7, doors: [
+      { side: 'W', at: 1, type: 'door', mat: DOORW }, { side: 'N', at: 2, type: 'door', mat: DOORW }, { side: 'S', at: 4, type: 'door', mat: DOORW }, { side: 'E', at: 1, type: 'door', mat: DOORW }] });
     cor.objects.push(
       mo('large-props/metal_barrel_mp_1', 5.7, 0.6, 0), mo('large-props/cardboard_box_1', 6.0, 2.3, 20),
       mo('large-props/pipe_1', 0.6, 2.6, 0, { solid: false }),
@@ -993,7 +1004,7 @@
     rooms.corridor = { label: 'Corridor', room: cor,
       exits: [{ to: 'lobby', arrive: 0 }, { to: 'bedroom', arrive: 0 }, { to: 'living', arrive: 0 }, { to: 'storage', arrive: 0 }] };
 
-    var bed = genRoom(6, 6, { floorMat: 'wood', wallMat: 'plaster', wallH: 2.7, doors: [{ side: 'S', at: 2, type: 'door' }] });
+    var bed = genRoom(6, 6, { floorMat: 'tex:floor_wood', wallMat: 'tex:wall_a', wallH: 2.7, doors: [{ side: 'S', at: 2, type: 'door', mat: DOORW }] });
     bed.objects.push(
       mo('furniture/bed_1', 1.9, 4.1, 90), mo('furniture/bedside_table_1', 0.7, 5.0, 0),
       mo('furniture/wardrobe_mp_1', 4.9, 5.2, 180), mo('furniture/old_mattress_mp_1', 4.4, 1.3, 70, { solid: false }),
@@ -1004,7 +1015,7 @@
       mo('lighting/ceiling_lamp_1_on', 3, 3, 0, { y: 2.52, solid: false, light: CEIL }));
     rooms.bedroom = { label: 'Bedroom', room: bed, exits: [{ to: 'corridor', arrive: 1 }] };
 
-    var liv = genRoom(7, 6, { floorMat: 'wood', wallMat: 'plaster', wallH: 2.7, doors: [{ side: 'N', at: 3, type: 'door' }] });
+    var liv = genRoom(7, 6, { floorMat: 'tex:floor_wood2', wallMat: 'tex:wall_a', wallH: 2.7, doors: [{ side: 'N', at: 3, type: 'door', mat: DOORW }] });
     liv.objects.push(
       mo('large-props/carpet_mp_1', 3.3, 2.8, 0, { solid: false }), mo('furniture/sofa_3', 3.3, 1.0, 0),
       mo('furniture/armchair_1', 1.1, 2.6, 70), mo('furniture/coffee_table_1', 3.3, 2.6, 0),
@@ -1017,7 +1028,7 @@
       mo('decals/cobweb_5', 0.6, 5.4, 0, { y: 1.9, solid: false }));
     rooms.living = { label: 'Living Room', room: liv, exits: [{ to: 'corridor', arrive: 2 }] };
 
-    var sto = genRoom(6, 5, { floorMat: 'stone', wallMat: 'plaster', wallH: 2.7, doors: [{ side: 'W', at: 2, type: 'door' }] });
+    var sto = genRoom(6, 5, { floorMat: 'tex:floor_metal', wallMat: 'tex:wall_b', wallH: 2.7, doors: [{ side: 'W', at: 2, type: 'door', mat: DOORW }] });
     sto.objects.push(
       mo('large-props/wooden_crate_1', 4.6, 4.2, 0), mo('large-props/wooden_crate_3', 5.2, 4.2, 20),
       mo('large-props/supply_crate_1', 4.4, 0.8, 15), mo('large-props/metal_barrel_mp_1', 1.5, 4.3, 0),
@@ -1025,12 +1036,12 @@
       mo('furniture/shelf_mp_2', 5.5, 1.3, 180), mo('small-props/jerrycan_1', 1.3, 0.8, 30),
       mo('small-props/car_battery_1', 2.0, 0.9, 0, { solid: false }),
       mo('decals/cobweb_1', 5.4, 4.4, 0, { y: 1.9, solid: false }),
-      mo('lighting/ceiling_lamp_2_on', 3, 2.5, 0, { y: 2.52, solid: false, light: { color: 0xbfd0e0, intensity: 0.9, dist: 7, y: 2.3 } }));
+      mo('lighting/ceiling_lamp_2_on', 3, 2.5, 0, { y: 2.52, solid: false, light: { color: 0xbfd0e0, intensity: 1.7, dist: 10, decay: 1.25, y: 2.3 } }));
     rooms.storage = { label: 'Storage', room: sto, exits: [{ to: 'corridor', arrive: 3 }] };
 
     var models = {};
     Object.keys(USED).sort().forEach(function (id) { models[id] = { name: id.split('/').pop(), path: 'assets/models/' + id + '.glb' }; });
-    return { start: 'lobby', sky: 'dusk', flicker: true, player: { gender: 'male', outfit: 'flannel', hairStyle: 'buzz' }, models: models, rooms: rooms };
+    return { start: 'lobby', sky: 'dusk', flicker: true, player: { gender: 'male', outfit: 'flannel', hairStyle: 'buzz' }, textures: TEX, models: models, rooms: rooms };
   })();
 
   resize(); loadWorld(SAMPLE);
