@@ -56,27 +56,26 @@ and **Export world JSON** gives you a world file to drop in `worlds/`.
 
 ## Assets
 
-Today, models (`.glb/.gltf/.obj`) and textures (`.png`) imported in the Build
-tab are **embedded** in the world JSON as data URIs — self-contained, but heavy.
+Two ways in: models/textures **imported** in the Build tab are embedded in the
+world JSON as data URIs (self-contained, but heavy), and — now wired up — assets
+**loaded by path** from `/assets`, so a world can reference hundreds of files
+without bloating its JSON.
 
-This repo is set up to move to **file-based assets** served from `/assets`:
+- Files live under `assets/models/<group>/*.glb` and `assets/textures/<pack>/*.png`,
+  indexed by `assets/manifest.json`. See **[assets/README.md](assets/README.md)**
+  for the layout, the manifest schema, and the world `models` + model-object fields.
+- A world's top-level `models` map lists each used asset as
+  `"<group>/<name>": { "name": "...", "path": "assets/models/<group>/<name>.glb" }`,
+  and a room places it with `{ "asset": "model", "src": "<group>/<name>", "position": [...] }`.
+  Path-loaded models keep their real metres; embedded imports are still re-fit and
+  both flows stay supported.
+- Because the player and `/assets` share an origin, the page `fetch`es them with no
+  CORS issues. The bundled **psx-horror** pack (~490 models, ~215 textures) drives
+  the default world.
 
-- Put model files in `assets/models/`, textures in `assets/textures/`.
-- List them in `assets/manifest.json`:
-  ```json
-  {
-    "models":   [{ "id": "chair", "name": "Chair", "path": "models/chair.glb", "scale": 1 }],
-    "textures": [{ "id": "brick", "name": "Brick", "path": "textures/brick.png" }]
-  }
-  ```
-- Because the player and `/assets` are served from the same origin, the page can
-  `fetch` them with no CORS issues.
-
-> **Load-by-path isn't wired up yet** — see Roadmap. Until then, use the Build
-> tab's Import buttons (embeds the file). Download CC0 packs (Kenney, Quaternius,
-> Poly Pizza) or convert itch `.blend`/`.fbx` packs to `.glb` in Blender first.
-
-If `assets/` grows past ~50 MB, enable **Git LFS** for `assets/**` and note it here.
+If `assets/` grows past ~50 MB (it has), consider **Git LFS** for `assets/**`. For
+now the files are committed directly; individual files are small (<1 MB each), so
+GitHub Pages serves them fine.
 
 ## Deploy (GitHub Pages)
 
@@ -84,16 +83,15 @@ If `assets/` grows past ~50 MB, enable **Git LFS** for `assets/**` and note it h
 In your repo: **Settings → Pages → Build and deployment → Source: GitHub Actions.**
 Your game goes live at `https://<user>.github.io/<repo>/`.
 
-## Roadmap — load assets by path
+## Roadmap
 
-The next step (great first task for a coding agent): make the player load assets
-from `/assets` by reference, in addition to the current embedded flow.
+Load-by-path is now wired up (via the world `models` map + `src`). Still open:
 
-- A model placement may be `{ "asset": "model", "ref": "models/chair.glb", "node": "...", "position": [...], "rotationY": 0, "scale": 1 }` — fetched + parsed (GLTFLoader for glb/gltf, OBJLoader for obj) and cached, exactly like today's embedded path. Keep `{ src/modelId + embedded data }` working for back-compat.
-- A material `"texref:textures/brick.png"` loads that texture.
-- Add an **Asset Library** panel in the Build tab that reads `assets/manifest.json`
-  and lists models/textures for one-click placement by `ref` (no embedding).
-- Add **Export (refs)** alongside the current embedded export.
+- An **Asset Library** panel in the Build tab that reads `assets/manifest.json` and
+  lists all pack models/textures for one-click placement by path (no embedding).
+  Today the Build palette only shows the assets a loaded world already references.
+- **Export (refs)** alongside the current embedded export.
+- A texture material that loads a pack `.png` by path for floors/walls (the engine's
+  `loadTextures` already accepts `{ path }`; the editor UI to pick one is pending).
 
-Keep it dependency-free and static; Three.js stays r128; don't change the game's
-visual behaviour — this is about asset storage and hosting only.
+Keep it dependency-free and static; Three.js stays r128.

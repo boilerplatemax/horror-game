@@ -1,0 +1,9 @@
+PSX Horror Pack — license / attribution
+=======================================
+
+Paste the original pack's LICENSE / attribution text here.
+
+These models and textures were supplied by the repo owner. Before
+publishing the game, confirm the pack's license permits redistribution
+and record the author + license (e.g. CC0, CC-BY) both here and in
+assets/manifest.json (packs["psx-horror"].author / .license / .source).

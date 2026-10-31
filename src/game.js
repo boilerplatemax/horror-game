@@ -954,36 +954,84 @@
   }
   function cc(gi, gj, i, j) { return [gi + i + 0.5 - 6, gj + j + 0.5 - 6]; }
 
-  // "Last Light" — an abandoned ward at night. The Entry is the hub: an OPEN archway east into the Hall
-  // (where something stalks you), and a CLOSED door south to the Ward. Night + flickering braziers; bring the flashlight.
-  var SAMPLE = {
-    start: 'entry', sky: 'night', flicker: true, player: { gender: 'male', outfit: 'flannel', hairStyle: 'buzz' },
-    rooms: {
-      entry: { label: 'Entry', room: genRoom(5, 4, { floorMat: 'stone', wallMat: 'brick', wallH: 2.6,
-          doors: [{ side: 'S', at: 2, type: 'door' }, { side: 'E', at: 1, type: 'archway' }],
-          furniture: [['brazier', 0, 0], ['crate', 0, 3], ['cabinet', 4, 3], ['barrel', 4, 0]] }),
-        npcs: [{ code: { gender: 'female', outfit: 'dress', hairStyle: 'long' }, at: cc(1, 1, 1, 1), face: 0, behavior: 'facePlayer', name: 'Nadia',
-          dialogue: { random: [
-            [{ text: 'You made it inside. Good.', emote: 'worried' }, { text: 'Don\'t go in the hall. It moves when you look away.', emote: 'scared' }],
-            [{ text: 'Eli\'s still in the ward — south door. It sticks.', emote: 'worried' }],
-            [{ text: 'Keep your light on. Keep your eyes open.', emote: 'scared' }] ] } }],
-        exits: [{ to: 'ward', arrive: 0 }, { to: 'hall', arrive: 0, auto: true }] },
-      hall: { label: 'Hall', room: genRoom(6, 3, { floorMat: 'stone', wallMat: 'brick', wallH: 2.6,
-          doors: [{ side: 'W', at: 1, type: 'archway' }],
-          furniture: [['brazier', 3, 0], ['crate', 5, 0], ['barrel', 5, 2]] }),
-        npcs: [{ code: { gender: 'male', outfit: 'suit', hairStyle: 'buzz' }, at: cc(1, 1, 4, 1), face: 270, behavior: 'stalker', speed: 1.3, name: 'The Pale Man' }],
-        exits: [{ to: 'entry', arrive: 1, auto: true }] },
-      ward: { label: 'Ward', room: genRoom(5, 4, { floorMat: 'stone', wallMat: 'brick', wallH: 2.6,
-          doors: [{ side: 'N', at: 2, type: 'door' }],
-          furniture: [['bed', 1, 0], ['bed', 3, 0], ['cabinet', 0, 3], ['crate', 4, 3], ['brazier', 0, 0]] }),
-        npcs: [{ code: { gender: 'male', outfit: 'tank', hairStyle: 'side' }, at: cc(1, 1, 2, 0), face: 180, behavior: 'facePlayer', name: 'Eli',
-          dialogue: { start: 'root', nodes: {
-            root: { say: [{ text: 'You... you actually came.', emote: 'surprised' }], choices: [{ text: 'We\'re leaving. Now.', to: 'go' }, { text: 'What happened here?', to: 'what' }] },
-            go: { say: [{ text: 'I can\'t walk. Go — before it hears us.', emote: 'scared' }] },
-            what: { say: [{ text: 'It wears our faces now.', emote: 'worried' }, { text: 'Don\'t trust what you see out there.', emote: 'scared' }] } } } }],
-        exits: [{ to: 'entry', arrive: 0 }] }
-    }
-  };
+  // "Vacancy" — an abandoned tenement floor, dusk. A central corridor links the lobby, a bedroom,
+  // a living room and a cold storage room, all dressed with the PSX horror pack (loaded by path).
+  // Furniture is placed in tile coordinates (i across width, j across depth); models keep real metres.
+  var SAMPLE = (function () {
+    var USED = {};
+    // a pack model placed in a room: i/j are tile coords (fractional ok), o.y lifts it off the floor,
+    // o.light attaches a point light (so a lamp model actually illuminates), o.solid:false = walk-through
+    function mo(id, i, j, rot, o) { o = o || {}; USED[id] = 1; var m = { asset: 'model', src: id, node: '', position: [i - 4.5, o.y || 0, j - 4.5], rotationY: rot || 0, scale: o.scale || 1, collision: { enabled: o.solid !== false } }; if (o.light) m.light = o.light; return m; }
+    var CEIL = { color: 0xffd9a8, intensity: 1.15, dist: 7.5, y: 2.3 };   // warm pool under a ceiling lamp
+    var DESK = { color: 0xffcf8a, intensity: 0.7, dist: 4.0, y: 0.55 };   // a small table/bedside lamp
+    var rooms = {};
+
+    var lob = genRoom(6, 5, { floorMat: 'tile', wallMat: 'plaster', wallH: 2.7, doors: [{ side: 'E', at: 2, type: 'door' }] });
+    lob.objects.push(
+      mo('furniture/dinner_table_1', 1.4, 3.7, 0), mo('furniture/chair_mp_1', 1.4, 4.3, 180),
+      mo('large-props/vending_machine_1', 0.7, 2.3, 90), mo('furniture/sofa_1', 3.4, 0.8, 0),
+      mo('furniture/armchair_1', 4.7, 1.5, 215), mo('furniture/coffee_table_1', 3.9, 1.6, 0),
+      mo('small-props/potted_cactus_mp_1', 5.3, 4.3, 0, { solid: false }),
+      mo('lighting/ceiling_lamp_1_on', 3, 2.5, 0, { y: 2.52, solid: false, light: CEIL }),
+      mo('decals/cobweb_1', 0.6, 4.4, 0, { y: 1.9, solid: false }));
+    rooms.lobby = { label: 'Lobby', room: lob, exits: [{ to: 'corridor', arrive: 0 }],
+      npcs: [{ code: { gender: 'female', outfit: 'dress', hairStyle: 'long' }, at: cc(1, 1, 2.2, 3.4), face: 90, behavior: 'facePlayer', name: 'Survivor',
+        dialogue: { random: [
+          [{ text: 'You\'re real. Thank god.', emote: 'surprised' }, { text: 'The power\'s been out for days.', emote: 'worried' }],
+          [{ text: 'Check the apartments down the hall. Take anything useful.', emote: 'neutral' }],
+          [{ text: 'Don\'t linger in the storage room. It\'s cold in there. Wrong-cold.', emote: 'scared' }] ] } }] };
+
+    // corridor hub: door order W,N,S,E fixes spawn indices 0..3 that the other rooms arrive at
+    var cor = genRoom(7, 3, { floorMat: 'stone', wallMat: 'plaster', wallH: 2.7, doors: [
+      { side: 'W', at: 1, type: 'door' }, { side: 'N', at: 2, type: 'door' }, { side: 'S', at: 4, type: 'door' }, { side: 'E', at: 1, type: 'door' }] });
+    cor.objects.push(
+      mo('large-props/metal_barrel_mp_1', 5.7, 0.6, 0), mo('large-props/cardboard_box_1', 6.0, 2.3, 20),
+      mo('large-props/pipe_1', 0.6, 2.6, 0, { solid: false }),
+      mo('small-props/painting_1', 3.5, 2.9, 180, { y: 1.3, solid: false }),
+      mo('decals/cobweb_2', 6.4, 2.5, 0, { y: 1.95, solid: false }),
+      mo('lighting/ceiling_lamp_2_on', 3.5, 1.5, 0, { y: 2.52, solid: false, light: CEIL }));
+    rooms.corridor = { label: 'Corridor', room: cor,
+      exits: [{ to: 'lobby', arrive: 0 }, { to: 'bedroom', arrive: 0 }, { to: 'living', arrive: 0 }, { to: 'storage', arrive: 0 }] };
+
+    var bed = genRoom(6, 6, { floorMat: 'wood', wallMat: 'plaster', wallH: 2.7, doors: [{ side: 'S', at: 2, type: 'door' }] });
+    bed.objects.push(
+      mo('furniture/bed_1', 1.9, 4.1, 90), mo('furniture/bedside_table_1', 0.7, 5.0, 0),
+      mo('furniture/wardrobe_mp_1', 4.9, 5.2, 180), mo('furniture/old_mattress_mp_1', 4.4, 1.3, 70, { solid: false }),
+      mo('furniture/shelf_mp_2', 5.4, 2.6, 180), mo('lighting/lamp_3_on', 0.7, 5.0, 0, { y: 0.52, solid: false, light: DESK }),
+      mo('small-props/clock_1', 3.0, 5.6, 180, { y: 1.7, solid: false }),
+      mo('small-props/photo_frame_mp_1', 5.4, 2.6, 180, { y: 1.05, solid: false }),
+      mo('decals/cobweb_4', 5.4, 5.4, 0, { y: 1.9, solid: false }),
+      mo('lighting/ceiling_lamp_1_on', 3, 3, 0, { y: 2.52, solid: false, light: CEIL }));
+    rooms.bedroom = { label: 'Bedroom', room: bed, exits: [{ to: 'corridor', arrive: 1 }] };
+
+    var liv = genRoom(7, 6, { floorMat: 'wood', wallMat: 'plaster', wallH: 2.7, doors: [{ side: 'N', at: 3, type: 'door' }] });
+    liv.objects.push(
+      mo('large-props/carpet_mp_1', 3.3, 2.8, 0, { solid: false }), mo('furniture/sofa_3', 3.3, 1.0, 0),
+      mo('furniture/armchair_1', 1.1, 2.6, 70), mo('furniture/coffee_table_1', 3.3, 2.6, 0),
+      mo('furniture/tv_table_1', 3.3, 5.1, 180), mo('electronics/tv_mp_1', 3.3, 5.0, 180, { y: 0.52, solid: false }),
+      mo('furniture/shelf_mp_2', 6.2, 4.6, 180), mo('small-props/book_mp_1', 3.1, 2.6, 0, { y: 0.42, solid: false }),
+      mo('small-props/potted_cactus_mp_1', 6.3, 1.0, 0, { solid: false }),
+      mo('electronics/ceiling_fan_mp_1', 1.6, 3, 0, { y: 2.3, solid: false }),
+      mo('lighting/ceiling_lamp_1_on', 3.3, 3.2, 0, { y: 2.52, solid: false, light: CEIL }),
+      mo('lighting/lamp_5_on', 6.2, 4.6, 180, { y: 0.95, solid: false, light: DESK }),
+      mo('decals/cobweb_5', 0.6, 5.4, 0, { y: 1.9, solid: false }));
+    rooms.living = { label: 'Living Room', room: liv, exits: [{ to: 'corridor', arrive: 2 }] };
+
+    var sto = genRoom(6, 5, { floorMat: 'stone', wallMat: 'plaster', wallH: 2.7, doors: [{ side: 'W', at: 2, type: 'door' }] });
+    sto.objects.push(
+      mo('large-props/wooden_crate_1', 4.6, 4.2, 0), mo('large-props/wooden_crate_3', 5.2, 4.2, 20),
+      mo('large-props/supply_crate_1', 4.4, 0.8, 15), mo('large-props/metal_barrel_mp_1', 1.5, 4.3, 0),
+      mo('large-props/metal_barrel_mp_1', 2.1, 4.2, 0), mo('large-props/cardboard_box_1', 5.4, 2.4, 0),
+      mo('furniture/shelf_mp_2', 5.5, 1.3, 180), mo('small-props/jerrycan_1', 1.3, 0.8, 30),
+      mo('small-props/car_battery_1', 2.0, 0.9, 0, { solid: false }),
+      mo('decals/cobweb_1', 5.4, 4.4, 0, { y: 1.9, solid: false }),
+      mo('lighting/ceiling_lamp_2_on', 3, 2.5, 0, { y: 2.52, solid: false, light: { color: 0xbfd0e0, intensity: 0.9, dist: 7, y: 2.3 } }));
+    rooms.storage = { label: 'Storage', room: sto, exits: [{ to: 'corridor', arrive: 3 }] };
+
+    var models = {};
+    Object.keys(USED).sort().forEach(function (id) { models[id] = { name: id.split('/').pop(), path: 'assets/models/' + id + '.glb' }; });
+    return { start: 'lobby', sky: 'dusk', flicker: true, player: { gender: 'male', outfit: 'flannel', hairStyle: 'buzz' }, models: models, rooms: rooms };
+  })();
 
   resize(); loadWorld(SAMPLE);
 

@@ -31,25 +31,34 @@ window.createPSXRoom = (function () {
   var MODELS = {}, SRCNODES = {};   // MODELS keyed by "sourceId::node" ('' node = the whole file)
   function b64ToBuf(b64){ var bin=atob(b64), len=bin.length, bytes=new Uint8Array(len); for(var i=0;i<len;i++) bytes[i]=bin.charCodeAt(i); return bytes.buffer; }
   function hasMesh(o){ var f=false; o.traverse(function(n){ if(n.isMesh) f=true; }); return f; }
-  function processModel(THREE, src){
+  // keepScale: trust the model's own units (used for path-loaded packs already authored in metres).
+  // Otherwise fit the footprint to ~0.85 of a tile, since a drag-dropped model's scale is unknown.
+  function processModel(THREE, src, keepScale){
     src.traverse(function(o){ if(o.isMesh){ o.castShadow=false; o.receiveShadow=false;
       var ms = Array.isArray(o.material)?o.material:[o.material];
-      ms.forEach(function(m){ if(!m) return; m.flatShading=true; if(m.map){ m.map.magFilter=THREE.NearestFilter; m.map.minFilter=THREE.NearestFilter; m.map.generateMipmaps=false; } m.needsUpdate=true; }); } });
+      ms.forEach(function(m){ if(!m) return; m.flatShading=true;
+        // Many pack GLBs ship metallic PBR materials; with no environment map those render pure black.
+        // Force the matte, non-metal look the rest of the engine uses (and the PSX style wants).
+        if('metalness' in m) m.metalness=0; if('roughness' in m) m.roughness=1;
+        // This engine renders with a linear output (no renderer.outputEncoding), like its own CanvasTextures.
+        // GLTFLoader tags base-colour maps sRGB, which would render dark here — force Linear to match.
+        if(m.map){ m.map.magFilter=THREE.NearestFilter; m.map.minFilter=THREE.NearestFilter; m.map.generateMipmaps=false; if('encoding' in m.map) m.map.encoding=THREE.LinearEncoding; m.map.needsUpdate=true; }
+        m.needsUpdate=true; }); } });
     src.updateMatrixWorld(true);
     var bb=new THREE.Box3().setFromObject(src), size=new THREE.Vector3(), ctr=new THREE.Vector3(); bb.getSize(size); bb.getCenter(ctr);
-    var maxh=Math.max(size.x,size.z)||1, s=0.85/maxh;                 // fit footprint to ~0.85 of a tile (user re-scales)
+    var maxh=Math.max(size.x,size.z)||1, s= keepScale ? 1 : 0.85/maxh;  // fit footprint to ~0.85 of a tile (user re-scales), or keep real metres
     src.position.set(-ctr.x, -bb.min.y, -ctr.z);                       // center x/z, drop base to y=0
     var wrap=new THREE.Group(); wrap.add(src); wrap.scale.setScalar(s);
     return { proto:wrap, size:{ x:size.x*s, y:size.y*s, z:size.z*s } };
   }
   function stub(){ return { proto:null, size:{x:0.4,y:0.4,z:0.4} }; }
-  function registerSource(THREE, id, rootObj){
+  function registerSource(THREE, id, rootObj, keepScale){
     var kids = rootObj.children.filter(hasMesh), nodes = [], used = {};
     if(kids.length>1){                                                 // a pack: one placeable piece per top-level object
       kids.forEach(function(c,i){ var nm=(c.name||('part'+(i+1))).replace(/[^\w\-]/g,'_')||('part'+(i+1)); if(used[nm]) nm=nm+'_'+i; used[nm]=1;
-        var pm=processModel(THREE, c.clone(true)); MODELS[id+'::'+nm]=pm; nodes.push({ node:nm, size:pm.size }); });
+        var pm=processModel(THREE, c.clone(true), keepScale); MODELS[id+'::'+nm]=pm; nodes.push({ node:nm, size:pm.size }); });
     }
-    var whole=processModel(THREE, rootObj.clone(true)); MODELS[id+'::']=whole;   // whole file as one piece too
+    var whole=processModel(THREE, rootObj.clone(true), keepScale); MODELS[id+'::']=whole;   // whole file as one piece too
     if(kids.length<=1) nodes=[{ node:'', size:whole.size }];
     SRCNODES[id]=nodes; return nodes;
   }
@@ -132,6 +141,9 @@ window.createPSXRoom = (function () {
         g.position.set(o.position[0], o.position[1], o.position[2]); g.rotation.y = rot(o);
         g.traverse(function(m){ if(m.isMesh) m.userData.srcObj = o; });
         root.add(g);
+        // any placed model may carry a light, so a lamp/ceiling-fixture model can actually illuminate the room
+        if(o.light){ var L=o.light, pl=new THREE.PointLight(L.color!=null?L.color:0xffcf8a, L.intensity!=null?L.intensity:1, L.dist!=null?L.dist:6, 2);
+          pl.position.set(o.position[0], (o.position[1]||0)+(L.y!=null?L.y:1.2), o.position[2]); root.add(pl); }
         var en = !(o.collision && o.collision.enabled===false);
         if(M && M.size && en){ var z=M.size, b=box(Math.max(z.x*sc,0.2), Math.max(z.y*sc,0.2), Math.max(z.z*sc,0.2), 0, z.y*sc/2, 0); colliders.push(worldAABB(b, o.position, rot(o))); }
         return;
@@ -175,7 +187,19 @@ window.createPSXRoom = (function () {
     var pend = ids.length; function fin(){ if(--pend<=0 && done) done(); }
     function fail(id, msg){ console.warn('[room-engine] model failed '+id, msg); SRCNODES[id]=[{node:'',size:{x:0.4,y:0.4,z:0.4}}]; MODELS[id+'::']=stub(); fin(); }
     ids.forEach(function(id){
-      var rec = models[id], fmt = rec.fmt || (rec.obj ? 'obj' : 'glb'), data = rec.data || rec.glb || rec.obj || rec;
+      var rec = models[id];
+      // Path records: fetch the file from assets/ and keep its real metres (a curated pack, not a stray import).
+      if(rec && rec.path){
+        var pfmt = rec.fmt || (/\.obj(\?|#|$)/i.test(rec.path) ? 'obj' : 'glb');
+        fetch(rec.path).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.arrayBuffer(); }).then(function(buf){
+          if(pfmt==='obj'){ if(!objl) return fail(id,'OBJLoader missing'); var grp=objl.parse(new TextDecoder().decode(buf)); registerSource(THREE, id, grp, true); fin(); }
+          else { if(!gltf) return fail(id,'GLTFLoader missing');
+            gltf.parse(buf, rec.path.replace(/[^\/]*$/,''), function(res){ try{ registerSource(THREE, id, res.scene, true); fin(); }catch(e){ fail(id, e&&e.message); } }, function(err){ fail(id, err&&err.message); }); }
+        }).catch(function(e){ fail(id, e&&e.message); });
+        return;
+      }
+      // Embedded records: base64 data URI from an in-editor import; scale is unknown, so normalise the footprint.
+      var fmt = rec.fmt || (rec.obj ? 'obj' : 'glb'), data = rec.data || rec.glb || rec.obj || rec;
       var sx = String(data), b64 = sx.indexOf(',')>=0 ? sx.split(',')[1] : sx;
       try{
         if(fmt==='obj'){ if(!objl) return fail(id,'OBJLoader missing'); var grp = objl.parse(atob(b64)); registerSource(THREE, id, grp); fin(); }
@@ -191,7 +215,7 @@ window.createPSXRoom = (function () {
     if(!ids.length){ if(done) done(); return; }
     var pend = ids.length; function fin(){ if(--pend<=0 && done) done(); }
     ids.forEach(function(id){
-      var rec = textures[id], uri = (rec && rec.img) || rec, img = new Image();
+      var rec = textures[id], uri = (rec && (rec.img || rec.path)) || rec, img = new Image();
       img.onload = function(){ try{ var t=new THREE.Texture(img); t.magFilter=t.minFilter=THREE.NearestFilter; t.generateMipmaps=false; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.needsUpdate=true;
         USERMAT['tex:'+id]=new THREE.MeshStandardMaterial({ map:t, flatShading:true, roughness:1, metalness:0 }); }catch(e){ USERMAT['tex:'+id]=MAT.plaster; } fin(); };
       img.onerror = function(){ console.warn('[room-engine] texture failed '+id); USERMAT['tex:'+id]=MAT.plaster; fin(); };

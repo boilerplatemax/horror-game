@@ -1,5 +1,5875 @@
 {
-  "packs": {},
-  "models": [],
-  "textures": []
+  "packs": {
+    "psx-horror": {
+      "name": "PSX Horror Pack",
+      "author": "user-supplied",
+      "license": "see licenses/psx-horror.txt",
+      "source": ""
+    }
+  },
+  "models": [
+    {
+      "id": "decals/cobweb_1",
+      "name": "Cobweb 1",
+      "pack": "psx-horror",
+      "category": "decal",
+      "group": "decals",
+      "path": "models/decals/cobweb_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "decals/cobweb_2",
+      "name": "Cobweb 2",
+      "pack": "psx-horror",
+      "category": "decal",
+      "group": "decals",
+      "path": "models/decals/cobweb_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "decals/cobweb_4",
+      "name": "Cobweb 4",
+      "pack": "psx-horror",
+      "category": "decal",
+      "group": "decals",
+      "path": "models/decals/cobweb_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "decals/cobweb_5",
+      "name": "Cobweb 5",
+      "pack": "psx-horror",
+      "category": "decal",
+      "group": "decals",
+      "path": "models/decals/cobweb_5.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/button_12",
+      "name": "Button 12",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/button_12.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/ceiling_fan_mp_1",
+      "name": "Ceiling Fan 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/ceiling_fan_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/ceiling_fan_mp_1_1_light_off",
+      "name": "Ceiling Fan 1 1 Light Off",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/ceiling_fan_mp_1_1_light_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/ceiling_fan_mp_1_1_light_on",
+      "name": "Ceiling Fan 1 1 Light On",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/ceiling_fan_mp_1_1_light_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/ceiling_fan_mp_1_1_light_on_blades",
+      "name": "Ceiling Fan 1 1 Light On Blades",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/ceiling_fan_mp_1_1_light_on_blades.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/ceiling_fan_mp_2",
+      "name": "Ceiling Fan 2",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/ceiling_fan_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/ceiling_fan_mp_2_1_light_off",
+      "name": "Ceiling Fan 2 1 Light Off",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/ceiling_fan_mp_2_1_light_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/ceiling_fan_mp_2_1_light_on",
+      "name": "Ceiling Fan 2 1 Light On",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/ceiling_fan_mp_2_1_light_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/cell_phone_3",
+      "name": "Cell Phone 3",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/cell_phone_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/cell_phone_battery_1",
+      "name": "Cell Phone Battery 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/cell_phone_battery_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/cell_phone_battery_1_1",
+      "name": "Cell Phone Battery 1 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/cell_phone_battery_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/cell_phone_battery_2",
+      "name": "Cell Phone Battery 2",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/cell_phone_battery_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/cell_phone_battery_2_1",
+      "name": "Cell Phone Battery 2 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/cell_phone_battery_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/electrical_outlet_1",
+      "name": "Electrical Outlet 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/electrical_outlet_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/electrical_outlet_2",
+      "name": "Electrical Outlet 2",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/electrical_outlet_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/electrical_outlet_3",
+      "name": "Electrical Outlet 3",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/electrical_outlet_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/elevator_buttons_1",
+      "name": "Elevator Buttons 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/elevator_buttons_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/elevator_call_button_1",
+      "name": "Elevator Call Button 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/elevator_call_button_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/elevator_screen_1",
+      "name": "Elevator Screen 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/elevator_screen_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/elevator_sign_1",
+      "name": "Elevator Sign 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/elevator_sign_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/handheld_game_console_1",
+      "name": "Handheld Game Console 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/handheld_game_console_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/handheld_tablet_1",
+      "name": "Handheld Tablet 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/handheld_tablet_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/light_switch_1",
+      "name": "Light Switch 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/light_switch_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/light_switch_1_1",
+      "name": "Light Switch 1 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/light_switch_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/monitoring_screen_mp_1",
+      "name": "Monitoring Screen 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/monitoring_screen_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/monitoring_screen_mp_1_1",
+      "name": "Monitoring Screen 1 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/monitoring_screen_mp_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/mouse_pad_mp_1",
+      "name": "Mouse Pad 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/mouse_pad_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/pc_keyboard_mp_1",
+      "name": "Pc Keyboard 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/pc_keyboard_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/pc_keyboard_mp_2",
+      "name": "Pc Keyboard 2",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/pc_keyboard_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/pc_keyboard_mp_3",
+      "name": "Pc Keyboard 3",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/pc_keyboard_mp_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/pc_monitor_mp_1",
+      "name": "Pc Monitor 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/pc_monitor_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/pc_mouse_mp_1",
+      "name": "Pc Mouse 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/pc_mouse_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/pc_mouse_mp_2",
+      "name": "Pc Mouse 2",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/pc_mouse_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/pc_mp_1",
+      "name": "Pc 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/pc_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/tv_mp_1",
+      "name": "Tv 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/tv_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/tv_mp_1_1",
+      "name": "Tv 1 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/tv_mp_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/tv_mp_1_2",
+      "name": "Tv 1 2",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/tv_mp_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/vent_1",
+      "name": "Vent 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/vent_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/vent_2",
+      "name": "Vent 2",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/vent_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/vent_3",
+      "name": "Vent 3",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/vent_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/vent_mp_1",
+      "name": "Vent 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/vent_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/vent_mp_1_1",
+      "name": "Vent 1 1",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/vent_mp_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "electronics/walkie_talkie_2",
+      "name": "Walkie Talkie 2",
+      "pack": "psx-horror",
+      "category": "electronics",
+      "group": "electronics",
+      "path": "models/electronics/walkie_talkie_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/armchair_1",
+      "name": "Armchair 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/armchair_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/armchair_1_1",
+      "name": "Armchair 1 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/armchair_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/armchair_1_2",
+      "name": "Armchair 1 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/armchair_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/armchair_1_3",
+      "name": "Armchair 1 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/armchair_1_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/armchair_2",
+      "name": "Armchair 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/armchair_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/armchair_2_1",
+      "name": "Armchair 2 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/armchair_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/armchair_2_2",
+      "name": "Armchair 2 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/armchair_2_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/armchair_2_3",
+      "name": "Armchair 2 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/armchair_2_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bed_1",
+      "name": "Bed 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bed_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bed_1_frame",
+      "name": "Bed 1 Frame",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bed_1_frame.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bed_2",
+      "name": "Bed 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bed_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bed_2_1",
+      "name": "Bed 2 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bed_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bed_4",
+      "name": "Bed 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bed_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bed_4_1",
+      "name": "Bed 4 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bed_4_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bed_4_2",
+      "name": "Bed 4 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bed_4_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bed_4_3",
+      "name": "Bed 4 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bed_4_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bed_4_4",
+      "name": "Bed 4 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bed_4_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bed_5",
+      "name": "Bed 5",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bed_5.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bed_5_1",
+      "name": "Bed 5 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bed_5_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bed_5_2",
+      "name": "Bed 5 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bed_5_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bed_5_3",
+      "name": "Bed 5 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bed_5_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bed_5_4",
+      "name": "Bed 5 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bed_5_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bedside_table_1",
+      "name": "Bedside Table 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bedside_table_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bedside_table_1_1",
+      "name": "Bedside Table 1 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bedside_table_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bedside_table_1_2",
+      "name": "Bedside Table 1 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bedside_table_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bedside_table_1_3",
+      "name": "Bedside Table 1 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bedside_table_1_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bedside_table_1_4",
+      "name": "Bedside Table 1 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bedside_table_1_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bedside_table_2",
+      "name": "Bedside Table 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bedside_table_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bedside_table_2_1",
+      "name": "Bedside Table 2 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bedside_table_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bedside_table_2_2",
+      "name": "Bedside Table 2 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bedside_table_2_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bedside_table_2_3",
+      "name": "Bedside Table 2 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bedside_table_2_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/bedside_table_2_4",
+      "name": "Bedside Table 2 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/bedside_table_2_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_1",
+      "name": "Chair 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_1_1",
+      "name": "Chair 1 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_1_2",
+      "name": "Chair 1 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_1_3",
+      "name": "Chair 1 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_1_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_1_4",
+      "name": "Chair 1 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_1_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_2",
+      "name": "Chair 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_2_1",
+      "name": "Chair 2 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_2_2",
+      "name": "Chair 2 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_2_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_2_3",
+      "name": "Chair 2 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_2_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_2_4",
+      "name": "Chair 2 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_2_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_3",
+      "name": "Chair 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_3_1",
+      "name": "Chair 3 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_3_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_3_2",
+      "name": "Chair 3 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_3_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_3_3",
+      "name": "Chair 3 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_3_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_3_4",
+      "name": "Chair 3 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_3_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_4",
+      "name": "Chair 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_4_1",
+      "name": "Chair 4 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_4_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_4_2",
+      "name": "Chair 4 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_4_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_4_3",
+      "name": "Chair 4 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_4_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_5",
+      "name": "Chair 5",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_5.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_5_1",
+      "name": "Chair 5 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_5_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_5_2",
+      "name": "Chair 5 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_5_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_5_3",
+      "name": "Chair 5 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_5_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/chair_mp_5_4",
+      "name": "Chair 5 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/chair_mp_5_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/coffee_table_1",
+      "name": "Coffee Table 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/coffee_table_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/coffee_table_1_1",
+      "name": "Coffee Table 1 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/coffee_table_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/coffee_table_1_2",
+      "name": "Coffee Table 1 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/coffee_table_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/coffee_table_1_3",
+      "name": "Coffee Table 1 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/coffee_table_1_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/coffee_table_1_4",
+      "name": "Coffee Table 1 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/coffee_table_1_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/dinner_table_1",
+      "name": "Dinner Table 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/dinner_table_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/dinner_table_1_1",
+      "name": "Dinner Table 1 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/dinner_table_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/dinner_table_1_2",
+      "name": "Dinner Table 1 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/dinner_table_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/dinner_table_1_3",
+      "name": "Dinner Table 1 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/dinner_table_1_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/dinner_table_1_4",
+      "name": "Dinner Table 1 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/dinner_table_1_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/display_cabinet_mp_1",
+      "name": "Display Cabinet 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/display_cabinet_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/display_cabinet_mp_1_1",
+      "name": "Display Cabinet 1 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/display_cabinet_mp_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/display_cabinet_mp_1_2",
+      "name": "Display Cabinet 1 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/display_cabinet_mp_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/display_cabinet_mp_1_3",
+      "name": "Display Cabinet 1 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/display_cabinet_mp_1_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/display_cabinet_mp_1_4",
+      "name": "Display Cabinet 1 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/display_cabinet_mp_1_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/display_cabinet_mp_2",
+      "name": "Display Cabinet 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/display_cabinet_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/display_cabinet_mp_2_1",
+      "name": "Display Cabinet 2 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/display_cabinet_mp_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/display_cabinet_mp_2_2",
+      "name": "Display Cabinet 2 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/display_cabinet_mp_2_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/display_cabinet_mp_2_3",
+      "name": "Display Cabinet 2 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/display_cabinet_mp_2_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/display_cabinet_mp_2_4",
+      "name": "Display Cabinet 2 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/display_cabinet_mp_2_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/old_mattress_mp_1",
+      "name": "Old Mattress 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/old_mattress_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/old_mattress_mp_1_1",
+      "name": "Old Mattress 1 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/old_mattress_mp_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/pillow_mp_1",
+      "name": "Pillow 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/pillow_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/pillow_mp_2",
+      "name": "Pillow 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/pillow_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_2",
+      "name": "Shelf 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_2_1",
+      "name": "Shelf 2 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_2_2",
+      "name": "Shelf 2 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_2_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_2_3",
+      "name": "Shelf 2 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_2_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_2_4",
+      "name": "Shelf 2 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_2_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_3",
+      "name": "Shelf 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_3_1",
+      "name": "Shelf 3 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_3_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_3_2",
+      "name": "Shelf 3 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_3_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_3_3",
+      "name": "Shelf 3 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_3_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_3_4",
+      "name": "Shelf 3 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_3_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_4",
+      "name": "Shelf 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_4_1",
+      "name": "Shelf 4 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_4_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_4_2",
+      "name": "Shelf 4 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_4_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_4_3",
+      "name": "Shelf 4 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_4_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_4_4",
+      "name": "Shelf 4 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_4_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_5",
+      "name": "Shelf 5",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_5.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_5_1",
+      "name": "Shelf 5 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_5_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_5_2",
+      "name": "Shelf 5 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_5_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_5_3",
+      "name": "Shelf 5 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_5_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_5_4",
+      "name": "Shelf 5 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_5_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_6",
+      "name": "Shelf 6",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_6.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_6_1",
+      "name": "Shelf 6 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_6_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_6_2",
+      "name": "Shelf 6 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_6_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_6_3",
+      "name": "Shelf 6 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_6_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_6_4",
+      "name": "Shelf 6 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_6_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_7",
+      "name": "Shelf 7",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_7.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_7_1",
+      "name": "Shelf 7 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_7_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_7_2",
+      "name": "Shelf 7 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_7_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_7_3",
+      "name": "Shelf 7 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_7_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/shelf_mp_7_4",
+      "name": "Shelf 7 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/shelf_mp_7_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/sofa_1",
+      "name": "Sofa 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/sofa_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/sofa_1_1",
+      "name": "Sofa 1 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/sofa_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/sofa_1_2",
+      "name": "Sofa 1 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/sofa_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/sofa_1_3",
+      "name": "Sofa 1 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/sofa_1_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/sofa_3",
+      "name": "Sofa 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/sofa_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/sofa_3_1",
+      "name": "Sofa 3 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/sofa_3_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/sofa_3_2",
+      "name": "Sofa 3 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/sofa_3_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/sofa_3_3",
+      "name": "Sofa 3 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/sofa_3_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/sofa_4",
+      "name": "Sofa 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/sofa_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/sofa_4_1",
+      "name": "Sofa 4 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/sofa_4_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/sofa_4_2",
+      "name": "Sofa 4 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/sofa_4_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/sofa_4_3",
+      "name": "Sofa 4 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/sofa_4_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/sofa_5",
+      "name": "Sofa 5",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/sofa_5.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/sofa_5_1",
+      "name": "Sofa 5 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/sofa_5_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/sofa_5_2",
+      "name": "Sofa 5 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/sofa_5_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/sofa_5_3",
+      "name": "Sofa 5 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/sofa_5_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/table_large_2",
+      "name": "Table Large 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/table_large_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/table_large_2_1",
+      "name": "Table Large 2 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/table_large_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/table_large_2_2",
+      "name": "Table Large 2 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/table_large_2_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/table_large_2_3",
+      "name": "Table Large 2 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/table_large_2_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/table_large_2_4",
+      "name": "Table Large 2 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/table_large_2_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/table_large_3",
+      "name": "Table Large 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/table_large_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/table_large_3_1",
+      "name": "Table Large 3 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/table_large_3_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/table_large_3_2",
+      "name": "Table Large 3 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/table_large_3_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/table_large_3_3",
+      "name": "Table Large 3 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/table_large_3_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/table_large_3_4",
+      "name": "Table Large 3 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/table_large_3_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/tv_table_1",
+      "name": "Tv Table 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/tv_table_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/tv_table_1_1",
+      "name": "Tv Table 1 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/tv_table_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/tv_table_1_2",
+      "name": "Tv Table 1 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/tv_table_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/tv_table_1_3",
+      "name": "Tv Table 1 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/tv_table_1_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/tv_table_1_4",
+      "name": "Tv Table 1 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/tv_table_1_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/tv_table_4",
+      "name": "Tv Table 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/tv_table_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/tv_table_4_1",
+      "name": "Tv Table 4 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/tv_table_4_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/tv_table_4_2",
+      "name": "Tv Table 4 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/tv_table_4_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/tv_table_4_3",
+      "name": "Tv Table 4 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/tv_table_4_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/tv_table_4_4",
+      "name": "Tv Table 4 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/tv_table_4_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/wardrobe_mp_1",
+      "name": "Wardrobe 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/wardrobe_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/wardrobe_mp_1_1",
+      "name": "Wardrobe 1 1",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/wardrobe_mp_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/wardrobe_mp_1_2",
+      "name": "Wardrobe 1 2",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/wardrobe_mp_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/wardrobe_mp_1_3",
+      "name": "Wardrobe 1 3",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/wardrobe_mp_1_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "furniture/wardrobe_mp_1_4",
+      "name": "Wardrobe 1 4",
+      "pack": "psx-horror",
+      "category": "furniture",
+      "group": "furniture",
+      "path": "models/furniture/wardrobe_mp_1_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_box_1",
+      "name": "Ammo Box 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_box_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_box_1_1",
+      "name": "Ammo Box 1 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_box_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_box_mp_1",
+      "name": "Ammo Box 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_box_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_box_mp_1_1",
+      "name": "Ammo Box 1 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_box_mp_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_box_mp_2",
+      "name": "Ammo Box 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_box_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_box_mp_2_1",
+      "name": "Ammo Box 2 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_box_mp_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_box_mp_3",
+      "name": "Ammo Box 3",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_box_mp_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_box_mp_3_1",
+      "name": "Ammo Box 3 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_box_mp_3_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_box_mp_4",
+      "name": "Ammo Box 4",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_box_mp_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_box_mp_4_1",
+      "name": "Ammo Box 4 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_box_mp_4_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_box_mp_5",
+      "name": "Ammo Box 5",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_box_mp_5.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_box_mp_5_1",
+      "name": "Ammo Box 5 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_box_mp_5_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_pistol_loose_1pc_mp_1",
+      "name": "Ammo Pistol Loose 1pc 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_pistol_loose_1pc_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_pistol_loose_1pc_mp_2",
+      "name": "Ammo Pistol Loose 1pc 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_pistol_loose_1pc_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_pistol_loose_1pc_mp_3",
+      "name": "Ammo Pistol Loose 1pc 3",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_pistol_loose_1pc_mp_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_pistol_loose_2pcs_mp_2",
+      "name": "Ammo Pistol Loose 2pcs 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_pistol_loose_2pcs_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_pistol_loose_3pcs_mp_1",
+      "name": "Ammo Pistol Loose 3pcs 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_pistol_loose_3pcs_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_pistol_loose_4pcs_mp_3",
+      "name": "Ammo Pistol Loose 4pcs 3",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_pistol_loose_4pcs_mp_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_pistol_loose_5pcs_mp_1",
+      "name": "Ammo Pistol Loose 5pcs 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_pistol_loose_5pcs_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_pistol_loose_5pcs_mp_2",
+      "name": "Ammo Pistol Loose 5pcs 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_pistol_loose_5pcs_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_pistol_loose_mp_1_casing",
+      "name": "Ammo Pistol Loose 1 Casing",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_pistol_loose_mp_1_casing.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_pistol_loose_mp_2_casing",
+      "name": "Ammo Pistol Loose 2 Casing",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_pistol_loose_mp_2_casing.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/ammo_pistol_loose_mp_3_casing",
+      "name": "Ammo Pistol Loose 3 Casing",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/ammo_pistol_loose_mp_3_casing.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/bandage_mp_1",
+      "name": "Bandage 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/bandage_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/bandage_mp_2",
+      "name": "Bandage 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/bandage_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/battery_mp_1",
+      "name": "Battery 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/battery_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/battery_mp_1_1",
+      "name": "Battery 1 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/battery_mp_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/battery_mp_2",
+      "name": "Battery 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/battery_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/battery_mp_2_1",
+      "name": "Battery 2 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/battery_mp_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/battery_mp_3_1",
+      "name": "Battery 3 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/battery_mp_3_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/battery_mp_3_2",
+      "name": "Battery 3 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/battery_mp_3_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/butcher_knife_mp_1",
+      "name": "Butcher Knife 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/butcher_knife_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/canned_food_mp_1",
+      "name": "Canned Food 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/canned_food_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/canned_food_mp_2",
+      "name": "Canned Food 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/canned_food_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/canned_food_mp_3",
+      "name": "Canned Food 3",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/canned_food_mp_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/canned_food_mp_4",
+      "name": "Canned Food 4",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/canned_food_mp_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/canned_food_mp_5_rusty",
+      "name": "Canned Food 5 Rusty",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/canned_food_mp_5_rusty.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/cash_1",
+      "name": "Cash 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/cash_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/cash_1_2",
+      "name": "Cash 1 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/cash_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/cash_2",
+      "name": "Cash 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/cash_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/cash_2_1",
+      "name": "Cash 2 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/cash_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/cash_3",
+      "name": "Cash 3",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/cash_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/cash_3_1",
+      "name": "Cash 3 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/cash_3_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/cash_4",
+      "name": "Cash 4",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/cash_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/cash_5",
+      "name": "Cash 5",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/cash_5.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/cash_5_1",
+      "name": "Cash 5 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/cash_5_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/cash_6",
+      "name": "Cash 6",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/cash_6.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/cash_6_1",
+      "name": "Cash 6 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/cash_6_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/cassette_tape_mp_1",
+      "name": "Cassette Tape 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/cassette_tape_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/cassette_tape_mp_2",
+      "name": "Cassette Tape 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/cassette_tape_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/cell_phone_1",
+      "name": "Cell Phone 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/cell_phone_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/cell_phone_2",
+      "name": "Cell Phone 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/cell_phone_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/cig_1",
+      "name": "Cig 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/cig_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/cigs_packet_1",
+      "name": "Cigs Packet 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/cigs_packet_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/coin_mp_1",
+      "name": "Coin 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/coin_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/compact_disc_mp_1",
+      "name": "Compact Disc 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/compact_disc_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/dosimeter_1",
+      "name": "Dosimeter 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/dosimeter_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/dosimeter_2",
+      "name": "Dosimeter 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/dosimeter_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/dosimeter_4",
+      "name": "Dosimeter 4",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/dosimeter_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/flashlight_1",
+      "name": "Flashlight 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/flashlight_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/flashlight_mp_1",
+      "name": "Flashlight 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/flashlight_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/floppy_disc_1",
+      "name": "Floppy Disc 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/floppy_disc_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/gay_card_mp_1",
+      "name": "Gay Card 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/gay_card_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/glass_bottle_1",
+      "name": "Glass Bottle 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/glass_bottle_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/glass_bottle_2",
+      "name": "Glass Bottle 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/glass_bottle_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/hand_saw_1",
+      "name": "Hand Saw 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/hand_saw_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/healing_potion_mp_1",
+      "name": "Healing Potion 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/healing_potion_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/healing_potion_mp_2",
+      "name": "Healing Potion 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/healing_potion_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/id_mp_1",
+      "name": "Id 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/id_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/id_mp_1_1",
+      "name": "Id 1 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/id_mp_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/incognito_mask_mp_1",
+      "name": "Incognito Mask 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/incognito_mask_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/key_mp_1",
+      "name": "Key 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/key_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/key_mp_1_1",
+      "name": "Key 1 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/key_mp_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/key_mp_1_2",
+      "name": "Key 1 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/key_mp_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/key_mp_2",
+      "name": "Key 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/key_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/key_mp_2_1",
+      "name": "Key 2 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/key_mp_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/key_mp_2_2",
+      "name": "Key 2 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/key_mp_2_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/key_mp_3",
+      "name": "Key 3",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/key_mp_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/key_mp_3_1",
+      "name": "Key 3 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/key_mp_3_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/key_mp_3_2",
+      "name": "Key 3 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/key_mp_3_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/key_mp_4",
+      "name": "Key 4",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/key_mp_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/key_mp_4_1",
+      "name": "Key 4 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/key_mp_4_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/key_mp_4_2",
+      "name": "Key 4 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/key_mp_4_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/keycard_1",
+      "name": "Keycard 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/keycard_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/keycard_1_1",
+      "name": "Keycard 1 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/keycard_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/keycard_1_2",
+      "name": "Keycard 1 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/keycard_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/keycard_1_3",
+      "name": "Keycard 1 3",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/keycard_1_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/keycard_1_authorization_level_1",
+      "name": "Keycard 1 Authorization Level 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/keycard_1_authorization_level_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/keycard_1_authorization_level_2",
+      "name": "Keycard 1 Authorization Level 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/keycard_1_authorization_level_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/keycard_1_authorization_level_3",
+      "name": "Keycard 1 Authorization Level 3",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/keycard_1_authorization_level_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/keycard_1_authorization_level_4",
+      "name": "Keycard 1 Authorization Level 4",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/keycard_1_authorization_level_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/knife_mp_1",
+      "name": "Knife 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/knife_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/knife_mp_1_1",
+      "name": "Knife 1 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/knife_mp_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/lighter_mp_1",
+      "name": "Lighter 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/lighter_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/lighter_mp_1_1",
+      "name": "Lighter 1 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/lighter_mp_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/lighter_mp_1_2",
+      "name": "Lighter 1 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/lighter_mp_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/lollipop_mp_1",
+      "name": "Lollipop 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/lollipop_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/lollipop_mp_1_1",
+      "name": "Lollipop 1 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/lollipop_mp_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/lollipop_mp_1_2",
+      "name": "Lollipop 1 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/lollipop_mp_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/lollipop_mp_1_3",
+      "name": "Lollipop 1 3",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/lollipop_mp_1_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/matchbox_1",
+      "name": "Matchbox 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/matchbox_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/matchbox_2",
+      "name": "Matchbox 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/matchbox_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/meat_1",
+      "name": "Meat 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/meat_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/meat_1_1",
+      "name": "Meat 1 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/meat_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/nails_1",
+      "name": "Nails 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/nails_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/nails_1_rusty",
+      "name": "Nails 1 Rusty",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/nails_1_rusty.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pills_1",
+      "name": "Pills 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pills_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pills_2",
+      "name": "Pills 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pills_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pills_2_1",
+      "name": "Pills 2 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pills_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pills_2_2",
+      "name": "Pills 2 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pills_2_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pills_3",
+      "name": "Pills 3",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pills_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pills_bottle_1",
+      "name": "Pills Bottle 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pills_bottle_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pills_bottle_1_1",
+      "name": "Pills Bottle 1 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pills_bottle_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pills_bottle_1_2",
+      "name": "Pills Bottle 1 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pills_bottle_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pills_bottle_2",
+      "name": "Pills Bottle 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pills_bottle_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pills_bottle_2_1",
+      "name": "Pills Bottle 2 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pills_bottle_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pills_bottle_2_2",
+      "name": "Pills Bottle 2 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pills_bottle_2_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pills_packet_1",
+      "name": "Pills Packet 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pills_packet_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pistol_mp_1",
+      "name": "Pistol 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pistol_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pistol_mp_1_1",
+      "name": "Pistol 1 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pistol_mp_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pistol_mp_1_2",
+      "name": "Pistol 1 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pistol_mp_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pistol_mp_1_3",
+      "name": "Pistol 1 3",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pistol_mp_1_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pistol_mp_1_mag_empty",
+      "name": "Pistol 1 Mag Empty",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pistol_mp_1_mag_empty.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pistol_mp_1_mag_extended_empty",
+      "name": "Pistol 1 Mag Extended Empty",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pistol_mp_1_mag_extended_empty.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pistol_mp_1_mag_extended_loaded",
+      "name": "Pistol 1 Mag Extended Loaded",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pistol_mp_1_mag_extended_loaded.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/pistol_mp_1_mag_loaded",
+      "name": "Pistol 1 Mag Loaded",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/pistol_mp_1_mag_loaded.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/poison_mp_1",
+      "name": "Poison 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/poison_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/police_baton_mp_1",
+      "name": "Police Baton 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/police_baton_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/screwdriver_mp_1",
+      "name": "Screwdriver 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/screwdriver_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/screwdriver_mp_1_1",
+      "name": "Screwdriver 1 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/screwdriver_mp_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/screwdriver_mp_1_2",
+      "name": "Screwdriver 1 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/screwdriver_mp_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/screwdriver_mp_2",
+      "name": "Screwdriver 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/screwdriver_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/screwdriver_mp_2_1",
+      "name": "Screwdriver 2 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/screwdriver_mp_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/screwdriver_mp_2_2",
+      "name": "Screwdriver 2 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/screwdriver_mp_2_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/shotgun_ammo_1",
+      "name": "Shotgun Ammo 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/shotgun_ammo_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/shotgun_ammo_2",
+      "name": "Shotgun Ammo 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/shotgun_ammo_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/shotgun_ammo_2_1",
+      "name": "Shotgun Ammo 2 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/shotgun_ammo_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/smartphone_mp_1",
+      "name": "Smartphone 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/smartphone_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/smartphone_mp_1_broken",
+      "name": "Smartphone 1 Broken",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/smartphone_mp_1_broken.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/suppressor_mp_1",
+      "name": "Suppressor 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/suppressor_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/suppressor_mp_2",
+      "name": "Suppressor 2",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/suppressor_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/sword_mp_1",
+      "name": "Sword 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/sword_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/syringe_mp_1",
+      "name": "Syringe 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/syringe_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/syringe_mp_1_1",
+      "name": "Syringe 1 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/syringe_mp_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/vape_mp_1",
+      "name": "Vape 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/vape_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "items-weapons/walkie_talkie_1",
+      "name": "Walkie Talkie 1",
+      "pack": "psx-horror",
+      "category": "item",
+      "group": "items-weapons",
+      "path": "models/items-weapons/walkie_talkie_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/cardboard_box_1",
+      "name": "Cardboard Box 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/cardboard_box_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/cardboard_box_2",
+      "name": "Cardboard Box 2",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/cardboard_box_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/cardboard_box_2_1",
+      "name": "Cardboard Box 2 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/cardboard_box_2_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/carpet_mp_1",
+      "name": "Carpet 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/carpet_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/curtain_rod_mp_1",
+      "name": "Curtain Rod 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/curtain_rod_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/metal_barrel_mp_0",
+      "name": "Metal Barrel 0",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/metal_barrel_mp_0.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/metal_barrel_mp_1",
+      "name": "Metal Barrel 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/metal_barrel_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/metal_barrel_mp_2",
+      "name": "Metal Barrel 2",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/metal_barrel_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/metal_barrel_mp_3",
+      "name": "Metal Barrel 3",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/metal_barrel_mp_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/pipe_1",
+      "name": "Pipe 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/pipe_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/pipe_1_corner",
+      "name": "Pipe 1 Corner",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/pipe_1_corner.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/pipe_1_cross",
+      "name": "Pipe 1 Cross",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/pipe_1_cross.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/pipe_1_short",
+      "name": "Pipe 1 Short",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/pipe_1_short.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/pipe_valve_holder_large_1",
+      "name": "Pipe Valve Holder Large 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/pipe_valve_holder_large_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/supply_crate_1",
+      "name": "Supply Crate 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/supply_crate_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/supply_crate_1_1",
+      "name": "Supply Crate 1 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/supply_crate_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/supply_crate_1_1_empty",
+      "name": "Supply Crate 1 1 Empty",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/supply_crate_1_1_empty.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/supply_crate_1_2",
+      "name": "Supply Crate 1 2",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/supply_crate_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/supply_crate_1_2_empty",
+      "name": "Supply Crate 1 2 Empty",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/supply_crate_1_2_empty.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/supply_crate_1_3",
+      "name": "Supply Crate 1 3",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/supply_crate_1_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/supply_crate_1_3_empty",
+      "name": "Supply Crate 1 3 Empty",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/supply_crate_1_3_empty.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/supply_crate_1_4",
+      "name": "Supply Crate 1 4",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/supply_crate_1_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/supply_crate_1_4_empty",
+      "name": "Supply Crate 1 4 Empty",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/supply_crate_1_4_empty.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/supply_crate_1_empty",
+      "name": "Supply Crate 1 Empty",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/supply_crate_1_empty.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/toilet_mp_1",
+      "name": "Toilet 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/toilet_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/toilet_mp_1_1",
+      "name": "Toilet 1 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/toilet_mp_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/toilet_mp_1_2",
+      "name": "Toilet 1 2",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/toilet_mp_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/vending_machine_1",
+      "name": "Vending Machine 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/vending_machine_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/wooden_crate_1",
+      "name": "Wooden Crate 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/wooden_crate_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/wooden_crate_1_1",
+      "name": "Wooden Crate 1 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/wooden_crate_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/wooden_crate_2",
+      "name": "Wooden Crate 2",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/wooden_crate_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/wooden_crate_3",
+      "name": "Wooden Crate 3",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/wooden_crate_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/wooden_crate_3_1",
+      "name": "Wooden Crate 3 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/wooden_crate_3_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/wooden_crate_4",
+      "name": "Wooden Crate 4",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/wooden_crate_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/wooden_crate_5",
+      "name": "Wooden Crate 5",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/wooden_crate_5.glb",
+      "scale": 1
+    },
+    {
+      "id": "large-props/wooden_crate_6",
+      "name": "Wooden Crate 6",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "large-props",
+      "path": "models/large-props/wooden_crate_6.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_1_fake_light_1",
+      "name": "Ceiling Lamp 1 Fake Light 1",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_1_fake_light_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_1_fake_light_2",
+      "name": "Ceiling Lamp 1 Fake Light 2",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_1_fake_light_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_1_off",
+      "name": "Ceiling Lamp 1 Off",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_1_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_1_on",
+      "name": "Ceiling Lamp 1 On",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_1_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_2_fake_light_1",
+      "name": "Ceiling Lamp 2 Fake Light 1",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_2_fake_light_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_2_fake_light_2",
+      "name": "Ceiling Lamp 2 Fake Light 2",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_2_fake_light_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_2_off",
+      "name": "Ceiling Lamp 2 Off",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_2_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_2_on",
+      "name": "Ceiling Lamp 2 On",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_2_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_4_1_a_off",
+      "name": "Ceiling Lamp 4 1 A Off",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_4_1_a_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_4_1_a_on",
+      "name": "Ceiling Lamp 4 1 A On",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_4_1_a_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_4_1_b_off",
+      "name": "Ceiling Lamp 4 1 B Off",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_4_1_b_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_4_1_b_on",
+      "name": "Ceiling Lamp 4 1 B On",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_4_1_b_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_4_1_off",
+      "name": "Ceiling Lamp 4 1 Off",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_4_1_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_4_1_on",
+      "name": "Ceiling Lamp 4 1 On",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_4_1_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_4_a_off",
+      "name": "Ceiling Lamp 4 A Off",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_4_a_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_4_a_on",
+      "name": "Ceiling Lamp 4 A On",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_4_a_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_4_b_off",
+      "name": "Ceiling Lamp 4 B Off",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_4_b_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_4_b_on",
+      "name": "Ceiling Lamp 4 B On",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_4_b_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_4_off",
+      "name": "Ceiling Lamp 4 Off",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_4_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_4_on",
+      "name": "Ceiling Lamp 4 On",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_4_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_mp_1_1_fake_light_1",
+      "name": "Ceiling Lamp 1 1 Fake Light 1",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_mp_1_1_fake_light_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_mp_1_1_fake_light_2",
+      "name": "Ceiling Lamp 1 1 Fake Light 2",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_mp_1_1_fake_light_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_mp_1_1_off",
+      "name": "Ceiling Lamp 1 1 Off",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_mp_1_1_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_mp_1_1_on",
+      "name": "Ceiling Lamp 1 1 On",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_mp_1_1_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_mp_1_off",
+      "name": "Ceiling Lamp 1 Off",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_mp_1_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/ceiling_lamp_mp_1_on",
+      "name": "Ceiling Lamp 1 On",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/ceiling_lamp_mp_1_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/fake_light_window_2_double",
+      "name": "Fake Light Window 2 Double",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/fake_light_window_2_double.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/fake_light_window_2_single",
+      "name": "Fake Light Window 2 Single",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/fake_light_window_2_single.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/lamp_1_1_off",
+      "name": "Lamp 1 1 Off",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/lamp_1_1_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/lamp_1_1_on",
+      "name": "Lamp 1 1 On",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/lamp_1_1_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/lamp_1_off",
+      "name": "Lamp 1 Off",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/lamp_1_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/lamp_1_on",
+      "name": "Lamp 1 On",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/lamp_1_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/lamp_2_2_off",
+      "name": "Lamp 2 2 Off",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/lamp_2_2_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/lamp_2_2_on",
+      "name": "Lamp 2 2 On",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/lamp_2_2_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/lamp_2_off",
+      "name": "Lamp 2 Off",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/lamp_2_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/lamp_2_on",
+      "name": "Lamp 2 On",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/lamp_2_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/lamp_3_1_off",
+      "name": "Lamp 3 1 Off",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/lamp_3_1_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/lamp_3_1_on",
+      "name": "Lamp 3 1 On",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/lamp_3_1_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/lamp_3_off",
+      "name": "Lamp 3 Off",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/lamp_3_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/lamp_3_on",
+      "name": "Lamp 3 On",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/lamp_3_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/lamp_5_1_off",
+      "name": "Lamp 5 1 Off",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/lamp_5_1_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/lamp_5_1_on",
+      "name": "Lamp 5 1 On",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/lamp_5_1_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/lamp_5_off",
+      "name": "Lamp 5 Off",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/lamp_5_off.glb",
+      "scale": 1
+    },
+    {
+      "id": "lighting/lamp_5_on",
+      "name": "Lamp 5 On",
+      "pack": "psx-horror",
+      "category": "lighting",
+      "group": "lighting",
+      "path": "models/lighting/lamp_5_on.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/ashtray_1",
+      "name": "Ashtray 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/ashtray_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/book_mp_1",
+      "name": "Book 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/book_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/book_mp_10",
+      "name": "Book 10",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/book_mp_10.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/book_mp_2",
+      "name": "Book 2",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/book_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/book_mp_3",
+      "name": "Book 3",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/book_mp_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/book_mp_4",
+      "name": "Book 4",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/book_mp_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/book_mp_5",
+      "name": "Book 5",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/book_mp_5.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/book_mp_6",
+      "name": "Book 6",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/book_mp_6.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/book_mp_7",
+      "name": "Book 7",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/book_mp_7.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/book_mp_8",
+      "name": "Book 8",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/book_mp_8.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/book_mp_9",
+      "name": "Book 9",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/book_mp_9.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/brick_1",
+      "name": "Brick 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/brick_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/brick_1_1",
+      "name": "Brick 1 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/brick_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/brick_1_2",
+      "name": "Brick 1 2",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/brick_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/brick_1_3",
+      "name": "Brick 1 3",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/brick_1_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/car_battery_1",
+      "name": "Car Battery 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/car_battery_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/cig_2",
+      "name": "Cig 2",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/cig_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/cig_3",
+      "name": "Cig 3",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/cig_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/clock_1",
+      "name": "Clock 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/clock_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/clock_2",
+      "name": "Clock 2",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/clock_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/concrete_block_1",
+      "name": "Concrete Block 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/concrete_block_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/cross_1",
+      "name": "Cross 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/cross_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/cross_mp_2",
+      "name": "Cross 2",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/cross_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/fish_skeleton_mp_1",
+      "name": "Fish Skeleton 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/fish_skeleton_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/fork_mp_1",
+      "name": "Fork 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/fork_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/gold_bar_pcs_1",
+      "name": "Gold Bar Pcs 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/gold_bar_pcs_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/jerrycan_1",
+      "name": "Jerrycan 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/jerrycan_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/jerrycan_1_1",
+      "name": "Jerrycan 1 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/jerrycan_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/keypad_1",
+      "name": "Keypad 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/keypad_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/keypad_2",
+      "name": "Keypad 2",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/keypad_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/magnet_mp_1",
+      "name": "Magnet 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/magnet_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/notebook_1",
+      "name": "Notebook 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/notebook_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/open_book_mp_1",
+      "name": "Open Book 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/open_book_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/padlock_1",
+      "name": "Padlock 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/padlock_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/padlock_2",
+      "name": "Padlock 2",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/padlock_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/padlock_3",
+      "name": "Padlock 3",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/padlock_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/padlock_4",
+      "name": "Padlock 4",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/padlock_4.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/painting_1",
+      "name": "Painting 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/painting_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/pc_speaker_1_left",
+      "name": "Pc Speaker 1 Left",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/pc_speaker_1_left.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/pc_speaker_1_right",
+      "name": "Pc Speaker 1 Right",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/pc_speaker_1_right.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/pen_mp_1",
+      "name": "Pen 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/pen_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/pencil_mp_1",
+      "name": "Pencil 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/pencil_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/photo_frame_mp_1",
+      "name": "Photo Frame 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/photo_frame_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/photo_frame_mp_2",
+      "name": "Photo Frame 2",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/photo_frame_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/planter_pot_mp_1_empty",
+      "name": "Planter Pot 1 Empty",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/planter_pot_mp_1_empty.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/planter_pot_mp_1_full",
+      "name": "Planter Pot 1 Full",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/planter_pot_mp_1_full.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/plate_mp_1",
+      "name": "Plate 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/plate_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/potted_cactus_mp_1",
+      "name": "Potted Cactus 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/potted_cactus_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/sponge_mp_1",
+      "name": "Sponge 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/sponge_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/sponge_mp_2",
+      "name": "Sponge 2",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/sponge_mp_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/spoon_mp_1",
+      "name": "Spoon 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/spoon_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/tin_can_mp_1_rusty",
+      "name": "Tin Can 1 Rusty",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/tin_can_mp_1_rusty.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/tin_can_mp_1_rusty_1",
+      "name": "Tin Can 1 Rusty 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/tin_can_mp_1_rusty_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/toy_brick_1",
+      "name": "Toy Brick 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/toy_brick_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/toy_brick_1_1",
+      "name": "Toy Brick 1 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/toy_brick_1_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/toy_brick_1_2",
+      "name": "Toy Brick 1 2",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/toy_brick_1_2.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/toy_brick_1_3",
+      "name": "Toy Brick 1 3",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/toy_brick_1_3.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/tv_remote_mp_1",
+      "name": "Tv Remote 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/tv_remote_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/underwear_mp_1",
+      "name": "Underwear 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/underwear_mp_1.glb",
+      "scale": 1
+    },
+    {
+      "id": "small-props/vhs_tape_1",
+      "name": "Vhs Tape 1",
+      "pack": "psx-horror",
+      "category": "prop",
+      "group": "small-props",
+      "path": "models/small-props/vhs_tape_1.glb",
+      "scale": 1
+    }
+  ],
+  "textures": [
+    {
+      "id": "tex/ammo_mp_1",
+      "name": "Ammo 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/ammo_mp_1.png"
+    },
+    {
+      "id": "tex/ash_tray_mp_1",
+      "name": "Ash Tray 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/ash_tray_mp_1.png"
+    },
+    {
+      "id": "tex/batteries_mp_1",
+      "name": "Batteries 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/batteries_mp_1.png"
+    },
+    {
+      "id": "tex/books_mp_1",
+      "name": "Books 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/books_mp_1.png"
+    },
+    {
+      "id": "tex/brick_1",
+      "name": "Brick 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/brick_1.png"
+    },
+    {
+      "id": "tex/bricks_1",
+      "name": "Bricks 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/bricks_1.png"
+    },
+    {
+      "id": "tex/button_12",
+      "name": "Button 12",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/button_12.png"
+    },
+    {
+      "id": "tex/cable_1",
+      "name": "Cable 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/cable_1.png"
+    },
+    {
+      "id": "tex/cable_2",
+      "name": "Cable 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/cable_2.png"
+    },
+    {
+      "id": "tex/cable_3",
+      "name": "Cable 3",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/cable_3.png"
+    },
+    {
+      "id": "tex/canned_foods_mp_1",
+      "name": "Canned Foods 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/canned_foods_mp_1.png"
+    },
+    {
+      "id": "tex/cardboard_box_1",
+      "name": "Cardboard Box 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/cardboard_box_1.png"
+    },
+    {
+      "id": "tex/cardboard_box_2",
+      "name": "Cardboard Box 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/cardboard_box_2.png"
+    },
+    {
+      "id": "tex/carpet_mp_1",
+      "name": "Carpet 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/carpet_mp_1.png"
+    },
+    {
+      "id": "tex/cassette_tape_1",
+      "name": "Cassette Tape 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/cassette_tape_1.png"
+    },
+    {
+      "id": "tex/cassette_tape_2",
+      "name": "Cassette Tape 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/cassette_tape_2.png"
+    },
+    {
+      "id": "tex/ceiling_1",
+      "name": "Ceiling 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/ceiling_1.png"
+    },
+    {
+      "id": "tex/ceiling_lamp_1_off",
+      "name": "Ceiling Lamp 1 Off",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/ceiling_lamp_1_off.png"
+    },
+    {
+      "id": "tex/ceiling_lamp_1_on",
+      "name": "Ceiling Lamp 1 On",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/ceiling_lamp_1_on.png"
+    },
+    {
+      "id": "tex/ceiling_lamp_1_on_emission",
+      "name": "Ceiling Lamp 1 On Emission",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/ceiling_lamp_1_on_emission.png"
+    },
+    {
+      "id": "tex/cell_phone_1",
+      "name": "Cell Phone 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/cell_phone_1.png"
+    },
+    {
+      "id": "tex/cell_phone_2",
+      "name": "Cell Phone 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/cell_phone_2.png"
+    },
+    {
+      "id": "tex/cell_phone_3",
+      "name": "Cell Phone 3",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/cell_phone_3.png"
+    },
+    {
+      "id": "tex/cell_phone_battery_1",
+      "name": "Cell Phone Battery 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/cell_phone_battery_1.png"
+    },
+    {
+      "id": "tex/cell_phone_battery_2",
+      "name": "Cell Phone Battery 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/cell_phone_battery_2.png"
+    },
+    {
+      "id": "tex/cigs_packet_1",
+      "name": "Cigs Packet 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/cigs_packet_1.png"
+    },
+    {
+      "id": "tex/clock_1",
+      "name": "Clock 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/clock_1.png"
+    },
+    {
+      "id": "tex/clock_2",
+      "name": "Clock 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/clock_2.png"
+    },
+    {
+      "id": "tex/cobweb_1",
+      "name": "Cobweb 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/cobweb_1.png"
+    },
+    {
+      "id": "tex/cobweb_2",
+      "name": "Cobweb 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/cobweb_2.png"
+    },
+    {
+      "id": "tex/cobweb_4",
+      "name": "Cobweb 4",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/cobweb_4.png"
+    },
+    {
+      "id": "tex/cobweb_5",
+      "name": "Cobweb 5",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/cobweb_5.png"
+    },
+    {
+      "id": "tex/compact_disc_mp_1",
+      "name": "Compact Disc 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/compact_disc_mp_1.png"
+    },
+    {
+      "id": "tex/concrete_1",
+      "name": "Concrete 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/concrete_1.png"
+    },
+    {
+      "id": "tex/concrete_2",
+      "name": "Concrete 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/concrete_2.png"
+    },
+    {
+      "id": "tex/concrete_3",
+      "name": "Concrete 3",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/concrete_3.png"
+    },
+    {
+      "id": "tex/concrete_4",
+      "name": "Concrete 4",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/concrete_4.png"
+    },
+    {
+      "id": "tex/concrete_block_1",
+      "name": "Concrete Block 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/concrete_block_1.png"
+    },
+    {
+      "id": "tex/cross_1",
+      "name": "Cross 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/cross_1.png"
+    },
+    {
+      "id": "tex/cross_mp_2",
+      "name": "Cross 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/cross_mp_2.png"
+    },
+    {
+      "id": "tex/crt_screen_mp_1",
+      "name": "Crt Screen 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/crt_screen_mp_1.png"
+    },
+    {
+      "id": "tex/crt_screen_mp_2",
+      "name": "Crt Screen 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/crt_screen_mp_2.png"
+    },
+    {
+      "id": "tex/display_mp_1_emission",
+      "name": "Display 1 Emission",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/display_mp_1_emission.png"
+    },
+    {
+      "id": "tex/door_1",
+      "name": "Door 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/door_1.png"
+    },
+    {
+      "id": "tex/door_2",
+      "name": "Door 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/door_2.png"
+    },
+    {
+      "id": "tex/door_3",
+      "name": "Door 3",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/door_3.png"
+    },
+    {
+      "id": "tex/door_3_double",
+      "name": "Door 3 Double",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/door_3_double.png"
+    },
+    {
+      "id": "tex/door_4",
+      "name": "Door 4",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/door_4.png"
+    },
+    {
+      "id": "tex/door_4_double",
+      "name": "Door 4 Double",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/door_4_double.png"
+    },
+    {
+      "id": "tex/door_frame_mp_2",
+      "name": "Door Frame 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/door_frame_mp_2.png"
+    },
+    {
+      "id": "tex/door_frame_wood_1",
+      "name": "Door Frame Wood 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/door_frame_wood_1.png"
+    },
+    {
+      "id": "tex/door_handle_1",
+      "name": "Door Handle 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/door_handle_1.png"
+    },
+    {
+      "id": "tex/door_handle_2",
+      "name": "Door Handle 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/door_handle_2.png"
+    },
+    {
+      "id": "tex/door_mp_1",
+      "name": "Door 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/door_mp_1.png"
+    },
+    {
+      "id": "tex/door_mp_6",
+      "name": "Door 6",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/door_mp_6.png"
+    },
+    {
+      "id": "tex/dosimeter_1",
+      "name": "Dosimeter 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/dosimeter_1.png"
+    },
+    {
+      "id": "tex/dosimeter_2",
+      "name": "Dosimeter 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/dosimeter_2.png"
+    },
+    {
+      "id": "tex/dosimeter_3",
+      "name": "Dosimeter 3",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/dosimeter_3.png"
+    },
+    {
+      "id": "tex/electrical_outlets_1",
+      "name": "Electrical Outlets 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/electrical_outlets_1.png"
+    },
+    {
+      "id": "tex/elevator_buttons_1",
+      "name": "Elevator Buttons 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/elevator_buttons_1.png"
+    },
+    {
+      "id": "tex/elevator_call_button_1",
+      "name": "Elevator Call Button 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/elevator_call_button_1.png"
+    },
+    {
+      "id": "tex/elevator_door_1",
+      "name": "Elevator Door 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/elevator_door_1.png"
+    },
+    {
+      "id": "tex/elevator_door_2",
+      "name": "Elevator Door 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/elevator_door_2.png"
+    },
+    {
+      "id": "tex/elevator_screen_1",
+      "name": "Elevator Screen 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/elevator_screen_1.png"
+    },
+    {
+      "id": "tex/elevator_sign_1",
+      "name": "Elevator Sign 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/elevator_sign_1.png"
+    },
+    {
+      "id": "tex/elevator_sign_1_emission",
+      "name": "Elevator Sign 1 Emission",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/elevator_sign_1_emission.png"
+    },
+    {
+      "id": "tex/fabric_1",
+      "name": "Fabric 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/fabric_1.png"
+    },
+    {
+      "id": "tex/fabric_2",
+      "name": "Fabric 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/fabric_2.png"
+    },
+    {
+      "id": "tex/fabric_3",
+      "name": "Fabric 3",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/fabric_3.png"
+    },
+    {
+      "id": "tex/fabric_4",
+      "name": "Fabric 4",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/fabric_4.png"
+    },
+    {
+      "id": "tex/fabric_5",
+      "name": "Fabric 5",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/fabric_5.png"
+    },
+    {
+      "id": "tex/fabric_6",
+      "name": "Fabric 6",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/fabric_6.png"
+    },
+    {
+      "id": "tex/fake_light_mp_1",
+      "name": "Fake Light 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/fake_light_mp_1.png"
+    },
+    {
+      "id": "tex/fish_skeleton_mp_1",
+      "name": "Fish Skeleton 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/fish_skeleton_mp_1.png"
+    },
+    {
+      "id": "tex/flashlight_1",
+      "name": "Flashlight 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/flashlight_1.png"
+    },
+    {
+      "id": "tex/flashlight_1_emission",
+      "name": "Flashlight 1 Emission",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/flashlight_1_emission.png"
+    },
+    {
+      "id": "tex/floor_1",
+      "name": "Floor 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/floor_1.png"
+    },
+    {
+      "id": "tex/floor_2",
+      "name": "Floor 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/floor_2.png"
+    },
+    {
+      "id": "tex/floor_2_tiles",
+      "name": "Floor 2 Tiles",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/floor_2_tiles.png"
+    },
+    {
+      "id": "tex/floor_3_metal",
+      "name": "Floor 3 Metal",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/floor_3_metal.png"
+    },
+    {
+      "id": "tex/floor_3_metal_1",
+      "name": "Floor 3 Metal 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/floor_3_metal_1.png"
+    },
+    {
+      "id": "tex/floppy_disc_1",
+      "name": "Floppy Disc 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/floppy_disc_1.png"
+    },
+    {
+      "id": "tex/glass_bottles_1",
+      "name": "Glass Bottles 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/glass_bottles_1.png"
+    },
+    {
+      "id": "tex/glass_mp_1",
+      "name": "Glass 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/glass_mp_1.png"
+    },
+    {
+      "id": "tex/gold_bar_mp_1",
+      "name": "Gold Bar 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/gold_bar_mp_1.png"
+    },
+    {
+      "id": "tex/hand_saw_1",
+      "name": "Hand Saw 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/hand_saw_1.png"
+    },
+    {
+      "id": "tex/handheld_game_console_1",
+      "name": "Handheld Game Console 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/handheld_game_console_1.png"
+    },
+    {
+      "id": "tex/handheld_tablet_1",
+      "name": "Handheld Tablet 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/handheld_tablet_1.png"
+    },
+    {
+      "id": "tex/identification_mp_1",
+      "name": "Identification 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/identification_mp_1.png"
+    },
+    {
+      "id": "tex/incognito_mask_mp_1",
+      "name": "Incognito Mask 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/incognito_mask_mp_1.png"
+    },
+    {
+      "id": "tex/jerrycan_1",
+      "name": "Jerrycan 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/jerrycan_1.png"
+    },
+    {
+      "id": "tex/jerrycan_1_1",
+      "name": "Jerrycan 1 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/jerrycan_1_1.png"
+    },
+    {
+      "id": "tex/keypad_1",
+      "name": "Keypad 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/keypad_1.png"
+    },
+    {
+      "id": "tex/keypad_1_emission",
+      "name": "Keypad 1 Emission",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/keypad_1_emission.png"
+    },
+    {
+      "id": "tex/keypad_2",
+      "name": "Keypad 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/keypad_2.png"
+    },
+    {
+      "id": "tex/keypad_2_emission",
+      "name": "Keypad 2 Emission",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/keypad_2_emission.png"
+    },
+    {
+      "id": "tex/keys_mp_1",
+      "name": "Keys 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/keys_mp_1.png"
+    },
+    {
+      "id": "tex/kitchen_knife_1",
+      "name": "Kitchen Knife 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/kitchen_knife_1.png"
+    },
+    {
+      "id": "tex/knife_mp_1",
+      "name": "Knife 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/knife_mp_1.png"
+    },
+    {
+      "id": "tex/knife_mp_1_1",
+      "name": "Knife 1 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/knife_mp_1_1.png"
+    },
+    {
+      "id": "tex/lamp_1_off",
+      "name": "Lamp 1 Off",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/lamp_1_off.png"
+    },
+    {
+      "id": "tex/lamp_1_on_white",
+      "name": "Lamp 1 On White",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/lamp_1_on_white.png"
+    },
+    {
+      "id": "tex/lamp_1_on_yellow",
+      "name": "Lamp 1 On Yellow",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/lamp_1_on_yellow.png"
+    },
+    {
+      "id": "tex/lamp_3_1_off",
+      "name": "Lamp 3 1 Off",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/lamp_3_1_off.png"
+    },
+    {
+      "id": "tex/lamp_3_1_on",
+      "name": "Lamp 3 1 On",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/lamp_3_1_on.png"
+    },
+    {
+      "id": "tex/lamp_3_emission",
+      "name": "Lamp 3 Emission",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/lamp_3_emission.png"
+    },
+    {
+      "id": "tex/lamp_3_off",
+      "name": "Lamp 3 Off",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/lamp_3_off.png"
+    },
+    {
+      "id": "tex/lamp_3_on",
+      "name": "Lamp 3 On",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/lamp_3_on.png"
+    },
+    {
+      "id": "tex/light_switches_mp_1",
+      "name": "Light Switches 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/light_switches_mp_1.png"
+    },
+    {
+      "id": "tex/lighters_mp_1",
+      "name": "Lighters 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/lighters_mp_1.png"
+    },
+    {
+      "id": "tex/lollipops_mp_1",
+      "name": "Lollipops 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/lollipops_mp_1.png"
+    },
+    {
+      "id": "tex/matchbox_1",
+      "name": "Matchbox 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/matchbox_1.png"
+    },
+    {
+      "id": "tex/matchbox_2",
+      "name": "Matchbox 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/matchbox_2.png"
+    },
+    {
+      "id": "tex/meat_1",
+      "name": "Meat 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/meat_1.png"
+    },
+    {
+      "id": "tex/meat_1_1",
+      "name": "Meat 1 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/meat_1_1.png"
+    },
+    {
+      "id": "tex/metal_2",
+      "name": "Metal 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/metal_2.png"
+    },
+    {
+      "id": "tex/metal_6",
+      "name": "Metal 6",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/metal_6.png"
+    },
+    {
+      "id": "tex/metal_6_1",
+      "name": "Metal 6 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/metal_6_1.png"
+    },
+    {
+      "id": "tex/metal_8",
+      "name": "Metal 8",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/metal_8.png"
+    },
+    {
+      "id": "tex/metal_barrel_mp_0",
+      "name": "Metal Barrel 0",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/metal_barrel_mp_0.png"
+    },
+    {
+      "id": "tex/metal_barrel_mp_1",
+      "name": "Metal Barrel 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/metal_barrel_mp_1.png"
+    },
+    {
+      "id": "tex/metal_barrel_mp_2",
+      "name": "Metal Barrel 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/metal_barrel_mp_2.png"
+    },
+    {
+      "id": "tex/metal_barrel_mp_3",
+      "name": "Metal Barrel 3",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/metal_barrel_mp_3.png"
+    },
+    {
+      "id": "tex/metal_mesh_1",
+      "name": "Metal Mesh 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/metal_mesh_1.png"
+    },
+    {
+      "id": "tex/metal_mp_1",
+      "name": "Metal 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/metal_mp_1.png"
+    },
+    {
+      "id": "tex/metal_mp_3",
+      "name": "Metal 3",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/metal_mp_3.png"
+    },
+    {
+      "id": "tex/metal_mp_4",
+      "name": "Metal 4",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/metal_mp_4.png"
+    },
+    {
+      "id": "tex/metal_mp_5",
+      "name": "Metal 5",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/metal_mp_5.png"
+    },
+    {
+      "id": "tex/metal_mp_6",
+      "name": "Metal 6",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/metal_mp_6.png"
+    },
+    {
+      "id": "tex/misc_mp_1",
+      "name": "Misc 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/misc_mp_1.png"
+    },
+    {
+      "id": "tex/misc_mp_2",
+      "name": "Misc 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/misc_mp_2.png"
+    },
+    {
+      "id": "tex/misc_mp_3",
+      "name": "Misc 3",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/misc_mp_3.png"
+    },
+    {
+      "id": "tex/money_1",
+      "name": "Money 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/money_1.png"
+    },
+    {
+      "id": "tex/mouse_pad_mp_1",
+      "name": "Mouse Pad 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/mouse_pad_mp_1.png"
+    },
+    {
+      "id": "tex/notebook_1",
+      "name": "Notebook 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/notebook_1.png"
+    },
+    {
+      "id": "tex/old_mattress_mp_1",
+      "name": "Old Mattress 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/old_mattress_mp_1.png"
+    },
+    {
+      "id": "tex/old_mattress_mp_1_1",
+      "name": "Old Mattress 1 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/old_mattress_mp_1_1.png"
+    },
+    {
+      "id": "tex/old_mattress_mp_2",
+      "name": "Old Mattress 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/old_mattress_mp_2.png"
+    },
+    {
+      "id": "tex/old_mattress_mp_2_1",
+      "name": "Old Mattress 2 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/old_mattress_mp_2_1.png"
+    },
+    {
+      "id": "tex/padlock_1",
+      "name": "Padlock 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/padlock_1.png"
+    },
+    {
+      "id": "tex/padlock_2",
+      "name": "Padlock 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/padlock_2.png"
+    },
+    {
+      "id": "tex/padlock_3",
+      "name": "Padlock 3",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/padlock_3.png"
+    },
+    {
+      "id": "tex/padlock_4",
+      "name": "Padlock 4",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/padlock_4.png"
+    },
+    {
+      "id": "tex/painting_1",
+      "name": "Painting 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/painting_1.png"
+    },
+    {
+      "id": "tex/panel_mp_1",
+      "name": "Panel 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/panel_mp_1.png"
+    },
+    {
+      "id": "tex/pc_accessories_mp_1",
+      "name": "Pc Accessories 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/pc_accessories_mp_1.png"
+    },
+    {
+      "id": "tex/pc_monitor_mp_1",
+      "name": "Pc Monitor 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/pc_monitor_mp_1.png"
+    },
+    {
+      "id": "tex/pc_monitor_mp_1_1",
+      "name": "Pc Monitor 1 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/pc_monitor_mp_1_1.png"
+    },
+    {
+      "id": "tex/pc_mp_1",
+      "name": "Pc 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/pc_mp_1.png"
+    },
+    {
+      "id": "tex/pc_speakers_1",
+      "name": "Pc Speakers 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/pc_speakers_1.png"
+    },
+    {
+      "id": "tex/photo_frames_mp_1",
+      "name": "Photo Frames 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/photo_frames_mp_1.png"
+    },
+    {
+      "id": "tex/pillow_mp_1",
+      "name": "Pillow 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/pillow_mp_1.png"
+    },
+    {
+      "id": "tex/pillow_mp_2",
+      "name": "Pillow 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/pillow_mp_2.png"
+    },
+    {
+      "id": "tex/pills_bottle_1",
+      "name": "Pills Bottle 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/pills_bottle_1.png"
+    },
+    {
+      "id": "tex/pipe_mp_1",
+      "name": "Pipe 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/pipe_mp_1.png"
+    },
+    {
+      "id": "tex/pistols_mp_1",
+      "name": "Pistols 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/pistols_mp_1.png"
+    },
+    {
+      "id": "tex/plastic_1",
+      "name": "Plastic 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/plastic_1.png"
+    },
+    {
+      "id": "tex/plastic_2",
+      "name": "Plastic 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/plastic_2.png"
+    },
+    {
+      "id": "tex/plastic_3",
+      "name": "Plastic 3",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/plastic_3.png"
+    },
+    {
+      "id": "tex/plastic_4",
+      "name": "Plastic 4",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/plastic_4.png"
+    },
+    {
+      "id": "tex/plastic_mp_1",
+      "name": "Plastic 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/plastic_mp_1.png"
+    },
+    {
+      "id": "tex/plastic_mp_2",
+      "name": "Plastic 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/plastic_mp_2.png"
+    },
+    {
+      "id": "tex/plastic_mp_3",
+      "name": "Plastic 3",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/plastic_mp_3.png"
+    },
+    {
+      "id": "tex/plate_mp_1",
+      "name": "Plate 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/plate_mp_1.png"
+    },
+    {
+      "id": "tex/potted_cactus_mp_1",
+      "name": "Potted Cactus 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/potted_cactus_mp_1.png"
+    },
+    {
+      "id": "tex/rubber_1",
+      "name": "Rubber 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/rubber_1.png"
+    },
+    {
+      "id": "tex/sawdust_board_mp_1",
+      "name": "Sawdust Board 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/sawdust_board_mp_1.png"
+    },
+    {
+      "id": "tex/shotgun_1",
+      "name": "Shotgun 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/shotgun_1.png"
+    },
+    {
+      "id": "tex/smartphone_mp_1",
+      "name": "Smartphone 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/smartphone_mp_1.png"
+    },
+    {
+      "id": "tex/sword_mp_1",
+      "name": "Sword 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/sword_mp_1.png"
+    },
+    {
+      "id": "tex/tiles_floor_1",
+      "name": "Tiles Floor 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/tiles_floor_1.png"
+    },
+    {
+      "id": "tex/toilet_mp_1",
+      "name": "Toilet 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/toilet_mp_1.png"
+    },
+    {
+      "id": "tex/toy_bricks_1",
+      "name": "Toy Bricks 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/toy_bricks_1.png"
+    },
+    {
+      "id": "tex/tv_remote_mp_1",
+      "name": "Tv Remote 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/tv_remote_mp_1.png"
+    },
+    {
+      "id": "tex/tvs_mp_1",
+      "name": "Tvs 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/tvs_mp_1.png"
+    },
+    {
+      "id": "tex/underwear_mp_1",
+      "name": "Underwear 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/underwear_mp_1.png"
+    },
+    {
+      "id": "tex/valve_1",
+      "name": "Valve 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/valve_1.png"
+    },
+    {
+      "id": "tex/vending_machine_1",
+      "name": "Vending Machine 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/vending_machine_1.png"
+    },
+    {
+      "id": "tex/vent_1",
+      "name": "Vent 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/vent_1.png"
+    },
+    {
+      "id": "tex/vent_2",
+      "name": "Vent 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/vent_2.png"
+    },
+    {
+      "id": "tex/vent_3",
+      "name": "Vent 3",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/vent_3.png"
+    },
+    {
+      "id": "tex/vents_mp_1",
+      "name": "Vents 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/vents_mp_1.png"
+    },
+    {
+      "id": "tex/vhs_tape_1",
+      "name": "Vhs Tape 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/vhs_tape_1.png"
+    },
+    {
+      "id": "tex/walkie_talkie_1",
+      "name": "Walkie Talkie 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/walkie_talkie_1.png"
+    },
+    {
+      "id": "tex/walkie_talkie_2",
+      "name": "Walkie Talkie 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/walkie_talkie_2.png"
+    },
+    {
+      "id": "tex/wall_1",
+      "name": "Wall 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wall_1.png"
+    },
+    {
+      "id": "tex/wall_3",
+      "name": "Wall 3",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wall_3.png"
+    },
+    {
+      "id": "tex/wall_4",
+      "name": "Wall 4",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wall_4.png"
+    },
+    {
+      "id": "tex/wall_5",
+      "name": "Wall 5",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wall_5.png"
+    },
+    {
+      "id": "tex/wall_6",
+      "name": "Wall 6",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wall_6.png"
+    },
+    {
+      "id": "tex/wall_6_plain",
+      "name": "Wall 6 Plain",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wall_6_plain.png"
+    },
+    {
+      "id": "tex/wall_mp_1",
+      "name": "Wall 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wall_mp_1.png"
+    },
+    {
+      "id": "tex/window_2",
+      "name": "Window 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/window_2.png"
+    },
+    {
+      "id": "tex/window_2_1",
+      "name": "Window 2 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/window_2_1.png"
+    },
+    {
+      "id": "tex/window_2_alpha",
+      "name": "Window 2 Alpha",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/window_2_alpha.png"
+    },
+    {
+      "id": "tex/window_2_emission",
+      "name": "Window 2 Emission",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/window_2_emission.png"
+    },
+    {
+      "id": "tex/wood_1",
+      "name": "Wood 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wood_1.png"
+    },
+    {
+      "id": "tex/wood_2",
+      "name": "Wood 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wood_2.png"
+    },
+    {
+      "id": "tex/wood_3",
+      "name": "Wood 3",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wood_3.png"
+    },
+    {
+      "id": "tex/wood_4",
+      "name": "Wood 4",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wood_4.png"
+    },
+    {
+      "id": "tex/wood_5",
+      "name": "Wood 5",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wood_5.png"
+    },
+    {
+      "id": "tex/wood_6",
+      "name": "Wood 6",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wood_6.png"
+    },
+    {
+      "id": "tex/wood_painted_white_mp_1",
+      "name": "Wood Painted White 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wood_painted_white_mp_1.png"
+    },
+    {
+      "id": "tex/wooden_crate_1",
+      "name": "Wooden Crate 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wooden_crate_1.png"
+    },
+    {
+      "id": "tex/wooden_crate_2",
+      "name": "Wooden Crate 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wooden_crate_2.png"
+    },
+    {
+      "id": "tex/wooden_crate_3",
+      "name": "Wooden Crate 3",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wooden_crate_3.png"
+    },
+    {
+      "id": "tex/wooden_crate_3_1",
+      "name": "Wooden Crate 3 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wooden_crate_3_1.png"
+    },
+    {
+      "id": "tex/wooden_crate_4",
+      "name": "Wooden Crate 4",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wooden_crate_4.png"
+    },
+    {
+      "id": "tex/wooden_crate_5",
+      "name": "Wooden Crate 5",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wooden_crate_5.png"
+    },
+    {
+      "id": "tex/wooden_crate_6",
+      "name": "Wooden Crate 6",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wooden_crate_6.png"
+    },
+    {
+      "id": "tex/wooden_crate_7",
+      "name": "Wooden Crate 7",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wooden_crate_7.png"
+    },
+    {
+      "id": "tex/wooden_crate_7_1",
+      "name": "Wooden Crate 7 1",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wooden_crate_7_1.png"
+    },
+    {
+      "id": "tex/wooden_crate_7_2",
+      "name": "Wooden Crate 7 2",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wooden_crate_7_2.png"
+    },
+    {
+      "id": "tex/wooden_crate_7_3",
+      "name": "Wooden Crate 7 3",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wooden_crate_7_3.png"
+    },
+    {
+      "id": "tex/wooden_crate_7_4",
+      "name": "Wooden Crate 7 4",
+      "pack": "psx-horror",
+      "category": "texture",
+      "path": "textures/psx-horror/wooden_crate_7_4.png"
+    }
+  ]
 }

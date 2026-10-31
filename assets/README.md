@@ -8,13 +8,16 @@ in‑editor Asset Library groups them **by category** and lets you filter by pac
 
 ```
 assets/
-  manifest.json              index of packs + every model/texture (below)
-  models/<pack-id>/*.glb      model files, one folder per pack (.glb preferred; .gltf/.obj ok)
-  textures/<pack-id>/*.png    texture files, one folder per pack
-  licenses/<pack-id>.txt      the pack's original LICENSE / attribution text
+  manifest.json               index of packs + every model/texture (below)
+  models/<group>/*.glb         model files grouped by kind (.glb preferred; .gltf/.obj ok)
+  textures/<pack-id>/*.png     texture files, one folder per pack
+  licenses/<pack-id>.txt       the pack's original LICENSE / attribution text
 ```
 
-`<pack-id>` is a short kebab-case slug, e.g. `kenney-furniture`, `quaternius-nature`.
+`<group>` is a short kebab-case kind, and doubles as the first half of each model's `id`
+(e.g. `furniture/bed_1`, `large-props/metal_barrel_mp_1`). The current pack lives under
+`models/{decals,electronics,furniture,items-weapons,large-props,lighting,small-props}/`
+and `textures/psx-horror/`, all attributed to the single `psx-horror` pack.
 
 ## manifest.json
 
@@ -41,11 +44,34 @@ The player reads this to list assets. Paths are **relative to `assets/`**.
 }
 ```
 
-- **id** — unique, stable, referenced by worlds (`ref`). Don't rename once used.
-- **category** — free-form grouping for the editor, e.g. `furniture`, `props`,
-  `walls`, `floors`, `nature`, `lighting`, `characters`, `decals`.
+- **id** — unique, stable, referenced by worlds. Don't rename once used.
+- **category** — free-form grouping for the editor (e.g. `furniture`, `prop`, `lighting`, `decal`).
+- **group** — the on-disk folder under `models/` (also the first half of the id).
 - **pack** — which pack it came from (groups + attributes it).
-- **scale** — default import scale (models only).
+- **scale** — default import scale (models only). This pack is authored in real metres, so `1`.
+
+## How a world loads these
+
+A world references assets by **path**, so nothing is embedded as base64. Its top-level
+`models` map lists each used asset (page-relative path, under `assets/`):
+
+```json
+"models": { "furniture/bed_1": { "name": "bed_1", "path": "assets/models/furniture/bed_1.glb" } }
+```
+
+and a room object places it:
+
+```json
+{ "asset": "model", "src": "furniture/bed_1", "node": "", "position": [x, y, z],
+  "rotationY": 90, "scale": 1, "collision": { "enabled": true },
+  "light": { "color": 16767400, "intensity": 1.15, "dist": 7.5, "y": 2.3 } }
+```
+
+- Path-loaded models keep their **real metres** (the engine does not re-fit the footprint);
+  base-anchored (base dropped to y=0, centred on x/z). GLTF base-colour maps are forced to
+  the engine's linear space and matte PBR so metallic packs don't render black.
+- **collision.enabled: false** — walk-through (floor clutter, wall/ceiling decor).
+- **light** — optional point light on any model, so a lamp fixture actually illuminates.
 
 ## Adding a pack
 
