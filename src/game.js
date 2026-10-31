@@ -219,7 +219,7 @@
           inst.doorTargets.push([[dA[0] - fA[0] * 0.6, dA[1] - fA[1] * 0.6], [dA[0] + fA[0] * 1.3, dA[1] + fA[1] * 1.3]]);
           if (!placed[m.to]) queue.push({ name: m.to, align: { dA: dA, fAng: exAng, arrive: m.arrive || 0 } });
         } else {
-          teleportExits.push({ x: exWorld[0], z: exWorld[1], to: m.to, arrive: m.arrive || 0, dx: fA[0], dz: fA[1] });
+          teleportExits.push({ x: exWorld[0], z: exWorld[1], to: m.to, arrive: m.arrive || 0, from: job.name, dx: fA[0], dz: fA[1] });
           var bx = Math.abs(fA[0]) > 0.5 ? [0.12, 0.5] : [0.5, 0.12];   // barrier across a closed doorway
           pColliders.push({ cx: dA[0], cz: dA[1], hx: bx[0], hz: bx[1], ymin: 0, ymax: 1.5 });
         }
@@ -233,9 +233,16 @@
     return root;
   }
   function setCeilings(vis) { loaded.forEach(function (inst) { if (inst.ro && inst.ro.ceiling) inst.ro.ceiling.visible = vis; }); }
-  function enterRoom(name, arriveIdx) {
+  // the spawn marker co-located with a given exit marker (so arrival pairs with the right doorway)
+  function spawnAt(spawns, pos) { var best = null, bd = 1e9; (spawns || []).forEach(function (s) { var d = Math.hypot(s.position[0] - pos[0], s.position[2] - pos[2]); if (d < bd) { bd = d; best = s; } }); return bd < 2.5 ? best : null; }
+  function enterRoom(name, arriveIdx, fromRoom) {
     var center = buildScene(name); if (!center) { $('hudMsg').textContent = 'Room "' + name + '" is missing.'; return; }
-    var sp = center.spawns[arriveIdx != null ? arriveIdx : 0] || center.spawns[0];
+    var sp = null;
+    if (fromRoom) {   // arrive at this room's doorway that leads back where we came from — robust to spawn ordering
+      var rex = world.rooms[name].exits || [];
+      for (var j = 0; j < rex.length; j++) { if (rex[j] && rex[j].to === fromRoom && center.exits[j]) { sp = spawnAt(center.spawns, center.exits[j].position); if (sp) break; } }
+    }
+    if (!sp) sp = center.spawns[arriveIdx != null ? arriveIdx : 0] || center.spawns[0];
     if (sp) { pPos.set(sp.position[0], 0, sp.position[2]); pYaw = sp.rotationY || 0; var rr = resolve(pPos.x, pPos.z, playerColliders(), PR); pPos.x = rr[0]; pPos.z = rr[1]; }
     else { pPos.set(0, 0, 0); pYaw = 0; }
     transCool = TRANS_COOL; camYaw = pYaw; if (player) player.root.position.copy(pPos); closeDlg();
@@ -517,7 +524,7 @@
     else if (nearNpc) { el.style.display = 'block'; el.textContent = 'Press E to talk to ' + (nearNpc.data.name || 'them'); }
     else el.style.display = 'none';
   }
-  function interact() { if (dlg.open) { advanceDialogue(); return; } if (nearExit) { enterRoom(nearExit.to, nearExit.arrive); return; } if (nearNpc) startDialogue(nearNpc); }
+  function interact() { if (dlg.open) { advanceDialogue(); return; } if (nearExit) { enterRoom(nearExit.to, nearExit.arrive, nearExit.from); return; } if (nearNpc) startDialogue(nearNpc); }
 
   /* ---------- keyboard ---------- */
   var keys = {};
@@ -895,8 +902,9 @@
     for (var i = 0; i < nEx; i++) {
       var ex = rm.exits[i] || {};
       var row = document.createElement('div'); row.className = 'npc-card';
-      row.innerHTML = '<div class="ep-row"><label>Exit ' + i + ' →</label><select data-ex="' + i + '" data-exf="to"><option value="">(none)</option>' + names.map(function (n) { return opt(n, draft.rooms[n].label || n, ex.to); }).join('') + '</select></div>' +
-        '<div class="ep-row"><label>Arrive</label><input data-ex="' + i + '" data-exf="arrive" type="number" min="0" style="max-width:52px" value="' + (ex.arrive || 0) + '"><label style="min-width:auto"><input type="checkbox" data-ex="' + i + '" data-exf="auto"' + (ex.auto ? ' checked' : '') + '> open (seamless)</label></div>';
+      row.innerHTML = '<div class="ep-row"><label>Door ' + i + ' →</label><select data-ex="' + i + '" data-exf="to"><option value="">(none)</option>' + names.map(function (n) { return opt(n, draft.rooms[n].label || n, ex.to); }).join('') + '</select></div>' +
+        '<div class="ep-row"><label style="min-width:auto"><input type="checkbox" data-ex="' + i + '" data-exf="auto"' + (ex.auto ? ' checked' : '') + '> open (seamless)</label>' +
+        '<span class="mini">arrival is automatic — you enter facing back the way you came</span></div>';
       exEl.appendChild(row);
     }
     wirePanelInputs();
